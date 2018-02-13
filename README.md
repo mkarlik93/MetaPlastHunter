@@ -1,1 +1,1 @@
-# malster_thesis_project
+# Master thesis
