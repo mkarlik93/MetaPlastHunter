@@ -216,12 +216,15 @@ def extract_level_from_root_all(taxtree_list, level_from_root, with_unclassif):
                 if line[1] == "Unclassified chloroplast sequence":
                     pass
                 else:
-                    yield line[0][0][level_from_root]
+                    if line[0][0][level_from_root] == "Viridiplantae":
+                        yield line[0][0][level_from_root+1]
+                    else:
+                        yield line[0][0][level_from_root]
             except IndexError:
                 yield "Not all of your reads reach this taxonomic level, take another one"
 
 def taxtree_to_dataframe(filename,distance_from_root,with_unclassif):
-    a =extract_level_from_root_all(parse_2_taxtree(filename),distance_from_root,with_unclassif)
+    a = extract_level_from_root_all(parse_2_taxtree(filename),distance_from_root,with_unclassif)
     df = pd.DataFrame(a,columns=["Taxon"])
     return df
 
@@ -238,18 +241,20 @@ def percentage_df(df):
     all = len(df["Taxon"])
     counts = series2table(df)
     counts = dict(counts)
-    print counts
     df = pd.DataFrame({'Taxon' : counts.keys() , 'counts' : counts.values() })
     return df
 
-def percentage_plot(df):
+def percentage_plot_y_oriented(df):
     all = sum(df['counts'])
-    ax = seaborn.barplot(y="Taxon",x="counts",data=df, estimator= lambda x: y / float(all) * 100)
-    ax.set(ylabel="Percent")
-
+    ax = seaborn.barplot(y="Taxon",x="counts",data=df, estimator= lambda y: y / float(all) * 100)
+    ax.set(xlabel="Percent",ylabel="Taxon")
     plt.show()
 
-
+def percentage_plot_x_oriented(df):
+    all = sum(df['counts'])
+    ax = seaborn.barplot(x="Taxon",y="counts",data=df, estimator= lambda x: x / float(all) * 100)
+    ax.set(xlabel="Percent",ylabel="Taxon")
+    plt.show()
 
 
 
