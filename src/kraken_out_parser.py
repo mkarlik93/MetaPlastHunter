@@ -28,6 +28,7 @@ __status__ = 'Development'
 
 import os
 import pandas as pd
+import numpy as np
 import seaborn
 import matplotlib.pyplot as plt
 
@@ -35,6 +36,21 @@ import matplotlib.pyplot as plt
 #let's try with these settings
 #threshold 0.25
 # < unclassified chloroplast
+
+#taxon dictionary
+#taxon_levels = {
+#"root":1,
+#"cellular organisms":2,
+#"Eukaryota":3,
+# : ,
+#4 : ,
+#5 : ,
+#}
+
+
+
+
+
 
 def filtering(kraken_out):
     with open(kraken_out, "r") as f:
@@ -173,8 +189,8 @@ def parsed_tree_to_csv(filename,generator):
 
 
 def parse_2_taxtree(filename):
-    taxdict = parse_tax_tree__2_dict("nodes.dmp")
-    names_dict = parse_tax_names_2_dict("names.dmp")
+    taxdict = parse_tax_tree__2_dict("../../nodes.dmp")
+    names_dict = parse_tax_names_2_dict("../../names.dmp")
     line_with_3 = line_with_tree(scoring(filtering(filename)),taxdict,names_dict,0.95)
     return list(line_with_3)
 
@@ -213,12 +229,41 @@ def count_plot(df):
     seaborn.countplot(y="Taxon",data=df)
     plt.show()
 
+def series2table(df):
+    counts = df["Taxon"].value_counts()
+    return counts
+    #Prettytable
+
+def percentage_df(df):
+    all = len(df["Taxon"])
+    counts = series2table(df)
+    counts = dict(counts)
+    print counts
+    df = pd.DataFrame({'Taxon' : counts.keys() , 'counts' : counts.values() })
+    return df
+
 def percentage_plot(df):
-    pass
+    all = sum(df['counts'])
+    ax = seaborn.barplot(y="Taxon",x="counts",data=df, estimator= lambda x: y / float(all) * 100)
+    ax.set(ylabel="Percent")
+
+    plt.show()
 
 
-a = taxtree_to_dataframe('../../kraken_out_masked',5,False)
-print count_plot(a)
+
+
+
+
+
+
+a = taxtree_to_dataframe('../../kraken_out_masked',4,False)
+#percentage_plot(a)
+#new_data_frame =  pd.DataFrame(series2table(a),columns=["Taxon","Readcounts"])
+percent = percentage_df(a)
+percentage_plot(percent)
+
+
+#print count_plot(a)
 
 #General function
 def analyze():
