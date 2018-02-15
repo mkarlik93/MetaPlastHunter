@@ -223,18 +223,14 @@ def extract_level_from_root_all(taxtree_list, level_from_root, with_unclassif):
 #because taxonomic tree of eukaryota is complicated
 
 def extract_species_level(taxtree_list):
-
     for line in taxtree_list:
-        try:
-            if line[1] == "Unclassified chloroplast sequence":
-                pass
+        if line[1] == "Unclassified chloroplast sequence":
+            pass
+        else:
+            if len(line[0][0][-1].split(" ")) == 2:
+                yield [line[0][0][-1],line[1]]
             else:
-                print line[0][0][-1]
-                if len(line[0][0][-1].split(" ")) == 2:
-                    yield [line[0][0][-1],line[1]]
-                else:
-                    pass
-
+                pass
 
 def taxtree_of_specific_level_to_dataframe(filename,distance_from_root,with_unclassif):
     a = extract_level_from_root_all(parse_2_taxtree(filename),distance_from_root,with_unclassif)
@@ -256,6 +252,7 @@ def percentage_df(df):
     df = pd.DataFrame({'Taxon' : counts.keys() , 'counts' : counts.values() })
     return df
 
+#Plots
 def percentage_plot_y_oriented(df):
     all = sum(df['counts'])
     ax = seaborn.barplot(y="Taxon",x="counts",data=df, estimator= lambda y: y / float(all) * 100)
@@ -304,7 +301,7 @@ def analyze():
 #print  list(line_with_tree(record,taxdict,names_dict))
 
 #TODO
+#Sprawdzic co sie dzieje z odczytami ktore nie maja taksonomii z jakiegos powodu
 #Slownik z poziomem taksonomicznym
-#Zrobic dataframe -> taxon, id_oczytu
 #Zrobic by nie bylo level, tylko nazwa poziomu taksonomiczego
 #Pomyslec nad stopiem integracji z pythonem, biopythonem

@@ -36,10 +36,6 @@ from kraken_out_parser import *
 
 
 def species_level_shannon_index(df_dict):
-    """ Given a hash { 'species': count } , returns the SDI
-
-    >>> sdi({'a': 10, 'b': 20, 'c': 30,})
-    1.0114042647073518"""
 
     def p(n, N):
         """ Relative abundance """
@@ -50,8 +46,9 @@ def species_level_shannon_index(df_dict):
 
     N = sum(df_dict.values())
 
-    return -sum(p(n, N) for n in df_dict.values() if n is not 0)
+    shannon = -sum(p(n, N) for n in df_dict.values() if n is not 0)
+    print "The species level shanon index is %s" % (shannon)
+    return shannon
 
 species = species4shannon_index('../../kraken_out_masked')
-print species
 print species_level_shannon_index(species)
