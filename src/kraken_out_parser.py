@@ -48,10 +48,6 @@ import matplotlib.pyplot as plt
 #}
 
 
-
-
-
-
 def filtering(kraken_out):
     with open(kraken_out, "r") as f:
         for line in f:
@@ -127,7 +123,7 @@ def parsed_names_to_csv(filename,generator):
             f.write(",".join(line)+"\n")
         print "The file has been written in "+str(cwd)+" directory"
 
-#tree part ~ node.dmp
+#node.dmp parsing part. From output to dataframe and plots
 def parse_tax_tree__2_dict(taxdmp):
     taxtree = {}
     with open(taxdmp,"r") as f:
@@ -165,9 +161,8 @@ def multiple_walks(walks,names_dict):
 
 def line_with_tree(parse_lines_to_names,taxdict,names_dict,threshold):
     for i in parse_lines_to_names:
-        if float(i[2]) > float(threshold):
+        if float(i[2]) >= float(threshold):
             tax = [list(walk2names(tree_walk_recurse(taxdict,i[1],[]),names_dict))]
-#            tax.append(i[0])
             yield [tax,i[0]]
         else:
             yield [i[0],"Unclassified chloroplast sequence"]
@@ -191,9 +186,8 @@ def parsed_tree_to_csv(filename,generator):
 def parse_2_taxtree(filename):
     taxdict = parse_tax_tree__2_dict("../../nodes.dmp")
     names_dict = parse_tax_names_2_dict("../../names.dmp")
-    line_with_3 = line_with_tree(scoring(filtering(filename)),taxdict,names_dict,0.95)
+    line_with_3 = line_with_tree(scoring(filtering(filename)),taxdict,names_dict,1)
     return list(line_with_3)
-
 
 #Data visualization + counting
 
@@ -203,12 +197,14 @@ def extract_level_from_root_all(taxtree_list, level_from_root, with_unclassif):
         for line in taxtree_list:
             try:
                 if line[1] == "Unclassified chloroplast sequence":
-                    yield line[1]
+                    yield line
                 else:
-                    yield line[0][0][level_from_root]
+                    if line[0][0][level_from_root] == "Viridiplantae":
+                        yield [line[0][0][level_from_root+1],line[1]]
+                    else:
+                        yield [line[0][0][level_from_root],line[1]]
             except IndexError:
-                break
-                print "Not all of your reads reach this taxonoic level, take another one"
+                yield ["Not all of your reads reach this taxonomic level, take another one",line[1]]
     else:
         level_from_root = level_from_root -1
         for line in taxtree_list:
@@ -216,30 +212,46 @@ def extract_level_from_root_all(taxtree_list, level_from_root, with_unclassif):
                 if line[1] == "Unclassified chloroplast sequence":
                     pass
                 else:
+                    print line
                     if line[0][0][level_from_root] == "Viridiplantae":
-                        yield line[0][0][level_from_root+1]
+                        yield [line[0][0][level_from_root+1],line[1]]
                     else:
-                        yield line[0][0][level_from_root]
+                        yield [line[0][0][level_from_root],line[1]]
             except IndexError:
-                yield "Not all of your reads reach this taxonomic level, take another one"
+                yield ["Not all of your reads reach this taxonomic level, take another one",line[1]]
 
-def taxtree_to_dataframe(filename,distance_from_root,with_unclassif):
+#because taxonomic tree of eukaryota is complicated
+
+def extract_species_level(taxtree_list):
+
+    for line in taxtree_list:
+        try:
+            if line[1] == "Unclassified chloroplast sequence":
+                pass
+            else:
+                print line[0][0][-1]
+                if len(line[0][0][-1].split(" ")) == 2:
+                    yield [line[0][0][-1],line[1]]
+                else:
+                    pass
+
+
+def taxtree_of_specific_level_to_dataframe(filename,distance_from_root,with_unclassif):
     a = extract_level_from_root_all(parse_2_taxtree(filename),distance_from_root,with_unclassif)
-    df = pd.DataFrame(a,columns=["Taxon"])
+    df = pd.DataFrame(a,columns=["Taxon","Read_1"])
     return df
 
 def count_plot(df):
     seaborn.countplot(y="Taxon",data=df)
     plt.show()
 
-def series2table(df):
+def counts2table(df):
     counts = df["Taxon"].value_counts()
     return counts
     #Prettytable
 
 def percentage_df(df):
-    all = len(df["Taxon"])
-    counts = series2table(df)
+    counts = counts2table(df)
     counts = dict(counts)
     df = pd.DataFrame({'Taxon' : counts.keys() , 'counts' : counts.values() })
     return df
@@ -256,16 +268,20 @@ def percentage_plot_x_oriented(df):
     ax.set(xlabel="Percent",ylabel="Taxon")
     plt.show()
 
+#prepares dict of counts of species
+def species4shannon_index(filename,with_unclassif):
+    a = extract_species_level(parse_2_taxtree(filename),with_unclassif)
+    df = pd.DataFrame(a,columns=["Taxon","Read_1"])
+    counts = counts2table(df)
+    counts = dict(counts)
+    return counts
 
 
-
-
-
-a = taxtree_to_dataframe('../../kraken_out_masked',4,False)
+#a = taxtree_to_dataframe('../../kraken_out_masked',4,False)
 #percentage_plot(a)
 #new_data_frame =  pd.DataFrame(series2table(a),columns=["Taxon","Readcounts"])
-percent = percentage_df(a)
-percentage_plot(percent)
+#percent = percentage_df(a)
+#percentage_plot(percent)
 
 
 #print count_plot(a)
@@ -284,13 +300,11 @@ def analyze():
 #a =  filtering("Sample_kraken_out.txt")
 #scored = list(scoring(a))
 #record = list(parse_lines_to_names('names.dmp',scored,0.2))
-#
+
 #print  list(line_with_tree(record,taxdict,names_dict))
 
 #TODO
-
 #Slownik z poziomem taksonomicznym
 #Zrobic dataframe -> taxon, id_oczytu
 #Zrobic by nie bylo level, tylko nazwa poziomu taksonomiczego
-#Procentowy udzial
 #Pomyslec nad stopiem integracji z pythonem, biopythonem
