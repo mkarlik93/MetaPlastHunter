@@ -26,28 +26,4 @@ __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
-from math import log as ln
-from kraken_out_parser import *
-# na species level only!!!!
-#This part works
-
-
-
-
-def species_level_shannon_index(df_dict):
-
-    def p(n, N):
-        """ Relative abundance """
-        if n is  0:
-            return 0
-        else:
-            return (float(n)/N) * ln(float(n)/N)
-
-    N = sum(df_dict.values())
-
-    shannon = -sum(p(n, N) for n in df_dict.values() if n is not 0)
-    print "The species level shanon index is %s" % (shannon)
-    return shannon
-
-#species = species4shannon_index('../../kraken_out_masked')
-#print species_level_shannon_index(species)
+#Tu bedzie wsparcie bibliotek obslugujacych nanoszenie na mape swiata/regionu

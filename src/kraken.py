@@ -27,27 +27,46 @@ __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
 import os
+import subprocess
+import logging
+
+
+#TODO
+#zintegrowanie z obecnymi skryptami
+#sprawdzenie czy dziala
+#Zbieranie logow
 
 class KrakenError(BaseException):
     pass
 
 
 class KrakenRunner():
-    """Wrapper for running prodigal."""
-    def __init__(self, outDir,Threads, database_dir,outDir):
-        self.logger = logging.getLogger()
 
-        # make sure prodigal is installed
+    """Wrapper for running kraken."""
+    def __init__(self,reads_1, reads_2, threads, database_dir):
+        self.logger = logging.getLogger()
+        self.reads_1 = reads_1
+        self.reads_2 = reads_2
+        self.threads = threads
+        self.database_dir = database_dir
+        # make sure kraken is installed
         self.checkForKraken()
 
 
-   def checkForKraken(self):
-        """Check to see if Prodigal is on the system before we try to run it."""
+    def run_classification(self):
+        pass
 
-        # Assume that a successful prodigal -h returns 0 and anything
+
+    def run_report(self):
+        pass
+
+    def checkForKraken(self):
+        """Check to see if Kraken is on the system before we try to run it."""
+
+        # Assume that a successful kraken -h returns 0 and anything
         # else returns something non-zero
         try:
             subprocess.call(['kraken', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
         except:
-            self.logger.error("  [Error] Make sure prodigal is on your system path.")
+            self.logger.error("  [Error] Make sure kraken is on your system path.")
             sys.exit()

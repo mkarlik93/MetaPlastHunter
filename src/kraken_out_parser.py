@@ -212,7 +212,7 @@ def extract_level_from_root_all(taxtree_list, level_from_root, with_unclassif):
                 if line[1] == "Unclassified chloroplast sequence":
                     pass
                 else:
-                    print line
+#                    print line
                     if line[0][0][level_from_root] == "Viridiplantae":
                         yield [line[0][0][level_from_root+1],line[1]]
                     else:
@@ -237,6 +237,7 @@ def taxtree_of_specific_level_to_dataframe(filename,distance_from_root,with_uncl
     df = pd.DataFrame(a,columns=["Taxon","Read_1"])
     return df
 
+#tables
 def count_plot(df):
     seaborn.countplot(y="Taxon",data=df)
     plt.show()

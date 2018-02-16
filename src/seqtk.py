@@ -26,60 +26,59 @@ __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
+import pandas as pd
+import glob
+from kraken_out_parser import *
 
 
+#It's time for general rebuildnig
 
-def parse_labels(path):
-    reads = {}
-    with open(path,"r") as f:
-        for line in f:
-            splited = line.split(" ")
-            splited_1 = line.split(";")
-            try:
-                reads[splited[0].strip("\troot;cellular")] = splited_1[3].strip("\n")
-            except IndexError:
-                try:
-                    reads[splited[0].strip("\troot;cellular")] = splited_1[2].strip("\n")
-                except IndexError:
-                    try:
-                        reads[splited[0].strip("\troot;cellular")] = splited_1[1].strip("\n")
-                    except IndexError:
-                        pass
-    return reads
-
-def parse_unique(path):
-    unique = set()
-
-    with open(path,"r") as f:
-        for line in f:
-            splited = line.split(" ")
-            splited_1 = line.split(";")
-            try:
-                unique.add(splited_1[3].strip("\n"))
-            except IndexError:
-                try:
-                    unique.add(splited_1[2].strip("\n"))
-                except IndexError:
-                    try:
-                        unique.add(splited_1[1].strip("\n"))
-                    except IndexError:
-                        pass
-    return unique
+#def parse_labels(path):
+#    reads = {}
+#    with open(path,"r") as f:
+#        for line in f:
+#            splited = line.split(" ")
+#            splited_1 = line.split(";")
+#            try:
+#                reads[splited[0].strip("\troot;cellular")] = splited_1[3].strip("\n")
+#            except IndexError:
+#                try:
+#                    reads[splited[0].strip("\troot;cellular")] = splited_1[2].strip("\n")
+#                except IndexError:
+#                    try:
+#                        reads[splited[0].strip("\troot;cellular")] = splited_1[1].strip("\n")
+#                    except IndexError:
+#                        pass
+#    return reads
 
 
-def segregate(path):
+#trzeba sprawdzic co w tym miejscu sie dzieje, moze juz jest okej
+
+def taxonomic_level_to_dict(df):
+    reads_dict = pd.Series(df.Taxon.values,index=df.Read_1).to_dict()
+    return reads_dict
+
+
+#Tu nazwy
+def parse_unique(df):
+    unique_names = set(df["Taxon"].tolist())
+    return unique_names
+
+
+#Ta trzeba teraz naprawic
+def segregate(df):
+    reads = taxonomic_level_to_dict(df)
     segregated = {}
-    unique = parse_unique(path)
-    reads = parse_labels(path)
+    unique = parse_unique(df)
     for i in unique:
         segregated[i] = []
     for key in reads:
         segregated[reads[key]].append(key)
     return segregated
 
-
-def file_preparation(path):
-    dictionary = segregate(path)
+#This function is ok
+def file_preparation(df):
+    dictionary = segregate(df)
     to_save = dictionary.items()
     for i in to_save:
         with open(str(i[0]+".1"),"w") as f:
@@ -94,6 +93,12 @@ def file_preparation(path):
         print str(i[0])+" has been written! (F)"
 
 
+#Chcialbym napisac workflowy wtedy taka funcja bylaby nie potrzebna
+def fromdf2reads_with_files(filename,tax_level,with_unclassif):
+    df = taxtree_of_specific_level_to_dataframe('../../kraken_out_masked',4,False)
+    file_preparation(df)
+
+#Tu obsluga globa + klasa seqtk?
 def seqtq_handler(reads_1,reads_2,path,ext):
 
     dictionary = segregate(path)
@@ -103,6 +108,7 @@ def seqtq_handler(reads_1,reads_2,path,ext):
         os.system(command_1)
         command_2 = "seqtk subseq %s %s > %s" % (reads_2, i[0]+".2", "reads_"+i[0]+"_2."+ext)
         os.system(command_2)
+
 
 if __name__ == "__main__":
 

@@ -1,0 +1,9 @@
+
+""" In case of dependacies are not installed in the path """
+
+Please add full paths below
+
+
+kraken = ../../../
+
+seqtk = ../../../
