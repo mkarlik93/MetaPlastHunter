@@ -27,16 +27,16 @@ __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
 
-import kraken
+from kraken import *
 
 class Pipeline_kraken:
 
-    def __init__(self, list_sra, station_name):
+    def __init__(self, list_sra, station_name,settings):
         self.list_sra = list_sra
         self.station_name = station_name
         self.database_dir = database_dir
         self.threads = threads
-
+        self.settings = settings
 
 
     def kraken_not_multi(self):
@@ -44,15 +44,19 @@ class Pipeline_kraken:
         sra_ids = self.list_sra
         list_sra_ids = sra_ids.split(",")
         starting_dir = os.getcwd()
+        kraken = KrakenRunner(self.threads,self.settings)
         for i in list_sra_ids:
             print "kraken for "+i
             read_name_1 = i+"_1.fastq"
             read_name_2 = i+"_2.fastq"
-            os.chdir("%s/%s/" % (self.station_name,i))
+            dir = "%s/%s/" % (self.station_name,i)
+            os.chdir(dir)
+            kraken.run_classification(read_name_1, read_name_2,dir)
+            kraken.run_report(dir)
+#            command = "/opt/kraken/kraken -t %s --db %s --paired %s %s --out-fmt paired --fastq-output --classified-out classif > kraken_out" % (str(self.threads),database_dir,read_name_1,read_name_2)
+#            os.system(command)
 
-            command = "/opt/kraken/kraken -t %s --db %s --paired %s %s --out-fmt paired --fastq-output --classified-out classif > kraken_out" % (str(self.threads),database_dir,read_name_1,read_name_2)
-            os.system(command)
-            command_report = "/opt/kraken/kraken-report --db %s kraken_out > kraken_report_%s.txt" % (str(self.threads), self.station_name)
+#            command_report = "/opt/kraken/kraken-report --db %s kraken_out > kraken_report_%s.txt" % (str(self.threads), self.station_name)
 #            command_translate = "/opt/kraken/kraken-translate --db /home/karlicki/custom kraken_out > kraken_labels_%s.txt" % (self.station_name)
 #            os.system(command_report)
 #            os.system(command_translate)
@@ -70,7 +74,7 @@ class Pipeline_kraken:
             proc.start()
             print "Downloading has started"
 
-
+#TO trzeba zmienic sa nowe zmienne
 if __name__ == "__main__":
 
     from time import gmtime, strftime
