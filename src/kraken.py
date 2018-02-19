@@ -43,7 +43,6 @@ class KrakenRunner:
 
     """Wrapper for running kraken."""
     def __init__(self,threads,settings):
-        self.logger = logging.getLogger()
         self.threads = threads
         # make sure kraken is installed
         if settings == None:
@@ -62,7 +61,7 @@ class KrakenRunner:
     def run_report(self,OutputDir):
         path = self.path
         db = self.db
-        command_report = "kraken/kraken-report --db %s kraken_out > kraken_report_%s.txt" % (path, db,str(self.threads))
+        command_report = "kraken/kraken-report --db %s kraken_out > %skraken_report.txt" % (path, db,str(self.threads),OutputDir)
         os.system(command_report)
 
     def checkForKraken(self):

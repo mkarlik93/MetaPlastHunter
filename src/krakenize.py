@@ -27,9 +27,11 @@ __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
 
+import kraken
+
 class Pipeline_kraken:
 
-    def __init__(self, list_sra, station_name,database_dir,threads):
+    def __init__(self, list_sra, station_name):
         self.list_sra = list_sra
         self.station_name = station_name
         self.database_dir = database_dir
@@ -47,11 +49,12 @@ class Pipeline_kraken:
             read_name_1 = i+"_1.fastq"
             read_name_2 = i+"_2.fastq"
             os.chdir("%s/%s/" % (self.station_name,i))
+
             command = "/opt/kraken/kraken -t %s --db %s --paired %s %s --out-fmt paired --fastq-output --classified-out classif > kraken_out" % (str(self.threads),database_dir,read_name_1,read_name_2)
             os.system(command)
             command_report = "/opt/kraken/kraken-report --db %s kraken_out > kraken_report_%s.txt" % (str(self.threads), self.station_name)
 #            command_translate = "/opt/kraken/kraken-translate --db /home/karlicki/custom kraken_out > kraken_labels_%s.txt" % (self.station_name)
-            os.system(command_report)
+#            os.system(command_report)
 #            os.system(command_translate)
             os.chdir(starting_dir)
             os.remove("%s/%s/%s" % (self.station_name,i,read_name_1))
