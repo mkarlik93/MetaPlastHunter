@@ -26,26 +26,55 @@ __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
-from math import log as ln
-from kraken_out_parser import *
-# na species level only!!!!
-#This part works
+import pandas as pd
+import glob
+import os
 
 
-def species_level_shannon_index(df_dict):
 
-    def p(n, N):
-        """ Relative abundance """
-        if n is  0:
-            return 0
+#collects table from file and merge it into one large table
+def collector_single_specie_oriented(folders, specie_to_find):
+    pass
+
+
+
+class SettingsError(BaseException):
+    pass
+
+class Settings_loader:
+    def __init__(self,mode="kraken"):
+        if mode == "kraken":
+            self.mode = 'kraken'
+        elif mode == "seqtk":
+            self.mode = 'seqtk'
+#in case of more software
+#        elif mode == 'align':
+#            self.mode = 'align'
+#        elif mode == 'fetch':
+#            self.mode = 'fetch'
         else:
-            return (float(n)/N) * ln(float(n)/N)
+            raise SettingsError("Mode %s not understood" % mode)
 
-    N = sum(df_dict.values())
+        self.check_settings()
 
-    shannon = -sum(p(n, N) for n in df_dict.values() if n is not 0)
-    print "The species level shanon index is %s" % (shannon)
-    return shannon
 
-#species = species4shannon_index('../../kraken_out_masked')
-#print species_level_shannon_index(species)
+    def check_settings(self):
+        if glob.glob("../settings.txt") == 0:
+            print "[ERROR] There is no settings file"
+            sys.exit()
+
+
+    def read_path(self):
+        if self.mode == 'kraken':
+            line = 'kraken'
+        elif self.mode == 'seqtk':
+            line = 'seqtk'
+
+        with open("../settings.txt") as f:
+            dict = {}
+            database = "kraken_db"
+            for i in f:
+                splited = i.split("=")
+                if line == splited[0] or database == splited[0] :
+                    dict[splited[0]] = splited[1].strip("\n")
+            return dict

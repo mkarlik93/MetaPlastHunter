@@ -40,7 +40,6 @@ import pandas as pd
 # species
 
 # samples column have to be connected
-
 #TODO
 #Function for gathering data is needed with many crucial options.
 
@@ -56,7 +55,6 @@ def dataframe_deduplication(df):
 def load_tara_data():
     my_dataframe = fromcsv2df("../data/tara.csv")
     return my_dataframe
-
 
 #By jedna nazwe reprezentowaly jedne wspolrzedne (male roznice)
 
@@ -82,12 +80,8 @@ def get_tara_station_list():
     list = df["Station identifier [TARA_station#]"].tolist()
     return list
 
-
-
-
 #Jest ok!
 df_1 = fromcsv2df("../data/Single_Taxa_case.csv")
-
 
 def merge(tara_df, new_df):
     merged_left = pd.merge(left=tara_df,right=new_df, how='left', left_on='Station identifier [TARA_station#]', right_on='Station identifier [TARA_station#]')
@@ -109,6 +103,7 @@ def filter_null(df):
 #tara_lon, tara_lat = tara_oceans_lon_lat(deduplicated)
 
 #Tu dodac do analiy ilosciowej
+#Popracowac nad ta czescia
 def draw_map(lon, lat,reads):
 
     #background map
@@ -121,13 +116,14 @@ def draw_map(lon, lat,reads):
     m.drawcoastlines(color='gray')
     #m.drawcountries(color='gray')
     #m.drawstates(color='gray')
+    #My points -> modifible
     m.scatter(lon, lat,c=reads,cmap='Reds', alpha=0.5)
     plt.show()
 
-
 #for now log transformation
 #for now CANT be ZERO
-def vizualization(df):
+
+def vizualization_with_tara(df):
     df_tara = tara_singletons()
     merged = merge(df_tara,df)
     filtered = filter_null(merged)
@@ -135,7 +131,3 @@ def vizualization(df):
     reads = filtered['Reads number'].values
     reads = np.log10(reads)
     draw_map(lon, lat, reads)
-
-
-
-vizualization(df_1)

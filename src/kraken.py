@@ -27,9 +27,8 @@ __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
 import os
-import subprocess
-import logging
-
+import sys
+from helpers import *
 
 #TODO
 #zintegrowanie z obecnymi skryptami
@@ -40,25 +39,31 @@ class KrakenError(BaseException):
     pass
 
 
-class KrakenRunner():
+class KrakenRunner:
 
     """Wrapper for running kraken."""
-    def __init__(self,reads_1, reads_2, threads, database_dir):
+    def __init__(self,threads,settings):
         self.logger = logging.getLogger()
-        self.reads_1 = reads_1
-        self.reads_2 = reads_2
         self.threads = threads
-        self.database_dir = database_dir
         # make sure kraken is installed
-        self.checkForKraken()
+        if settings == None:
+            self.checkForKraken()
+        else:
+            self.path = Settings_loader(mode="kraken").read_path()["kraken"]
+            self.db = Settings_loader(mode="kraken").read_path()["kraken_db"]
 
+    def run_classification(self,reads_1, reads_2,OutDir):
+        path = self.path
+        db = self.db
+        threads = self.threads
+        command = "%skraken -t %s --db %s --paired %s %s --out-fmt paired --fastq-output --classified-out classif > %skraken_out" % (path,str(self.threads),db,reads_1,reads_2,OutDir)
+        os.system(command)
 
-    def run_classification(self):
-        pass
-
-
-    def run_report(self):
-        pass
+    def run_report(self,OutputDir):
+        path = self.path
+        db = self.db
+        command_report = "kraken/kraken-report --db %s kraken_out > kraken_report_%s.txt" % (path, db,str(self.threads))
+        os.system(command_report)
 
     def checkForKraken(self):
         """Check to see if Kraken is on the system before we try to run it."""
@@ -68,5 +73,5 @@ class KrakenRunner():
         try:
             subprocess.call(['kraken', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
         except:
-            self.logger.error("  [Error] Make sure kraken is on your system path.")
+            print "  [Error] Make sure kraken is on your system path or set usage to path in settings.txt"
             sys.exit()

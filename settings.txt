@@ -4,6 +4,6 @@
 Please add full paths below
 
 
-kraken = ../../../
-
-seqtk = ../../../
+kraken=/opt/kraken/
+seqtk=/../../../
+kraken_db=/../../

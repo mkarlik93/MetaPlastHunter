@@ -47,7 +47,6 @@ import matplotlib.pyplot as plt
 #5 : ,
 #}
 
-
 def filtering(kraken_out):
     with open(kraken_out, "r") as f:
         for line in f:
@@ -212,7 +211,6 @@ def extract_level_from_root_all(taxtree_list, level_from_root, with_unclassif):
                 if line[1] == "Unclassified chloroplast sequence":
                     pass
                 else:
-#                    print line
                     if line[0][0][level_from_root] == "Viridiplantae":
                         yield [line[0][0][level_from_root+1],line[1]]
                     else:
@@ -302,7 +300,7 @@ def analyze():
 #print  list(line_with_tree(record,taxdict,names_dict))
 
 #TODO
-#Sprawdzic co sie dzieje z odczytami ktore nie maja taksonomii z jakiegos powodu
-#Slownik z poziomem taksonomicznym
-#Zrobic by nie bylo level, tylko nazwa poziomu taksonomiczego
-#Pomyslec nad stopiem integracji z pythonem, biopythonem
+#Sprawdzic co sie dzieje z odczytami ktore nie maja taksonomii z jakiegos powodu - wciaz
+#Slownik z poziomem taksonomicznym - - wciaz
+#OutDIR!!! Zobaczyc jak sie to robi np. w checkM.
+#Zaczac robic workflow-y -> kilka outputow w jednym folderze
