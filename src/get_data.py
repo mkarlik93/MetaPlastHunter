@@ -26,19 +26,23 @@ __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
-def fastq_dump_sra_file(station_name,sra_id):
+from helpers import *
+
+
+def fastq_dump_sra_file(station_name,sra_id,path):
     command_create_dir = "mkdir %s/%s" % (station_name,sra_id)
     os.system(command_create_dir)
-    command = "/opt/sratoolkit.2.8.2-1-ubuntu64/bin/fastq-dump %s --skip-technical -I --split-3" % (sra_id)
+    command = "%sfastq-dump %s --skip-technical -I --split-3" % (path,sra_id)
     os.chdir("%s/%s/" % (station_name,sra_id))
     os.system(command)
 
 
 class Pipeline_fetch:
 
-    def __init__(self, list_sra, station_name):
+    def __init__(self, list_sra, station_name,settings):
         self.list_sra = list_sra
-        self.station_name = station_name
+
+        self.path = Settings_loader(mode="sratoolkit").read_path()["sratoolkit"]
 
     def create_station_dir(self):
         command  = "mkdir %s" % (self.station_name)
@@ -54,8 +58,9 @@ class Pipeline_fetch:
     def multiprocess(self):
         sra_ids = self.list_sra
         list_sra_ids = sra_ids.split(",")
+        path = self.path
         for i in list_sra_ids:
-                proc = Process(target=fastq_dump_sra_file, args=(self.station_name,i))
+                proc = Process(target=fastq_dump_sra_file, args=(self.station_name,i,path))
                 proc.start()
                 print "Downloading has started"
 

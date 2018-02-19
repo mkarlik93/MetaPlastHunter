@@ -41,6 +41,7 @@ def collector_single_specie_oriented(folders, specie_to_find):
 class SettingsError(BaseException):
     pass
 
+#Tu dodac sprawdzanie
 class Settings_loader:
     def __init__(self,mode="kraken"):
         if mode == "kraken":
@@ -48,8 +49,8 @@ class Settings_loader:
         elif mode == "seqtk":
             self.mode = 'seqtk'
 #in case of more software
-#        elif mode == 'align':
-#            self.mode = 'align'
+        elif mode == 'sratoolkit':
+            self.mode = 'sratoolkit'
 #        elif mode == 'fetch':
 #            self.mode = 'fetch'
         else:
@@ -69,6 +70,8 @@ class Settings_loader:
             line = 'kraken'
         elif self.mode == 'seqtk':
             line = 'seqtk'
+        elif self.mode == 'sratoolkit':
+            line = 'sratoolkit'
 
         with open("../settings.txt") as f:
             dict = {}
