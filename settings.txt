@@ -7,4 +7,4 @@ Please add full paths below
 kraken=/opt/kraken/
 seqtk=/../../../
 kraken_db=/../../
-sratoolkit=/../../
+fastq-dump=/../../

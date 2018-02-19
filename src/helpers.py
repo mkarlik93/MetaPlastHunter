@@ -29,7 +29,7 @@ __status__ = 'Development'
 import pandas as pd
 import glob
 import os
-
+import sys
 
 
 #collects table from file and merge it into one large table
@@ -41,7 +41,6 @@ def collector_single_specie_oriented(folders, specie_to_find):
 class SettingsError(BaseException):
     pass
 
-#Tu dodac sprawdzanie
 class Settings_loader:
     def __init__(self,mode="kraken"):
         if mode == "kraken":
@@ -49,8 +48,8 @@ class Settings_loader:
         elif mode == "seqtk":
             self.mode = 'seqtk'
 #in case of more software
-        elif mode == 'sratoolkit':
-            self.mode = 'sratoolkit'
+        elif mode == 'fastq-dump':
+            self.mode = 'fastq-dump'
 #        elif mode == 'fetch':
 #            self.mode = 'fetch'
         else:
@@ -70,14 +69,19 @@ class Settings_loader:
             line = 'kraken'
         elif self.mode == 'seqtk':
             line = 'seqtk'
-        elif self.mode == 'sratoolkit':
-            line = 'sratoolkit'
+        elif self.mode == 'fastq-dump':
+            line = 'fastq-dump'
 
         with open("../settings.txt") as f:
             dict = {}
             database = "kraken_db"
             for i in f:
                 splited = i.split("=")
-                if line == splited[0] or database == splited[0] :
+                if line == splited[0] or database == splited[0]:
                     dict[splited[0]] = splited[1].strip("\n")
+                    try:
+                        subprocess.call([splited[1].strip("\n")+splited[0], '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
+                    except:
+                        print "  [Error] Make sure %s path is in settings.txt or was set correctly" % splited[0]
+                        sys.exit()
             return dict
