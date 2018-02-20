@@ -29,7 +29,9 @@ __status__ = 'Development'
 import pandas as pd
 import glob
 from kraken_out_parser import *
+from seqtk_wrapper import *
 
+#Do klasy_czas na ten skrypt
 
 def taxonomic_level_to_dict(df):
     reads_dict = pd.Series(df.Taxon.values,index=df.Read_1).to_dict()
@@ -52,7 +54,7 @@ def segregate(df):
     return segregated
 
 #This function is ok
-def file_preparation(df):
+def files_preparation(df):
     dictionary = segregate(df)
     to_save = dictionary.items()
     for i in to_save:
@@ -70,18 +72,34 @@ def file_preparation(df):
 #Chcialbym napisac workflowy wtedy taka funcja bylaby nie potrzebna
 def fromdf2reads_with_files(filename,tax_level,with_unclassif):
     df = taxtree_of_specific_level_to_dataframe('../../kraken_out_masked',4,False)
-    file_preparation(df)
+    files_preparation(df)
 
+
+#To jest zupelnie nie zrobione
 #Tu obsluga globa + klasa seqtk?
-def seqtk_handler(reads_1,reads_2,path,ext):
+#This first!
+#Fastq only! - it might be better for assembly
+def seqtk_handler(reads_1,reads_2,workDir,settings):
+    #workDir is a folder which contains, id_reads, kraken_out etc.
+    os.chdir(workDir)
+    list_of_ids = glob.glob["ids_*"]
+    read_1 = glob.glob["classif_R1."]
+    read_2 = glob.glont["classifl_R2."]
 
-    dictionary = segregate(path)
-    to_save = dictionary.items()
-    for i in to_save:
-        command_1 = "seqtk subseq %s %s > %s" % (reads_1, i[0]+".1", "reads_"+i[0]+"_1."+ext)
-        os.system(command_1)
-        command_2 = "seqtk subseq %s %s > %s" % (reads_2, i[0]+".2", "reads_"+i[0]+"_2."+ext)
-        os.system(command_2)
+    if len(read_1) == 0 or len(read_2) == 0:
+        print " [ERROR] There is no files with reads, change the work directory. Check it!"
+        sys.exit()
+
+    if len(list_of_ids) == 0:
+        print " [ERROR] There is no files with reads id, change the work directory. Check it!"
+        sys.exit()
+    for reads_1, reads_2 in itertools.combinations(reads_1, reads_2):
+        if reads_1[:-2] == reads_2[:-2]:
+            print "Running seqtk subseq for %s" % reads_1
+            SeqtkRunner(settings).run_seqtk(read_1,reads_1,workDir,".1")
+            print "Running seqtk subseq for %s" % reads_2
+            SeqtkRunner(settings).run_seqtk(read_2,reads_2,workDir,".2")
+
 
 
 if __name__ == "__main__":

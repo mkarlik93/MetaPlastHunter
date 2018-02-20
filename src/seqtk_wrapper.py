@@ -26,53 +26,40 @@ __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
+
 import os
 import sys
 from helpers import *
 
-#TODO
-#zintegrowanie z obecnymi skryptami
-#sprawdzenie czy dziala
-#Zbieranie logow
-
-class KrakenError(BaseException):
+class SeqtkError(BaseException):
     pass
 
 
-class KrakenRunner:
+class SeqtkRunner:
 
-    """Wrapper for running kraken."""
-
-    def __init__(self,threads,settings):
-        self.threads = threads
-        # make sure kraken is installed
+    """Wrapper for running seqtk."""
+    def __init__(self,settings):
+        #make sure kraken is installed
         if settings == False:
-            self.checkForKraken()
+            self.checkForseqtk()
             self.path = ""
         else:
-            self.path = Settings_loader(mode="kraken").read_path()["kraken"]
-            self.db = Settings_loader(mode="kraken").read_path()["kraken_db"]
+            self.path = Settings_loader(mode="seqtk").read_path()["seqtk"]
 
-    def run_classification(self,reads_1, reads_2,OutDir):
+    def run_seqtk(self,orig_reads,reads,WorkDir,which_pair):
+        os.chdir(WorkDir)
         path = self.path
-        db = self.db
-        threads = self.threads
-        command = "%skraken -t %s --db %s --paired %s %s --out-fmt paired --fastq-output --classified-out classif > %skraken_out" % (path,str(self.threads),db,reads_1,reads_2,OutDir)
+        command = "%sseqtk subseq %s %s > %s" % (path,orig_reads, reads_1, "reads_"+reads_1+str(which_pair)+".fastq")
         os.system(command)
 
-    def run_report(self,OutputDir):
-        path = self.path
-        db = self.db
-        command_report = "kraken/kraken-report --db %s kraken_out > %skraken_report.txt" % (path, db,str(self.threads),OutputDir)
-        os.system(command_report)
 
-    def checkForKraken(self):
+    def checkForseqtk(self):
         """Check to see if Kraken is on the system before we try to run it."""
 
         # Assume that a successful kraken -h returns 0 and anything
         # else returns something non-zero
         try:
-            subprocess.call(['kraken', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
+            subprocess.call(['seqtk', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
         except:
-            print "  [Error] Make sure kraken is on your system path or set usage to path in settings.txt"
+            print "  [Error] Make sure seqtk is on your system path or set usage to path in settings.txt"
             sys.exit()

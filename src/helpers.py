@@ -37,7 +37,7 @@ def collector_single_specie_oriented(folders, specie_to_find):
     pass
 
 
-
+#checking dependacies
 class SettingsError(BaseException):
     pass
 
@@ -60,7 +60,7 @@ class Settings_loader:
 
     def check_settings(self):
         if glob.glob("../settings.txt") == 0:
-            print "[ERROR] There is no settings file"
+            print "  [ERROR] There is no settings file"
             sys.exit()
 
 
@@ -71,17 +71,19 @@ class Settings_loader:
             line = 'seqtk'
         elif self.mode == 'fastq-dump':
             line = 'fastq-dump'
-
         with open("../settings.txt") as f:
+            print "  Loaded settings.txt"
             dict = {}
             database = "kraken_db"
             for i in f:
                 splited = i.split("=")
                 if line == splited[0] or database == splited[0]:
                     dict[splited[0]] = splited[1].strip("\n")
+                    print "  Checking for %s" % (splited[0])
                     try:
                         subprocess.call([splited[1].strip("\n")+splited[0], '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
+                        print "  Status OK synek!"
                     except:
-                        print "  [Error] Make sure %s path is in settings.txt or was set correctly" % splited[0]
+                        print "  [Error] Make sure %s path is in settings.txt or was set correctly, synek." % splited[0]
                         sys.exit()
             return dict
