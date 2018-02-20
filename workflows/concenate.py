@@ -27,53 +27,58 @@ __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
 
+""" Project managment  """
+
 """Tworzenie plikow z odczytami zawierajacymi wszystkie odczyty z danego taksonu otrzymanych z roznych zestawow danych dla jednej stacji"""
 
-def create_folder_all(station_name):
-    base_cwd = os.getcwd()
-    os.chdir(os.getcwd()+"/"+station_name+"/")
-    os.system("mkdir all_"+station_name)
-    os.chdir(base_cwd)
+#def create_folder_all(station_name):
+#    base_cwd = os.getcwd()
+#    os.chdir(os.getcwd()+"/"+station_name+"/")
+#    os.system("mkdir all_"+station_name)
+#    os.chdir(base_cwd)
 
+class concatenate:
+    def __init__(self,station_name):
+        self.station_name = station_name
 
-def get_unique_among_folders(extension, station_name):
-    base_cwd = os.getcwd()
-    os.chdir(os.getcwd()+"/"+station_name+"/")
-    directories = glob.glob("E*")
-    unique_names = set()
-    cwd = os.getcwd()
-    for i in directories:
-        os.chdir(cwd+"/"+i+"/")
-        files = glob.glob("*."+extension)
-        for file in files:
-            unique_names.add(file)
-    os.chdir(base_cwd)
-    return unique_names
+    def get_unique_among_folders(self):
+        base_cwd = os.getcwd()
+        os.chdir(os.getcwd()+"/"+self.station_name+"/")
+        thedir = self.station_name
+        directories =  [ name for name in os.listdir(thedir) if os.path.isdir(os.path.join(thedir, name)) ]
+        unique_names = set()
+        cwd = os.getcwd()
+        for i in directories:
+            os.chdir(cwd+"/"+i+"/")
+            files = glob.glob("extracted_reads_*")
+            for file in files:
+                unique_names.add(file)
+        os.chdir(base_cwd)
+        return unique_names
 
-def concatenate(extension, station_name):
-    base_cwd = os.getcwd()
-    if extension == "fa":
-        ext = "fasta"
-    else:
-        ext = "fastq"
-    unique_names = get_unique_among_folders(extension, station_name)
-    os.chdir(os.getcwd()+"/"+station_name+"/")
-    directories = glob.glob("E*")
-    reads_in_memory = {}
-    for name in unique_names:
-        reads_in_memory[name] = []
-    cwd = os.getcwd()
-    for i in directories:
-        os.chdir(cwd+"/"+i+"/")
-        files = glob.glob("*."+extension)
-        for file in files:
-            for record in SeqIO.parse(file, ext):
-                reads_in_memory[file].append(record)
-    os.chdir(base_cwd)
-    os.chdir(os.getcwd()+"/"+station_name+"/")
-    for key in reads_in_memory:
-        SeqIO.write(reads_in_memory[key], "all_"+key, ext)
-        print "Writing "+key
+    def concatenate(self):
+        base_cwd = os.getcwd()
+        unique_names = get_unique_among_folders(self.station_name)
+        os.chdir(os.getcwd()+"/"+self.station_name+"/")
+        thedir = self.station_name
+        directories =  [ name for name in os.listdir(thedir) if os.path.isdir(os.path.join(thedir, name)) ]
+        reads_in_memory = {}
+        for name in unique_names:
+            reads_in_memory[name] = []
+        cwd = os.getcwd()
+        for i in directories:
+            os.chdir(cwd+"/"+i+"/")
+            files = glob.glob("extracted_reads_*")
+            if files == 0:
+                print "   [ERROR] There is no files. Check folders"
+            for file in files:
+                for record in SeqIO.parse(file, ext):
+                    reads_in_memory[file].append(record)
+        os.chdir(base_cwd)
+        os.chdir(os.getcwd()+"/"+self.station_name+"/")
+        for key in reads_in_memory:
+            SeqIO.write(reads_in_memory[key], "all_"+key, ext)
+            print "Writing "+key
 
 
 if __name__ == "__main__":

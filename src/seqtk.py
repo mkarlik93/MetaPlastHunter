@@ -78,13 +78,13 @@ def fromdf2reads_with_files(filename,tax_level,with_unclassif):
 #To jest zupelnie nie zrobione
 #Tu obsluga globa + klasa seqtk?
 #This first!
-#Fastq only! - it might be better for assembly
+#Fastq only! - it might be better for future assembly
 def seqtk_handler(reads_1,reads_2,workDir,settings):
     #workDir is a folder which contains, id_reads, kraken_out etc.
     os.chdir(workDir)
-    list_of_ids = glob.glob["ids_*"]
-    read_1 = glob.glob["classif_R1."]
-    read_2 = glob.glont["classifl_R2."]
+    list_of_ids = glob.glob("ids_*")
+    read_1 = glob.glob("classif_R1.")
+    read_2 = glob.glont("classifl_R2.")
 
     if len(read_1) == 0 or len(read_2) == 0:
         print " [ERROR] There is no files with reads, change the work directory. Check it!"

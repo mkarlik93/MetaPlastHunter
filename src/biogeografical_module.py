@@ -41,7 +41,7 @@ import pandas as pd
 
 # samples column have to be connected
 #TODO
-#Function for gathering data is needed with many crucial options.
+#Function for gathering data is needed with many  options.
 
 #take_geographical_data
 def fromcsv2df(filename):

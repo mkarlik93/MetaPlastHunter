@@ -28,7 +28,7 @@ __status__ = 'Development'
 
 import os
 import sys
-from helpers import *
+from settings import *
 
 #TODO
 #zintegrowanie z obecnymi skryptami
