@@ -33,35 +33,45 @@ from seqtk_wrapper import *
 
 #Do klasy_czas na ten skrypt
 
-def taxonomic_level_to_dict(df):
-    reads_dict = pd.Series(df.Taxon.values,index=df.Read_1).to_dict()
-    return reads_dict
+class ReadExtraction:
+    def __init_(self,df,settings):
+        self.df = df
+        self.settings = settings
+
+
+    def taxonomic_level_to_dict(self):
+        df = self.df
+        reads_dict = pd.Series(df.Taxon.values,index=df.Read_1).to_dict()
+        return reads_dict
 
 #Tu nazwy
-def parse_unique(df):
-    unique_names = set(df["Taxon"].tolist())
-    return unique_names
+    def parse_unique(self):
+        df = self.df
+        unique_names = set(df["Taxon"].tolist())
+        return unique_names
 
 #Ta trzeba teraz naprawic
-def segregate(df):
-    reads = taxonomic_level_to_dict(df)
-    segregated = {}
-    unique = parse_unique(df)
-    for i in unique:
-        segregated[i] = []
-    for key in reads:
-        segregated[reads[key]].append(key)
-    return segregated
+    def segregate(self):
+        df = self.df
+        reads = taxonomic_level_to_dict(df)
+        segregated = {}
+        unique = parse_unique(df)
+        for i in unique:
+            segregated[i] = []
+        for key in reads:
+            segregated[reads[key]].append(key)
+        return segregated
 
 #This function is ok
-def files_preparation(df):
-    dictionary = segregate(df)
-    to_save = dictionary.items()
-    for i in to_save:
-        with open(str("ids_"+i[0]+".1"),"w") as f:
-            for id in i[1]:
-                f.write(id+"\n")
-        print str(i[0])+" has been written! (R)"
+    def files_preparation(self):
+        df = self.df
+        dictionary = segregate(df)
+        to_save = dictionary.items()
+        for i in to_save:
+            with open(str("ids_"+i[0]+".1"),"w") as f:
+                for id in i[1]:
+                    f.write(id+"\n")
+            print str(i[0])+" has been written! (R)"
 
         with open(str("ids_"+i[0]+".2"),"w") as f:
             for id in i[1]:
@@ -70,35 +80,32 @@ def files_preparation(df):
         print str(i[0])+" has been written! (F)"
 
 #Chcialbym napisac workflowy wtedy taka funcja bylaby nie potrzebna
-def fromdf2reads_with_files(filename,tax_level,with_unclassif):
-    df = taxtree_of_specific_level_to_dataframe('../../kraken_out_masked',4,False)
-    files_preparation(df)
+#def fromdf2reads_with_files(filename,tax_level,with_unclassif):
+#    df = taxtree_of_specific_level_to_dataframe('../../kraken_out_masked',4,False)
+#    files_preparation(df)
 
 
-#To jest zupelnie nie zrobione
-#Tu obsluga globa + klasa seqtk?
-#This first!
-#Fastq only! - it might be better for future assembly
-def seqtk_handler(reads_1,reads_2,workDir,settings):
+    def seqtk_handler(self, reads_1,reads_2,workDir):
+        settings = self.settings
     #workDir is a folder which contains, id_reads, kraken_out etc.
-    os.chdir(workDir)
-    list_of_ids = glob.glob("ids_*")
-    read_1 = glob.glob("classif_R1.")
-    read_2 = glob.glont("classifl_R2.")
+        os.chdir(workDir)
+        list_of_ids = glob.glob("ids_*")
+        read_1 = glob.glob("classif_R1.")
+        read_2 = glob.glont("classifl_R2.")
 
-    if len(read_1) == 0 or len(read_2) == 0:
-        print " [ERROR] There is no files with reads, change the work directory. Check it!"
-        sys.exit()
+        if len(read_1) == 0 or len(read_2) == 0:
+            print " [ERROR] There is no files with reads, change the work directory. Check it!"
+            sys.exit()
 
-    if len(list_of_ids) == 0:
-        print " [ERROR] There is no files with reads id, change the work directory. Check it!"
-        sys.exit()
-    for reads_1, reads_2 in itertools.combinations(reads_1, reads_2):
-        if reads_1[:-2] == reads_2[:-2]:
-            print "Running seqtk subseq for %s" % reads_1
-            SeqtkRunner(settings).run_seqtk(read_1,reads_1,workDir,".1")
-            print "Running seqtk subseq for %s" % reads_2
-            SeqtkRunner(settings).run_seqtk(read_2,reads_2,workDir,".2")
+        if len(list_of_ids) == 0:
+            print " [ERROR] There is no files with reads id, change the work directory. Check it!"
+            sys.exit()
+        for reads_1, reads_2 in itertools.combinations(reads_1, reads_2):
+            if reads_1[:-2] == reads_2[:-2]:
+                print "Running seqtk subseq for %s" % reads_1
+                SeqtkRunner(settings).run_seqtk(read_1,reads_1,workDir,".1")
+                print "Running seqtk subseq for %s" % reads_2
+                SeqtkRunner(settings).run_seqtk(read_2,reads_2,workDir,".2")
 
 
 

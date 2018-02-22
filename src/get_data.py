@@ -96,6 +96,12 @@ class Pipeline_fetch:
             os.chdir("%s/%s/" % (cwd,station_name))
         os.chdir(cwd)
 
+        def run(self):
+            self.create_station_dir()
+            self.multiprocess()
+            self.evaluation()
+            self.fastqc_report()
+
 
 if __name__ == "__main__":
 
@@ -142,11 +148,7 @@ email address: michal.karlicki@gmail.com
     args = parser.parse_args()
 
     start = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
-    run = Pipeline_fetch(args.sra_ids,args.station_name)
-    run.create_station_dir()
-    run.multiprocess()
-    run.evaluation()
-    run.fastqc_report()
+    run = Pipeline_fetch(args.sra_ids,args.station_name).run()
     end = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
     print "Starting time: "+start
     print "Ending time: "+end

@@ -47,5 +47,7 @@ def species_level_shannon_index(df_dict):
     print "The species level shanon index is %s" % (shannon)
     return shannon
 
+
+
 #species = species4shannon_index('../../kraken_out_masked')
 #print species_level_shannon_index(species)

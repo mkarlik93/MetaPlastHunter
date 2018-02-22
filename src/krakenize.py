@@ -64,6 +64,8 @@ class Pipeline_kraken:
             os.remove("%s/%s/%s" % (self.station_name,i,read_name_1))
             os.remove("%s/%s/%s" % (self.station_name,i,read_name_2))
 
+    def run(self):
+        self.kraken_not_multi()
 
 
     def multiprocess(self):
@@ -120,8 +122,7 @@ email address: michal.karlicki@gmail.com
     args = parser.parse_args()
 
     start = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
-    run = Pipeline_kraken(args.sra_ids,args.station_name)
-    run.kraken_not_multi()
+    run = Pipeline_kraken(args.sra_ids,args.station_name).run()
     end = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
     print "Starting time: "+start
     print "Ending time: "+end

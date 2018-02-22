@@ -25,3 +25,15 @@ __version__ = '1.0.0'
 __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
+
+
+"""  kraken output parser  """
+
+import kraken_output_analysis *
+
+class kraken_out_pipeline:
+
+    def __init__(self, kraken_out_file):
+        self.kraken_out_file = kraken_out_file
+
+            

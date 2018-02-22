@@ -47,6 +47,10 @@ import matplotlib.pyplot as plt
 #5 : ,
 #}
 
+#Summary kazdego kroku - czyli csv
+
+
+
 def filtering(kraken_out):
     with open(kraken_out, "r") as f:
         for line in f:
@@ -235,10 +239,7 @@ def taxtree_of_specific_level_to_dataframe(filename,distance_from_root,with_uncl
     df = pd.DataFrame(a,columns=["Taxon","Read_1"])
     return df
 
-#tables
-def count_plot(df):
-    seaborn.countplot(y="Taxon",data=df)
-    plt.show()
+#Tables
 
 def counts2table(df):
     counts = df["Taxon"].value_counts()
@@ -252,17 +253,34 @@ def percentage_df(df):
     return df
 
 #Plots
-def percentage_plot_y_oriented(df):
-    all = sum(df['counts'])
-    ax = seaborn.barplot(y="Taxon",x="counts",data=df, estimator= lambda y: y / float(all) * 100)
-    ax.set(xlabel="Percent",ylabel="Taxon")
-    plt.show()
+#Check how to save plots
 
-def percentage_plot_x_oriented(df):
-    all = sum(df['counts'])
-    ax = seaborn.barplot(x="Taxon",y="counts",data=df, estimator= lambda x: x / float(all) * 100)
-    ax.set(xlabel="Percent",ylabel="Taxon")
-    plt.show()
+
+class Plots:
+
+    def __init__ (self, df,WorkDIR):
+        self.df = df
+
+        def count_plot(self):
+            df = self.df
+            seaborn.countplot(y="Taxon",data=df)
+            plt.show()
+
+        def percentage_plot_y_oriented(self):
+            df = self.df
+            df = percentage_df(df)
+            all = sum(df['counts'])
+            ax = seaborn.barplot(y="Taxon",x="counts",data=df, estimator= lambda y: y / float(all) * 100)
+            ax.set(xlabel="Percent",ylabel="Taxon")
+            plt.show()
+
+        def percentage_plot_x_oriented(self):
+            df = self.df
+            df = percentage_df(df)
+            all = sum(df['counts'])
+            ax = seaborn.barplot(x="Taxon",y="counts",data=df, estimator= lambda x: x / float(all) * 100)
+            ax.set(xlabel="Percent",ylabel="Taxon")
+            plt.show()
 
 #prepares dict of counts of species
 def species4shannon_index(filename,with_unclassif):

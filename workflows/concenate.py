@@ -27,7 +27,7 @@ __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
 
-""" Project managment  """
+""" Project managment part  """
 
 """Tworzenie plikow z odczytami zawierajacymi wszystkie odczyty z danego taksonu otrzymanych z roznych zestawow danych dla jednej stacji"""
 
@@ -37,7 +37,7 @@ __status__ = 'Development'
 #    os.system("mkdir all_"+station_name)
 #    os.chdir(base_cwd)
 
-class concatenate:
+class Concatenate:
     def __init__(self,station_name):
         self.station_name = station_name
 

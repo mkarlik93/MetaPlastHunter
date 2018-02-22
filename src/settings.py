@@ -42,6 +42,7 @@ class SettingsError(BaseException):
     pass
 
 class Settings_loader:
+
     def __init__(self,mode="kraken"):
         if mode == "kraken":
             self.mode = 'kraken'
