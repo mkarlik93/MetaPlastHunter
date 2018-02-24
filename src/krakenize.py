@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+!/usr/bin/env python
 
 ###############################################################################
 #                                                                             #
@@ -29,12 +29,13 @@ __status__ = 'Development'
 
 from kraken import *
 
+#Moze wszystko list_sra, station nazwy etc.
+
 class Pipeline_kraken:
 
-    def __init__(self, list_sra, station_name,settings):
+    def __init__(self, list_sra, station_name,settings,threads):
         self.list_sra = list_sra
         self.station_name = station_name
-        self.database_dir = database_dir
         self.threads = threads
         self.settings = settings
 
@@ -51,8 +52,8 @@ class Pipeline_kraken:
             read_name_2 = i+"_2.fastq"
             dir = "%s/%s/" % (self.station_name,i)
             os.chdir(dir)
-            kraken.run_classification(read_name_1, read_name_2,dir)
-            kraken.run_report(dir)
+            kraken.run_classification(read_name_1, read_name_2,i)
+            kraken.run_report(i)
 #            command = "/opt/kraken/kraken -t %s --db %s --paired %s %s --out-fmt paired --fastq-output --classified-out classif > kraken_out" % (str(self.threads),database_dir,read_name_1,read_name_2)
 #            os.system(command)
 

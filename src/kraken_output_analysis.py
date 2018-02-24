@@ -101,6 +101,10 @@ def parse_tax_names_2_dict(namesdmp):
                 names[splited[0].strip("\t")] = splited[1].strip("\t")
     return names
 
+
+#print parse_tax_names_2_dict("../../names.dmp")
+
+
 def parse_lines_to_names(names_dict,list,threshold):
     dict_init = names_dict
     for record in list:
@@ -127,7 +131,7 @@ def parsed_names_to_csv(filename,generator):
         print "The file has been written in "+str(cwd)+" directory"
 
 #node.dmp parsing part. From output to dataframe and plots
-def parse_tax_tree__2_dict(taxdmp):
+def parse_tax_tree_2_dict(taxdmp):
     taxtree = {}
     with open(taxdmp,"r") as f:
         for line in f:
@@ -239,48 +243,11 @@ def taxtree_of_specific_level_to_dataframe(filename,distance_from_root,with_uncl
     df = pd.DataFrame(a,columns=["Taxon","Read_1"])
     return df
 
-#Tables
-
-def counts2table(df):
-    counts = df["Taxon"].value_counts()
-    return counts
-    #Prettytable
-
-def percentage_df(df):
-    counts = counts2table(df)
-    counts = dict(counts)
-    df = pd.DataFrame({'Taxon' : counts.keys() , 'counts' : counts.values() })
-    return df
-
 #Plots
 #Check how to save plots
 
 
-class Plots:
 
-    def __init__ (self, df,WorkDIR):
-        self.df = df
-
-        def count_plot(self):
-            df = self.df
-            seaborn.countplot(y="Taxon",data=df)
-            plt.show()
-
-        def percentage_plot_y_oriented(self):
-            df = self.df
-            df = percentage_df(df)
-            all = sum(df['counts'])
-            ax = seaborn.barplot(y="Taxon",x="counts",data=df, estimator= lambda y: y / float(all) * 100)
-            ax.set(xlabel="Percent",ylabel="Taxon")
-            plt.show()
-
-        def percentage_plot_x_oriented(self):
-            df = self.df
-            df = percentage_df(df)
-            all = sum(df['counts'])
-            ax = seaborn.barplot(x="Taxon",y="counts",data=df, estimator= lambda x: x / float(all) * 100)
-            ax.set(xlabel="Percent",ylabel="Taxon")
-            plt.show()
 
 #prepares dict of counts of species
 def species4shannon_index(filename,with_unclassif):
@@ -290,19 +257,187 @@ def species4shannon_index(filename,with_unclassif):
     counts = dict(counts)
     return counts
 
-
-#a = taxtree_to_dataframe('../../kraken_out_masked',4,False)
-#percentage_plot(a)
-#new_data_frame =  pd.DataFrame(series2table(a),columns=["Taxon","Readcounts"])
-#percent = percentage_df(a)
-#percentage_plot(percent)
-
-
-#print count_plot(a)
-
 #General function
-def analyze():
-    pass
+#Bbmap scaffhist - analyze - analyze
+
+""" General class for bbmap based output  """
+
+class Output_Analyze():
+
+    def __init__(self,filename,namesdmp,taxdmp,seqid2taxid,treshold):
+
+        self.filename = filename
+        self.dict_names = self.parse_tax_names_2_dict(namesdmp)
+        self.dict_tax =  self.parse_tax_tree_2_dict(taxdmp)
+        self.seqidmap =  self.seqid2taxid(seqid2taxid)
+        self.treshold = treshold
+
+    def seqid2taxid(self,filename):
+
+        seqid2taxid = {}
+        with open(filename,"r") as f:
+            for line in f:
+                splited = line.split("\t")
+                seqid2taxid[splited[0]] = splited[1].strip("\n")
+
+        return seqid2taxid
+
+    def parse_tax_names_2_dict(self,namesdmp):
+
+        names = {}
+        with open(namesdmp,"r") as f:
+            for line in f:
+                splited = line.split("|")
+                if splited[3] == '\tscientific name\t':
+                    names[splited[0].strip("\t")] = splited[1].strip("\t")
+        return names
+
+    def parse_tax_tree_2_dict(self,taxdmp):
+
+        taxtree = {}
+        with open(taxdmp,"r") as f:
+            for line in f:
+                splited = line.split("|")
+                taxtree[splited[0].strip("\t")] = splited[1].strip("\t")
+        return taxtree
+
+    def collect_lines_gen(self):
+
+        filename = self.filename
+        with open(filename, "r") as f:
+            for line in f:
+                splited = line.split("\t")
+                yield splited
+
+    #SPECIES read counts gen
+
+    def species_counts_unamig_gen(self,threshold):
+
+        for i in self.collect_lines_generator():
+            split = i[1].split(' ')
+            name = "%s %s" % (split[0],split[1])
+            if int(threshold) < split[6]:
+                yield name,i[6]
+
+    def names_for_mapping_gen(self):
+
+        dict = self.seqidmap
+        for i in self.collect_lines_generator():
+            split = i[1].split(' ')
+            name = "%s %s" % (split[0],split[1])
+            yield name
+
+    def table_1(self):
+
+        dict = self.seqidmap
+        for i in self.collect_lines_gen():
+            split = i[0].split(" ")
+            try:
+                name = "%s %s" % (split[1],split[2])
+                if int(i[6]) >= self.treshold:
+                    yield [name,dict[split[0]],i[5],i[6].strip("\n")]
+                else:
+                    pass
+            except IndexError:
+                pass
+
+    def table_1_2_df(self):
+        table = list(self.table_1())
+        df = pd.DataFrame(table, columns=['Species name', 'taxid', 'unambiguousReads', 'ambiguousReads'])
+        return df
+
+    def table_2(self,table_1):
+
+        for i in table_1:
+            tax = [list(walk2names(tree_walk_recurse(self.dict_tax,i[1],[]),self.dict_names))]
+            yield [tax,i[2],i[3]]
+
+    def save_data(self, file_name, generator):
+        with open("filered_records.txt","w") as f:
+            for i in generator:
+                f.write(",".join[i]+"\n")
+
+
+    def save_dataframe(self,df):
+        pass
+
+    def extract_level_from_root(self, level_from_root):
+        taxtree_list = self.table_2(self.table_1())
+        level_from_root = level_from_root -1
+        for line in taxtree_list:
+            try:
+                if line[0][0][level_from_root] == "Viridiplantae":
+                    yield [line[0][0][level_from_root+1],line[1],line[2]]
+                else:
+                    yield [line[0][0][level_from_root],line[1],line[2]]
+#                yield [line[0][0][level_from_root],line[1],line[2]]
+            except IndexError:
+                yield ["Not all of your reads reach this taxonomic level, take another one",line[1],line[2]]
+
+    def specific_taxonomic_level2df(self,level_from_root):
+        table = list(self.extract_level_from_root(level_from_root))
+        dict = {}
+        for i in table:
+            if i[0] not in dict:
+                dict[i[0]] = int(i[1])
+            else:
+                dict[i[0]] = int(dict[i[0]]) + int(i[1])
+        df = pd.DataFrame(dict.items(), columns=['Taxon', 'unambiguousReads'])
+        return df
+
+
+    def run(self):
+        pass
+
+
+
+#        def count_plot(self):
+#            df = self.df
+#            seaborn.countplot(y="Taxon",data=df)
+#            plt.show()
+
+
+class Plots:
+    def __init__(self,df):
+        self.df = df
+
+    def percentage_plot_y_oriented(self):
+
+        df = self.df
+        all = pd.Series(df['unambiguousReads']).sum()
+        ax = seaborn.barplot(y="Taxon",x="unambiguousReads",data=df, estimator= lambda y: y / float(all) * 100)
+        ax.set(xlabel="Percent",ylabel="Taxon")
+        plt.show()
+
+
+    def percentage_plot_x_oriented(self):
+
+        df = self.df
+        all = pd.Series(df['unambiguousReads']).sum()
+        ax = seaborn.barplot(x="Taxon",y="unambiguousReads",data=df, estimator= lambda x: x / float(all) * 100)
+        ax.set(xlabel="Percent",ylabel="unambiguousReads")
+        plt.show()
+
+
+
+
+#print list(Output_Analyze("../../chloroplasts.hitstats","../../names.dmp","../../nodes.dmp","../../seqid2taxid.map").collect_lines_gen())
+table1 = Output_Analyze("../../chloroplasts.hitstats","../../names.dmp","../../nodes.dmp","../../seqid2taxid.map",5).table_1()
+#print list(Output_Analyze("../../chloroplasts.hitstats","../../names.dmp","../../nodes.dmp","../../seqid2taxid.map",5).table_2(table1))
+
+df = Output_Analyze("../../chloroplasts.hitstats","../../names.dmp","../../nodes.dmp","../../seqid2taxid.map",5).specific_taxonomic_level2df(4)
+print df
+Plots(df).percentage_plot_y_oriented()
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -320,5 +455,5 @@ def analyze():
 #TODO
 #Sprawdzic co sie dzieje z odczytami ktore nie maja taksonomii z jakiegos powodu - wciaz
 #Slownik z poziomem taksonomicznym - - wciaz
-#OutDIR!!! Zobaczyc jak sie to robi np. w checkM.
 #Zaczac robic workflow-y -> kilka outputow w jednym folderze
+#Analiza output-u dopiero na poziomie bbmap

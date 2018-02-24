@@ -42,8 +42,7 @@ import pandas as pd
 # samples column have to be connected
 #TODO
 #Function for gathering data is needed with many  options.
-
-#take_geographical_data
+#Tu cos jest skopanego 
 
 
 class Biogeography:
@@ -136,4 +135,4 @@ class Biogeography:
         lon, lat = tara_oceans_lon_lat(filtered)
         reads = filtered['Reads number'].values
         reads = np.log10(reads)
-        draw_map(lon, lat, reads)
+        self.draw_map(lon, lat, reads)

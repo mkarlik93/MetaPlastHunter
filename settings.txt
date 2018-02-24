@@ -3,8 +3,10 @@
 
 Please add full paths below
 
-
 kraken=/opt/kraken/
 seqtk=/../../../
 kraken_db=/../../
 fastq-dump=/../../
+bbduk.sh=../../../
+bbmap.sh=../../../
+ref_base=../../../

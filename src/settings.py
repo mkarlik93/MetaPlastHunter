@@ -51,8 +51,13 @@ class Settings_loader:
 #in case of more software
         elif mode == 'fastq-dump':
             self.mode = 'fastq-dump'
-#        elif mode == 'fetch':
-#            self.mode = 'fetch'
+#        elif mode == 'bbmap.sh':
+#            self.mode = 'bbmap.sh'
+
+#        elif mode == 'bbduk.sh':
+#            self.mode = 'bbduk.sh'
+
+
         else:
             raise SettingsError("Mode %s not understood" % mode)
 

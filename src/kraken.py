@@ -34,6 +34,7 @@ from settings import *
 #zintegrowanie z obecnymi skryptami
 #sprawdzenie czy dziala
 #Zbieranie logow
+#Outdir -> nie musi byc
 
 class KrakenError(BaseException):
     pass
@@ -53,17 +54,17 @@ class KrakenRunner:
             self.path = Settings_loader(mode="kraken").read_path()["kraken"]
             self.db = Settings_loader(mode="kraken").read_path()["kraken_db"]
 
-    def run_classification(self,reads_1, reads_2,OutDir):
+    def run_classification(self,reads_1, reads_2,name):
         path = self.path
         db = self.db
         threads = self.threads
-        command = "%skraken -t %s --db %s --paired %s %s --out-fmt paired --fastq-output --classified-out classif > %skraken_out" % (path,str(self.threads),db,reads_1,reads_2,OutDir)
+        command = "%skraken -t %s --db %s --paired %s %s --out-fmt paired --fastq-output --classified-out %s_classif > %s_kraken_out" % (path,str(self.threads),db,reads_1,reads_2,name,name)
         os.system(command)
 
-    def run_report(self,OutputDir):
+    def run_report(self,name):
         path = self.path
         db = self.db
-        command_report = "kraken/kraken-report --db %s kraken_out > %skraken_report.txt" % (path, db,str(self.threads),OutputDir)
+        command_report = "kraken/kraken-report --db %s %s_kraken_out > kraken_report.txt" % (path, db,str(self.threads),name)
         os.system(command_report)
 
     def checkForKraken(self):
