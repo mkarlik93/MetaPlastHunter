@@ -37,20 +37,6 @@ import matplotlib.pyplot as plt
 #threshold 0.25
 # < unclassified chloroplast
 
-#taxon dictionary
-#taxon_levels = {
-#"root":1,
-#"cellular organisms":2,
-#"Eukaryota":3,
-# : ,
-#4 : ,
-#5 : ,
-#}
-
-#Summary kazdego kroku - czyli csv
-
-
-
 def filtering(kraken_out):
     with open(kraken_out, "r") as f:
         for line in f:
@@ -344,6 +330,7 @@ class Output_Analyze():
     def table_1_2_df(self):
         table = list(self.table_1())
         df = pd.DataFrame(table, columns=['Species name', 'taxid', 'unambiguousReads', 'ambiguousReads'])
+        pd.DataFrame.to_csv(df)
         return df
 
     def table_2(self,table_1):
@@ -357,9 +344,6 @@ class Output_Analyze():
             for i in generator:
                 f.write(",".join[i]+"\n")
 
-
-    def save_dataframe(self,df):
-        pass
 
     def extract_level_from_root(self, level_from_root):
         taxtree_list = self.table_2(self.table_1())
@@ -383,19 +367,13 @@ class Output_Analyze():
             else:
                 dict[i[0]] = int(dict[i[0]]) + int(i[1])
         df = pd.DataFrame(dict.items(), columns=['Taxon', 'unambiguousReads'])
+        pd.DataFrame.to_csv(df)
         return df
-
-
-    def run(self):
-        pass
-
-
 
 #        def count_plot(self):
 #            df = self.df
 #            seaborn.countplot(y="Taxon",data=df)
 #            plt.show()
-
 
 class Plots:
     def __init__(self,df):
@@ -419,41 +397,49 @@ class Plots:
         plt.show()
 
 
+class Run_analysis:
+    def __init__ (self,  list_sra, station_name,taxon_level):
+        self.list_sra = list_sra
+        self.station_name = station_name
+        self.taxon_level = taxon_level
+
+        try:
+            self.nodes = Settings_loader(mode="nodes.dmp").read_database["nodes.dmp"]
+            self.names = Settings_loader(mode="names.dmp").read_database["names.dmp"]
+            self.seqidmap = Settings_loader(mode="seqid2taxid.map").read_database["seqid2taxid.map"]
+
+        except KeyError:
+            print " [Error] Something went wrong during loading files, check paths"
+            sys.exit()
+
+
+    def process(self):
+        sra_ids = self.list_sra
+        list_sra_ids = sra_ids.split(",")
+        starting_dir = os.getcwd()
+        for i in list_sra_ids:
+            print "Procesing "+i
+            dir = "%s/%s/" % (self.station_name,i)
+            os.chdir(dir)
+            work = Output_Analyze("%s_chloroplasts.hitstats",self.namesdmp,self.nodes,self.seqid2taxid,5)
+            work.table_1_2_df()
+            work.specific_taxonomic_level2df(self.taxon_level)
+# For now that's it !
+#            Output_Analyze
+            os.chdir(starting_dir)
 
 
 #print list(Output_Analyze("../../chloroplasts.hitstats","../../names.dmp","../../nodes.dmp","../../seqid2taxid.map").collect_lines_gen())
-table1 = Output_Analyze("../../chloroplasts.hitstats","../../names.dmp","../../nodes.dmp","../../seqid2taxid.map",5).table_1()
+#table1 = Output_Analyze("../../chloroplasts.hitstats","../../names.dmp","../../nodes.dmp","../../seqid2taxid.map",5).table_1()
 #print list(Output_Analyze("../../chloroplasts.hitstats","../../names.dmp","../../nodes.dmp","../../seqid2taxid.map",5).table_2(table1))
 
-df = Output_Analyze("../../chloroplasts.hitstats","../../names.dmp","../../nodes.dmp","../../seqid2taxid.map",5).specific_taxonomic_level2df(4)
-print df
-Plots(df).percentage_plot_y_oriented()
+#df = Output_Analyze("../../chloroplasts.hitstats","../../names.dmp","../../nodes.dmp","../../seqid2taxid.map",5).specific_taxonomic_level2df(4)
+#print df
+#Plots(df).percentage_plot_y_oriented()
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-#parse_2_names("kraken_out_masked","test_filtered_names.csv")
-
-
-
-#a =  filtering("Sample_kraken_out.txt")
-#scored = list(scoring(a))
-#record = list(parse_lines_to_names('names.dmp',scored,0.2))
-
-#print  list(line_with_tree(record,taxdict,names_dict))
 
 #TODO
-#Sprawdzic co sie dzieje z odczytami ktore nie maja taksonomii z jakiegos powodu - wciaz
-#Slownik z poziomem taksonomicznym - - wciaz
-#Zaczac robic workflow-y -> kilka outputow w jednym folderze
 #Analiza output-u dopiero na poziomie bbmap

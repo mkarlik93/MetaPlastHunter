@@ -40,7 +40,7 @@ class BBmap:
             self.db = Settings_loader(mode="ref_base").read_path()["ref_base"]
         else:
             self.path = Settings_loader(mode="bbmap.sh").read_path()["bbmap.sh"]
-            self.db = Settings_loader(mode="ref_base").read_path()["ref_base"]
+            self.db = Settings_loader(mode="bbmap").read_database()["bbmap_base"]
 
 
         def checkForBBmap(self):
@@ -64,7 +64,7 @@ class BBmap:
 
 #This comes first -> kraken_out
 class BBduk:
-    
+
     def __init__(self,settings):
 
         if settings == False:
@@ -84,7 +84,7 @@ class BBduk:
 
         def run(self, sample):
             path = self.path
-            command="%sbbduk.sh in1=%s_classif_R1.fastq in2=%s_classif_R2.fastq out1=%s_de_complex_R1.fastq out2=%s_de_complex_R2.fastq  outm=%s_repat_regions.fq outm2=%s_repeat_regions.fq entropy=0.8" % (path, sample, sample, sample, sample, sample, sample)
+            command="%sbbduk.sh in1=%s_classif_R1.fastq in2=%s_classif_R2.fastq out1=%s_de_complex_R1.fastq out2=%s_de_complex_R2.fastq  outm=%s_repeat_regions.fq outm2=%s_repeat_regions.fq entropy=0.8" % (path, sample, sample, sample, sample, sample, sample)
             print "     Running command: [%s]" % command
             os.system(command)
 
@@ -108,3 +108,4 @@ class BBpipe:
             os.chdir(dir)
             bbduk.run(i)
             bbmap.run(i)
+            os.chdir(starting_dir)

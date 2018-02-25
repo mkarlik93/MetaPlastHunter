@@ -3,10 +3,19 @@
 
 Please add full paths below
 
+
+""" Software """
+
 kraken=/opt/kraken/
 seqtk=/../../../
-kraken_db=/../../
-fastq-dump=/../../
+fastq-dump=../../
 bbduk.sh=../../../
 bbmap.sh=../../../
-ref_base=../../../
+
+""" Databases """
+
+bbmap_base=/../../../
+kraken_db=/../../
+names.dmp=/../../
+nodes.dmp=/../../
+seqid2taxid.map=/../../

@@ -31,10 +31,8 @@ import sys
 from settings import *
 
 #TODO
-#zintegrowanie z obecnymi skryptami
 #sprawdzenie czy dziala
-#Zbieranie logow
-#Outdir -> nie musi byc
+
 
 class KrakenError(BaseException):
     pass
@@ -52,7 +50,7 @@ class KrakenRunner:
             self.path = ""
         else:
             self.path = Settings_loader(mode="kraken").read_path()["kraken"]
-            self.db = Settings_loader(mode="kraken").read_path()["kraken_db"]
+            self.db = Settings_loader(mode="kraken").read_database()["kraken_db"]
 
     def run_classification(self,reads_1, reads_2,name):
         path = self.path

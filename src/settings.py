@@ -51,12 +51,20 @@ class Settings_loader:
 #in case of more software
         elif mode == 'fastq-dump':
             self.mode = 'fastq-dump'
-#        elif mode == 'bbmap.sh':
-#            self.mode = 'bbmap.sh'
+        elif mode == 'bbmap':
+            self.mode = 'bbmap.sh'
 
-#        elif mode == 'bbduk.sh':
-#            self.mode = 'bbduk.sh'
+        elif mode == 'bbduk':
+            self.mode = 'bbduk.sh'
 
+        elif mode == 'names.dmp':
+            self.mode = 'names.dmp'
+
+        elif mode == 'nodes.dmp':
+            self.mode =  'nodes.dmp'
+
+        elif mode == 'seqid2taxid.map':
+            self.mode = 'seqid2taxid.map'
 
         else:
             raise SettingsError("Mode %s not understood" % mode)
@@ -77,13 +85,19 @@ class Settings_loader:
             line = 'seqtk'
         elif self.mode == 'fastq-dump':
             line = 'fastq-dump'
+
+        elif self.mode == "bbduk":
+            line = 'bbduk.sh'
+
+        elif self.mode == 'bbmap':
+            line = 'bbmap.sh'
+
         with open("../settings.txt") as f:
             print "  Loaded settings.txt"
             dict = {}
-            database = "kraken_db"
             for i in f:
                 splited = i.split("=")
-                if line == splited[0] or database == splited[0]:
+                if line == splited[0]:
                     dict[splited[0]] = splited[1].strip("\n")
                     print "  Checking for %s" % (splited[0])
                     try:
@@ -92,4 +106,33 @@ class Settings_loader:
                     except:
                         print "  [Error] Make sure %s path is in settings.txt or was set correctly, synek." % splited[0]
                         sys.exit()
+            return dict
+
+    def read_database(self):
+
+        if self.mode == 'kraken':
+            line = 'kraken_db'
+        elif self.mode == 'bbmap'
+            line = 'bbmap_base'
+        elif self.mode == 'names.dmp':
+            line = 'names.dmp'
+        elif self.mode == 'nodes.dmp':
+            line = 'nodes.dmp'
+        elif self.mode == 'seqid2taxid.map':
+            line = 'seqid2taxid.map'
+
+        with open("../settings.txt") as f:
+            print "  Loaded settings.txt"
+            dict = {}
+            for i in f:
+                splited = i.split("=")
+                if line == splited[0]:
+                    dict[splited[0]] = splited[1].strip("\n")
+                    print "  Checking for %s" % (splited[0])
+#                    try:
+#                        subprocess.call([splited[1].strip("\n")+splited[0], '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
+#                        print "  Status OK synek!"
+#                    except:
+#                        print "  [Error] Make sure %s path is in settings.txt or was set correctly, synek." % splited[0]
+#                        sys.exit()
             return dict
