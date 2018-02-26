@@ -385,8 +385,8 @@ class Plots:
         all = pd.Series(df['unambiguousReads']).sum()
         ax = seaborn.barplot(y="Taxon",x="unambiguousReads",data=df, estimator= lambda y: y / float(all) * 100)
         ax.set(xlabel="Percent",ylabel="Taxon")
-        plt.show()
-
+        plt.savefig("y_oriented_plots.png")
+#        plt.show()
 
     def percentage_plot_x_oriented(self):
 
@@ -394,8 +394,8 @@ class Plots:
         all = pd.Series(df['unambiguousReads']).sum()
         ax = seaborn.barplot(x="Taxon",y="unambiguousReads",data=df, estimator= lambda x: x / float(all) * 100)
         ax.set(xlabel="Percent",ylabel="unambiguousReads")
-        plt.show()
-
+        plt.savefig("x_oriented_plots.png")
+#        plt.show()
 
 class Run_analysis:
     def __init__ (self,  list_sra, station_name,taxon_level):
@@ -412,8 +412,8 @@ class Run_analysis:
             print " [Error] Something went wrong during loading files, check paths"
             sys.exit()
 
-
     def process(self):
+        
         sra_ids = self.list_sra
         list_sra_ids = sra_ids.split(",")
         starting_dir = os.getcwd()
@@ -422,8 +422,10 @@ class Run_analysis:
             dir = "%s/%s/" % (self.station_name,i)
             os.chdir(dir)
             work = Output_Analyze("%s_chloroplasts.hitstats",self.namesdmp,self.nodes,self.seqid2taxid,5)
-            work.table_1_2_df()
-            work.specific_taxonomic_level2df(self.taxon_level)
+            table_1 = work.table_1_2_df()
+            pl = work.specific_taxonomic_level2df(self.taxon_level)
+            Plots(pl).percentage_plot_x_oriented()
+            Plots(pl).percentage_plot_y_oriented()
 # For now that's it !
 #            Output_Analyze
             os.chdir(starting_dir)

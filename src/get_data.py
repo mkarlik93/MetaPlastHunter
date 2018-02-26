@@ -40,8 +40,11 @@ class Pipeline_fetch:
 
     def __init__(self, list_sra, station_name,settings):
         self.list_sra = list_sra
-
-        self.path = Settings_loader(mode="sratoolkit").read_path()["sratoolkit"]
+        self.station_name = station_name
+        if settings == False:
+            self.path = ""
+        else:
+            self.path = Settings_loader(mode="sratoolkit").read_path()["sratoolkit"]
 
     def create_station_dir(self):
         command  = "mkdir %s" % (self.station_name)
@@ -96,11 +99,11 @@ class Pipeline_fetch:
             os.chdir("%s/%s/" % (cwd,station_name))
         os.chdir(cwd)
 
-        def run(self):
-            self.create_station_dir()
-            self.multiprocess()
-            self.evaluation()
-            self.fastqc_report()
+    def run(self):
+        self.create_station_dir()
+        self.multiprocess()
+        self.evaluation()
+        self.fastqc_report()
 
 
 if __name__ == "__main__":

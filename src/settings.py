@@ -112,7 +112,7 @@ class Settings_loader:
 
         if self.mode == 'kraken':
             line = 'kraken_db'
-        elif self.mode == 'bbmap'
+        elif self.mode == 'bbmap':
             line = 'bbmap_base'
         elif self.mode == 'names.dmp':
             line = 'names.dmp'

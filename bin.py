@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 ###############################################################################
 #                                                                             #
 #    This program is free software: you can redistribute it and/or modify     #
@@ -27,71 +26,75 @@ __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
 
-from kraken import *
 
-#Moze wszystko list_sra, station nazwy etc.
+from src import bbpipe
+from src import krakenize
+from src import kraken_output_analysis
+from src import get_data
 
-class Pipeline_kraken:
+#LET's write whole main
 
-    def __init__(self, list_sra, station_name,settings,threads):
+
+
+class WholePipeline:
+
+    def __init__(self,list_sra, station_name,settings,threads):
         self.list_sra = list_sra
         self.station_name = station_name
-        self.threads = threads
         self.settings = settings
-
-
-    def kraken_not_multi(self):
-        database_dir = self.database_dir
-        sra_ids = self.list_sra
-        list_sra_ids = sra_ids.split(",")
-        starting_dir = os.getcwd()
-        kraken = KrakenRunner(self.threads,self.settings)
-        for i in list_sra_ids:
-            print "kraken for "+i
-            read_name_1 = i+"_1.fastq"
-            read_name_2 = i+"_2.fastq"
-            dir = "%s/%s/" % (self.station_name,i)
-            os.chdir(dir)
-            kraken.run_classification(read_name_1, read_name_2,i)
-            kraken.run_report(i)
-#            command = "/opt/kraken/kraken -t %s --db %s --paired %s %s --out-fmt paired --fastq-output --classified-out classif > kraken_out" % (str(self.threads),database_dir,read_name_1,read_name_2)
-#            os.system(command)
-
-#            command_report = "/opt/kraken/kraken-report --db %s kraken_out > kraken_report_%s.txt" % (str(self.threads), self.station_name)
-#            command_translate = "/opt/kraken/kraken-translate --db /home/karlicki/custom kraken_out > kraken_labels_%s.txt" % (self.station_name)
-#            os.system(command_report)
-#            os.system(command_translate)
-            os.chdir(starting_dir)
-            os.remove("%s/%s/%s" % (self.station_name,i,read_name_1))
-            os.remove("%s/%s/%s" % (self.station_name,i,read_name_2))
+        self.threads = threads
 
     def run(self):
-        self.kraken_not_multi()
+        print "     [%s] Dowloading data" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
+        Pipeline_fetch(self.list_sra,self.station_name,self.settings).run()
+        print "     [%s] Kraken classification" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
+        Pipeline_kraken(self.list_sra, self.station_name,self.settings,self.threads).run()
+        print "     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
+        BBpipe(list_sra,station_name,settings).process()
+        print "     [%s] Output analysis" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
+        Run_analysis(list_sra, station_name,4).process()
+
+class Pipeline_without_downloading:
+
+    def __init__(self,list_sra, station_name,settings,threads):
+        self.list_sra = list_sra
+        self.station_name = station_name
+        self.settings = settings
+        self.threads = threads
+
+    def run(self):
+        #Do tworzenia folderow
+#        try:
+#            os.stat(station_name)
+#        except:
+#            os.mkdir(station_name)
+#                    for i in list_sra:
 
 
-    def multiprocess(self):
-        sra_ids = self.list_sra
-        list_sra_ids = sra_ids.split(",")
-        for i in list_sra_ids:
-            proc = Process(target=fastq_dump_sra_file, args=(self.station_name,i))
-            proc.start()
-            print "Downloading has started"
+        print "     [%s] Kraken classification" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
+        Pipeline_kraken(self.list_sra, self.station_name,self.settings,self.threads).run()
+        print "     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
+        BBpipe(list_sra,station_name,settings).process()
+        print "     [%s] Output analysis" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
+        Run_analysis(list_sra, station_name,4).process()
 
-#TO trzeba zmienic sa nowe zmienne
+
+
+
 if __name__ == "__main__":
 
     from time import gmtime, strftime
     import sys
     import os
     import argparse
-    from multiprocessing import Process
 
 
     description = """
 
 Version 1.0
 
-This script was designed to use Kraken for metagenomic sequence classification.
+
+The first version of mtp programme.
 
 If you have any questions, please do not hesitate to contact me
 email address: michal.karlicki@gmail.com
