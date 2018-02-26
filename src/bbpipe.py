@@ -88,7 +88,6 @@ class BBduk:
             print "     Running command: [%s]" % command
             os.system(command)
 
-
 class BBpipe:
     def __init__(self, list_sra, station_name,settings):
 

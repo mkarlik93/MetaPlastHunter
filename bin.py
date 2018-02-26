@@ -63,12 +63,16 @@ class Pipeline_without_downloading:
         self.threads = threads
 
     def run(self):
-        #Do tworzenia folderow
+#        list_sra_ids = sra_ids.split(",")
+
+        #Do tworzenia folderow Just in case
 #        try:
 #            os.stat(station_name)
 #        except:
 #            os.mkdir(station_name)
-#                    for i in list_sra:
+#            for id in list_sra:
+#                command_create_dir = "mkdir %s/%s" % (station_name,sra_id)
+
 
 
         print "     [%s] Kraken classification" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
@@ -91,14 +95,17 @@ if __name__ == "__main__":
 
     description = """
 
-Version 1.0
+Version %s
 
 
 The first version of mtp programme.
 
 If you have any questions, please do not hesitate to contact me
 email address: michal.karlicki@gmail.com
-"""
+
+
+This sofware was written by %s.
+""" % (__version__,__author__)
 
     epilog = """
 
@@ -111,8 +118,8 @@ email address: michal.karlicki@gmail.com
                     epilog=epilog)
 
 
-
-
+    parser.add_argument('-run_full_analysis','--full',action='store_true')
+    parser.add_argument('-run_partial_analysis','--partial',action='store_true')
     parser.add_argument('sra_ids', metavar='sra_ids', type=str)
     parser.add_argument('station_name', metavar='station_name', type=str)
     parser.add_argument('database_dir', metavar='database_dir', type=str)
@@ -126,7 +133,10 @@ email address: michal.karlicki@gmail.com
     args = parser.parse_args()
 
     start = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
-    run = Pipeline_kraken(args.sra_ids,args.station_name).run()
+    if args.full:
+        WholePipeline(args.list_sra, args.station_name,args.settings,args.threads).run()
+    if args.partial:
+        Pipeline_without_downloading(args.list_sra, args.station_name,args.settings,args.threads).run()
     end = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
     print "Starting time: "+start
     print "Ending time: "+end
