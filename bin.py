@@ -74,8 +74,6 @@ class Pipeline_without_downloading:
 #            for id in list_sra:
 #                command_create_dir = "mkdir %s/%s" % (station_name,sra_id)
 
-
-
         print "     [%s] Kraken classification" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
         Pipeline_kraken(self.list_sra, self.station_name,self.settings,self.threads).run()
         print "     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
@@ -123,7 +121,6 @@ This sofware was written by %s.
     parser.add_argument('-run_partial_analysis','--partial',action='store_true')
     parser.add_argument('sra_ids', metavar='sra_ids', type=str)
     parser.add_argument('station_name', metavar='station_name', type=str)
-    parser.add_argument('database_dir', metavar='database_dir', type=str)
     parser.add_argument('threads', metavar='threads', type=int)
 
 
