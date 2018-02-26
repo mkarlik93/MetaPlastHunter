@@ -57,6 +57,7 @@ class WholePipeline:
 class Pipeline_without_downloading:
 
     def __init__(self,list_sra, station_name,settings,threads):
+
         self.list_sra = list_sra
         self.station_name = station_name
         self.settings = settings
@@ -136,7 +137,7 @@ This sofware was written by %s.
     if args.full:
         WholePipeline(args.list_sra, args.station_name,args.settings,args.threads).run()
     if args.partial:
-        Pipeline_without_downloading(args.list_sra, args.station_name,args.settings,args.threads).run()
+        Pipeline_without_downloading(args.sra_ids, args.station_name,args.settings,args.threads).run()
     end = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
     print "Starting time: "+start
     print "Ending time: "+end
