@@ -25,12 +25,15 @@ __version__ = '1.0.0'
 __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
+import matplotlib
+matplotlib.use('Agg')
 
 import os
 import pandas as pd
 import numpy as np
 import seaborn
 import matplotlib.pyplot as plt
+from settings import *
 
 #definitition of unclassified chloroplast
 #let's try with these settings
@@ -398,22 +401,23 @@ class Plots:
 #        plt.show()
 
 class Run_analysis:
-    def __init__ (self,  list_sra, station_name,taxon_level):
+    def __init__ (self,  list_sra, station_name,taxon_level,settings):
         self.list_sra = list_sra
         self.station_name = station_name
         self.taxon_level = taxon_level
+        self.settings = settings
 
         try:
-            self.nodes = Settings_loader(mode="nodes.dmp").read_database["nodes.dmp"]
-            self.names = Settings_loader(mode="names.dmp").read_database["names.dmp"]
-            self.seqidmap = Settings_loader(mode="seqid2taxid.map").read_database["seqid2taxid.map"]
+            self.nodes = Settings_loader(mode="nodes.dmp",path=self.settings).read_database()["nodes.dmp"]
+            self.names = Settings_loader(mode="names.dmp",path=self.settings).read_database()["names.dmp"]
+            self.seqidmap = Settings_loader(mode="seqid2taxid.map",path=self.settings).read_database()["seqid2taxid.map"]
 
         except KeyError:
             print " [Error] Something went wrong during loading files, check paths"
             sys.exit()
 
     def process(self):
-        
+
         sra_ids = self.list_sra
         list_sra_ids = sra_ids.split(",")
         starting_dir = os.getcwd()
@@ -421,27 +425,15 @@ class Run_analysis:
             print "Procesing "+i
             dir = "%s/%s/" % (self.station_name,i)
             os.chdir(dir)
-            work = Output_Analyze("%s_chloroplasts.hitstats",self.namesdmp,self.nodes,self.seqid2taxid,5)
+            work = Output_Analyze(i+"_chloroplasts.hitstats",self.names,self.nodes,self.seqidmap,5)
             table_1 = work.table_1_2_df()
             pl = work.specific_taxonomic_level2df(self.taxon_level)
             Plots(pl).percentage_plot_x_oriented()
             Plots(pl).percentage_plot_y_oriented()
-# For now that's it !
-#            Output_Analyze
+
             os.chdir(starting_dir)
-
-
-#print list(Output_Analyze("../../chloroplasts.hitstats","../../names.dmp","../../nodes.dmp","../../seqid2taxid.map").collect_lines_gen())
-#table1 = Output_Analyze("../../chloroplasts.hitstats","../../names.dmp","../../nodes.dmp","../../seqid2taxid.map",5).table_1()
-#print list(Output_Analyze("../../chloroplasts.hitstats","../../names.dmp","../../nodes.dmp","../../seqid2taxid.map",5).table_2(table1))
-
-#df = Output_Analyze("../../chloroplasts.hitstats","../../names.dmp","../../nodes.dmp","../../seqid2taxid.map",5).specific_taxonomic_level2df(4)
-#print df
-#Plots(df).percentage_plot_y_oriented()
-
-
 
 
 
 #TODO
-#Analiza output-u dopiero na poziomie bbmap
+#Naprawic zapis plikow csv!!!! Wazniejssze niz wykresy

@@ -30,20 +30,20 @@ import pandas as pd
 import glob
 import os
 import sys
+import subprocess
 
 
-#collects table from file and merge it into one large table
-def collector_single_specie_oriented(folders, specie_to_find):
-    pass
 
 
-#checking dependacies
 class SettingsError(BaseException):
     pass
 
 class Settings_loader:
 
-    def __init__(self,mode="kraken"):
+    def __init__(self,mode="kraken",path='path'):
+
+        self.path = path
+
         if mode == "kraken":
             self.mode = 'kraken'
         elif mode == "seqtk":
@@ -51,10 +51,10 @@ class Settings_loader:
 #in case of more software
         elif mode == 'fastq-dump':
             self.mode = 'fastq-dump'
-        elif mode == 'bbmap':
+        elif mode == 'bbmap.sh':
             self.mode = 'bbmap.sh'
 
-        elif mode == 'bbduk':
+        elif mode == 'bbduk.sh':
             self.mode = 'bbduk.sh'
 
         elif mode == 'names.dmp':
@@ -86,13 +86,14 @@ class Settings_loader:
         elif self.mode == 'fastq-dump':
             line = 'fastq-dump'
 
-        elif self.mode == "bbduk":
+        elif self.mode == "bbduk.sh":
             line = 'bbduk.sh'
 
-        elif self.mode == 'bbmap':
+        elif self.mode == 'bbmap.sh':
             line = 'bbmap.sh'
 
-        with open("../settings.txt") as f:
+
+        with open(self.path) as f:
             print "  Loaded settings.txt"
             dict = {}
             for i in f:
@@ -112,7 +113,7 @@ class Settings_loader:
 
         if self.mode == 'kraken':
             line = 'kraken_db'
-        elif self.mode == 'bbmap':
+        elif self.mode == 'bbmap.sh':
             line = 'bbmap_base'
         elif self.mode == 'names.dmp':
             line = 'names.dmp'
@@ -121,18 +122,11 @@ class Settings_loader:
         elif self.mode == 'seqid2taxid.map':
             line = 'seqid2taxid.map'
 
-        with open("../settings.txt") as f:
-            print "  Loaded settings.txt"
+        with open(self.path) as f:
             dict = {}
             for i in f:
                 splited = i.split("=")
                 if line == splited[0]:
                     dict[splited[0]] = splited[1].strip("\n")
                     print "  Checking for %s" % (splited[0])
-#                    try:
-#                        subprocess.call([splited[1].strip("\n")+splited[0], '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
-#                        print "  Status OK synek!"
-#                    except:
-#                        print "  [Error] Make sure %s path is in settings.txt or was set correctly, synek." % splited[0]
-#                        sys.exit()
             return dict

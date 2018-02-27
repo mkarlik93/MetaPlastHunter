@@ -44,13 +44,14 @@ class KrakenRunner:
 
     def __init__(self,threads,settings):
         self.threads = threads
+        self.settings = settings
         # make sure kraken is installed
-        if settings == False:
+        if settings == None:
             self.checkForKraken()
             self.path = ""
         else:
-            self.path = Settings_loader(mode="kraken").read_path()["kraken"]
-            self.db = Settings_loader(mode="kraken").read_database()["kraken_db"]
+            self.path = Settings_loader(mode="kraken",path=self.settings).read_path()["kraken"]
+            self.db = Settings_loader(mode="kraken",path=self.settings).read_database()["kraken_db"]
 
     def run_classification(self,reads_1, reads_2,name):
         path = self.path
@@ -62,7 +63,7 @@ class KrakenRunner:
     def run_report(self,name):
         path = self.path
         db = self.db
-        command_report = "kraken/kraken-report --db %s %s_kraken_out > kraken_report.txt" % (path, db,str(self.threads),name)
+        command_report = "%sscripts/kraken-report --db %s %s_kraken_out > kraken_report.txt" % (path, db,name)
         os.system(command_report)
 
     def checkForKraken(self):

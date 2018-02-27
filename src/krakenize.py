@@ -28,8 +28,8 @@ __status__ = 'Development'
 
 
 from kraken import *
+import glob
 
-#Moze wszystko list_sra, station nazwy etc.
 
 class Pipeline_kraken:
 
@@ -41,7 +41,6 @@ class Pipeline_kraken:
 
 
     def kraken_not_multi(self):
-        database_dir = self.database_dir
         sra_ids = self.list_sra
         list_sra_ids = sra_ids.split(",")
         starting_dir = os.getcwd()
@@ -52,78 +51,66 @@ class Pipeline_kraken:
             read_name_2 = i+"_2.fastq"
             dir = "%s/%s/" % (self.station_name,i)
             os.chdir(dir)
-            kraken.run_classification(read_name_1, read_name_2,i)
-            kraken.run_report(i)
-#            command = "/opt/kraken/kraken -t %s --db %s --paired %s %s --out-fmt paired --fastq-output --classified-out classif > kraken_out" % (str(self.threads),database_dir,read_name_1,read_name_2)
-#            os.system(command)
-
-#            command_report = "/opt/kraken/kraken-report --db %s kraken_out > kraken_report_%s.txt" % (str(self.threads), self.station_name)
-#            command_translate = "/opt/kraken/kraken-translate --db /home/karlicki/custom kraken_out > kraken_labels_%s.txt" % (self.station_name)
-#            os.system(command_report)
-#            os.system(command_translate)
-            os.chdir(starting_dir)
-            os.remove("%s/%s/%s" % (self.station_name,i,read_name_1))
-            os.remove("%s/%s/%s" % (self.station_name,i,read_name_2))
+            if len(glob.glob(read_name_1)) == 1:
+                kraken.run_classification(read_name_1, read_name_2,i)
+                kraken.run_report(i)
+                os.chdir(starting_dir)
+                os.remove("%s/%s/%s" % (self.station_name,i,read_name_1))
+                os.remove("%s/%s/%s" % (self.station_name,i,read_name_2))
+            else:
+                print "    [ERROR] There is no fastq files"
+                os.chdir(starting_dir)
 
     def run(self):
         self.kraken_not_multi()
 
 
-    def multiprocess(self):
-        sra_ids = self.list_sra
-        list_sra_ids = sra_ids.split(",")
-        for i in list_sra_ids:
-            proc = Process(target=fastq_dump_sra_file, args=(self.station_name,i))
-            proc.start()
-            print "Downloading has started"
-
-#TO trzeba zmienic sa nowe zmienne
-if __name__ == "__main__":
-
-    from time import gmtime, strftime
-    import sys
-    import os
-    import argparse
-    from multiprocessing import Process
-
-
-    description = """
-
-Version 1.0
-
-This script was designed to use Kraken for metagenomic sequence classification.
-
-If you have any questions, please do not hesitate to contact me
-email address: michal.karlicki@gmail.com
-"""
-
-    epilog = """
-
-"""
-
-
-    parser = argparse.ArgumentParser(
-                    description=description,
-                    formatter_class=argparse.RawDescriptionHelpFormatter,
-                    epilog=epilog)
-
-
-
-
-    parser.add_argument('sra_ids', metavar='sra_ids', type=str)
-    parser.add_argument('station_name', metavar='station_name', type=str)
-    parser.add_argument('database_dir', metavar='database_dir', type=str)
-    parser.add_argument('threads', metavar='threads', type=int)
-
-
-    if len(sys.argv) == 1:
-        parser.print_help()
-        sys.exit(1)
-
-    args = parser.parse_args()
-
-    start = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
-    run = Pipeline_kraken(args.sra_ids,args.station_name).run()
-    end = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
-    print "Starting time: "+start
-    print "Ending time: "+end
+#if __name__ == "__main__":
+#
+#    from time import gmtime, strftime
+#    import sys
+#    import os
+#    import argparse
+#    from multiprocessing import Process
+#
+#
+#    description = """
+#
+#Version 1.0
+#
+#This script was designed to use Kraken for metagenomic sequence classification.
+#
+#If you have any questions, please do not hesitate to contact me
+#email address: michal.karlicki@gmail.com
+#"""
+#
+#    epilog = """
+#
+#"""
+#
+#
+#    parser = argparse.ArgumentParser(
+#                    description=description,
+#                    formatter_class=argparse.RawDescriptionHelpFormatter,
+#                    epilog=epilog)
+#
+#
+#
+#
+#    parser.add_argument('sra_ids', metavar='sra_ids', type=str)
+#    parser.add_argument('station_name', metavar='station_name', type=str)
+#    parser.add_argument('threads', metavar='threads', type=int)
+#    parser.add_argument('settings', metavar='settings', type=str)
+#
+#
+#    if len(sys.argv) == 1:
+#        parser.print_help()
+#        sys.exit(1)
+#
+#    args = parser.parse_args()
+#
+#    start = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
+#    run = Pipeline_kraken(args.sra_ids,args.station_name).run()
+#    end = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
+#    print "Starting time: "+start
+#    print "Ending time: "+end

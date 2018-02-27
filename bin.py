@@ -27,10 +27,10 @@ __status__ = 'Development'
 
 
 
-from src import bbpipe
-from src import krakenize
-from src import kraken_output_analysis
-from src import get_data
+from src.bbpipe import BBpipe
+from src.krakenize import Pipeline_kraken
+from src.kraken_output_analysis import Run_analysis
+from src.get_data import Pipeline_fetch
 
 #LET's write whole main
 
@@ -64,24 +64,13 @@ class Pipeline_without_downloading:
         self.threads = threads
 
     def run(self):
-#        list_sra_ids = sra_ids.split(",")
-
-        #Do tworzenia folderow Just in case
-#        try:
-#            os.stat(station_name)
-#        except:
-#            os.mkdir(station_name)
-#            for id in list_sra:
-#                command_create_dir = "mkdir %s/%s" % (station_name,sra_id)
 
         print "     [%s] Kraken classification" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
         Pipeline_kraken(self.list_sra, self.station_name,self.settings,self.threads).run()
         print "     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
-        BBpipe(list_sra,station_name,settings).process()
+        BBpipe(self.list_sra,self.station_name,self.settings).process()
         print "     [%s] Output analysis" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
-        Run_analysis(list_sra, station_name,4).process()
-
-
+        Run_analysis(self.list_sra, self.station_name,4,self.settings).process()
 
 
 if __name__ == "__main__":
@@ -97,7 +86,7 @@ if __name__ == "__main__":
 Version %s
 
 
-The first version of mtp programme.
+The first version of ChMS programme.
 
 If you have any questions, please do not hesitate to contact me
 email address: michal.karlicki@gmail.com
@@ -122,6 +111,7 @@ This sofware was written by %s.
     parser.add_argument('sra_ids', metavar='sra_ids', type=str)
     parser.add_argument('station_name', metavar='station_name', type=str)
     parser.add_argument('threads', metavar='threads', type=int)
+    parser.add_argument('settings', metavar='settings', type=str)
 
 
     if len(sys.argv) == 1:
