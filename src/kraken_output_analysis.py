@@ -334,6 +334,8 @@ class Output_Analyze():
         table = list(self.table_1())
         df = pd.DataFrame(table, columns=['Species name', 'taxid', 'unambiguousReads', 'ambiguousReads'])
         pd.DataFrame.to_csv(df)
+        with open("table_with_tree.csv","r") as f:
+            pd.DataFrame.to_csv(f,df)
         return df
 
     def table_2(self,table_1):
@@ -370,7 +372,8 @@ class Output_Analyze():
             else:
                 dict[i[0]] = int(dict[i[0]]) + int(i[1])
         df = pd.DataFrame(dict.items(), columns=['Taxon', 'unambiguousReads'])
-        pd.DataFrame.to_csv(df)
+        with open("tax_level.csv","r") as f:
+            pd.DataFrame.to_csv(f,df)
         return df
 
 #        def count_plot(self):
@@ -425,7 +428,7 @@ class Run_analysis:
             print "Procesing "+i
             dir = "%s/%s/" % (self.station_name,i)
             os.chdir(dir)
-            work = Output_Analyze(i+"_chloroplasts.hitstats",self.names,self.nodes,self.seqidmap,5)
+            work = Output_Analyze(i+"_chloroplasts.hitstats",self.names,self.nodes,self.seqidmap,50)
             table_1 = work.table_1_2_df()
             pl = work.specific_taxonomic_level2df(self.taxon_level)
             Plots(pl).percentage_plot_x_oriented()

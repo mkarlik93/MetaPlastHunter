@@ -86,7 +86,7 @@ if __name__ == "__main__":
 Version %s
 
 
-The first version of ChMS programme.
+The first version of ChMS/Metaplasty/ programme.
 
 If you have any questions, please do not hesitate to contact me
 email address: michal.karlicki@gmail.com
@@ -106,8 +106,8 @@ This sofware was written by %s.
                     epilog=epilog)
 
 
-    parser.add_argument('-run_full_analysis','--full',action='store_true')
-    parser.add_argument('-run_partial_analysis','--partial',action='store_true')
+    parser.add_argument('-analysis_with_dumping_data','--full',action='store_true')
+    parser.add_argument('-analysis','--partial',action='store_true')
     parser.add_argument('sra_ids', metavar='sra_ids', type=str)
     parser.add_argument('station_name', metavar='station_name', type=str)
     parser.add_argument('threads', metavar='threads', type=int)
@@ -125,6 +125,9 @@ This sofware was written by %s.
         WholePipeline(args.list_sra, args.station_name,args.settings,args.threads).run()
     if args.partial:
         Pipeline_without_downloading(args.sra_ids, args.station_name,args.settings,args.threads).run()
+    else:
+        print "     [ERROR] Please specify pipeline path"
+        sys.exit()
     end = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
     print "Starting time: "+start
     print "Ending time: "+end

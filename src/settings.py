@@ -66,6 +66,9 @@ class Settings_loader:
         elif mode == 'seqid2taxid.map':
             self.mode = 'seqid2taxid.map'
 
+        elif mode == 'silva':
+            self.mode = 'silva'
+
         else:
             raise SettingsError("Mode %s not understood" % mode)
 
@@ -121,6 +124,8 @@ class Settings_loader:
             line = 'nodes.dmp'
         elif self.mode == 'seqid2taxid.map':
             line = 'seqid2taxid.map'
+        elif self.mode == 'silva':
+            line = 'silva'
 
         with open(self.path) as f:
             dict = {}
