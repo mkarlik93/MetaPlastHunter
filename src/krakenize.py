@@ -65,52 +65,51 @@ class Pipeline_kraken:
         self.kraken_not_multi()
 
 
-#if __name__ == "__main__":
-#
-#    from time import gmtime, strftime
-#    import sys
-#    import os
-#    import argparse
-#    from multiprocessing import Process
-#
-#
-#    description = """
-#
-#Version 1.0
-#
-#This script was designed to use Kraken for metagenomic sequence classification.
-#
-#If you have any questions, please do not hesitate to contact me
-#email address: michal.karlicki@gmail.com
-#"""
-#
-#    epilog = """
-#
-#"""
-#
-#
-#    parser = argparse.ArgumentParser(
-#                    description=description,
-#                    formatter_class=argparse.RawDescriptionHelpFormatter,
-#                    epilog=epilog)
-#
-#
-#
-#
-#    parser.add_argument('sra_ids', metavar='sra_ids', type=str)
-#    parser.add_argument('station_name', metavar='station_name', type=str)
-#    parser.add_argument('threads', metavar='threads', type=int)
-#    parser.add_argument('settings', metavar='settings', type=str)
-#
-#
-#    if len(sys.argv) == 1:
-#        parser.print_help()
-#        sys.exit(1)
-#
-#    args = parser.parse_args()
-#
-#    start = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
-#    run = Pipeline_kraken(args.sra_ids,args.station_name).run()
-#    end = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
-#    print "Starting time: "+start
-#    print "Ending time: "+end
+if __name__ == "__main__":
+
+    from time import gmtime, strftime
+    import sys
+    import os
+    import argparse
+
+
+    description = """
+
+Version 1.0
+
+This script was designed to use Kraken for metagenomic sequence classification.
+
+If you have any questions, please do not hesitate to contact me
+email address: michal.karlicki@gmail.com
+"""
+
+    epilog = """
+
+"""
+
+
+    parser = argparse.ArgumentParser(
+                    description=description,
+                    formatter_class=argparse.RawDescriptionHelpFormatter,
+                    epilog=epilog)
+
+
+
+
+    parser.add_argument('sra_ids', metavar='sra_ids', type=str)
+    parser.add_argument('station_name', metavar='station_name', type=str)
+    parser.add_argument('threads', metavar='threads', type=int)
+    parser.add_argument('settings', metavar='settings', type=str)
+
+
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(1)
+
+    args = parser.parse_args()
+
+    start = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
+    run = Pipeline_kraken(args.sra_ids,args.station_name).run()
+    end = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
+    print "Starting time: "+start
+    print "Ending time: "+end

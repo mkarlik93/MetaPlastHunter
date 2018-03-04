@@ -99,8 +99,8 @@ email address: michal.karlicki@gmail.com
 
 
 
-    parser.add_argument('file_with_ids', metavar='file_with_ids', type=str)
-    parser.add_argument('location', metavar='location', type=str)
+    parser.add_argument('file_with_ids', metavar='-file_with_ids', type=str)
+    parser.add_argument('location', metavar='-location', type=str)
     parser.add_argument('number', nargs='?', type=int,default=None)
     parser.add_argument('format', nargs='?', type=str,default="fasta")
 

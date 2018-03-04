@@ -59,6 +59,9 @@ Script changes fastq headers.
 
 If you have any questions, please do not hesitate to contact me
 email address: michal.karlicki@gmail.com
+
+
+
 """
 
     epilog = """
@@ -74,8 +77,8 @@ email address: michal.karlicki@gmail.com
 
 
 
-    parser.add_argument('read_1', metavar='read_1', type=str)
-    parser.add_argument('read_2', metavar='read_2', type=str)
+    parser.add_argument('read_1', metavar='-read1', type=str)
+    parser.add_argument('read_2', metavar='-read2', type=str)
 
 
     if len(sys.argv) == 1:

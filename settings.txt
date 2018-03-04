@@ -19,3 +19,8 @@ kraken_db=/../../
 names.dmp=/../../
 nodes.dmp=/../../
 seqid2taxid.map=/../../
+
+
+""" Thresholds """
+
+min_number_of_reads=

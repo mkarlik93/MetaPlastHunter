@@ -26,7 +26,6 @@ __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
 
-
 from src.bbpipe import BBpipe
 from src.krakenize import Pipeline_kraken
 from src.kraken_output_analysis import Run_analysis
@@ -39,6 +38,7 @@ from src.get_data import Pipeline_fetch
 class WholePipeline:
 
     def __init__(self,list_sra, station_name,settings,threads):
+
         self.list_sra = list_sra
         self.station_name = station_name
         self.settings = settings
@@ -86,7 +86,7 @@ if __name__ == "__main__":
 Version %s
 
 
-The first version of ChMS/Metaplasty/ programme.
+The first version of MetaPlastidHunter.
 
 If you have any questions, please do not hesitate to contact me
 email address: michal.karlicki@gmail.com
@@ -108,7 +108,7 @@ This sofware was written by %s.
 
     parser.add_argument('-analysis_with_dumping_data','--full',action='store_true')
     parser.add_argument('-analysis','--partial',action='store_true')
-    parser.add_argument('sra_ids', metavar='sra_ids', type=str)
+    parser.add_argument('sra_ids', metavar='-sra_ids', type=str)
     parser.add_argument('station_name', metavar='station_name', type=str)
     parser.add_argument('threads', metavar='threads', type=int)
     parser.add_argument('settings', metavar='settings', type=str)
@@ -126,7 +126,7 @@ This sofware was written by %s.
     if args.partial:
         Pipeline_without_downloading(args.sra_ids, args.station_name,args.settings,args.threads).run()
     else:
-        print "     [ERROR] Please specify pipeline path"
+        print "     [ERROR] Please specify pipeline"
         sys.exit()
     end = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
     print "Starting time: "+start

@@ -30,13 +30,8 @@ import os
 import sys
 from settings import *
 
-#TODO
-#sprawdzenie czy dziala
-
-
 class KrakenError(BaseException):
     pass
-
 
 class KrakenRunner:
 
@@ -69,8 +64,6 @@ class KrakenRunner:
     def checkForKraken(self):
         """Check to see if Kraken is on the system before we try to run it."""
 
-        # Assume that a successful kraken -h returns 0 and anything
-        # else returns something non-zero
         try:
             subprocess.call(['kraken', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
         except:

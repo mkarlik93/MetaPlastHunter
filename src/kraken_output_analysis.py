@@ -34,6 +34,8 @@ import numpy as np
 import seaborn
 import matplotlib.pyplot as plt
 from settings import *
+from src.cov import Coverage
+
 
 #definitition of unclassified chloroplast
 #let's try with these settings
@@ -333,9 +335,8 @@ class Output_Analyze():
     def table_1_2_df(self):
         table = list(self.table_1())
         df = pd.DataFrame(table, columns=['Species name', 'taxid', 'unambiguousReads', 'ambiguousReads'])
-        pd.DataFrame.to_csv(df)
-        with open("table_with_tree.csv","r") as f:
-            pd.DataFrame.to_csv(f,df)
+
+        df.to_csv("table_1.csv")
         return df
 
     def table_2(self,table_1):
@@ -372,8 +373,8 @@ class Output_Analyze():
             else:
                 dict[i[0]] = int(dict[i[0]]) + int(i[1])
         df = pd.DataFrame(dict.items(), columns=['Taxon', 'unambiguousReads'])
-        with open("tax_level.csv","r") as f:
-            pd.DataFrame.to_csv(f,df)
+        print df
+        df.to_csv("read_count_at_4th_level.csv")
         return df
 
 #        def count_plot(self):
@@ -429,11 +430,17 @@ class Run_analysis:
             dir = "%s/%s/" % (self.station_name,i)
             os.chdir(dir)
             work = Output_Analyze(i+"_chloroplasts.hitstats",self.names,self.nodes,self.seqidmap,50)
-            table_1 = work.table_1_2_df()
-            pl = work.specific_taxonomic_level2df(self.taxon_level)
-            Plots(pl).percentage_plot_x_oriented()
-            Plots(pl).percentage_plot_y_oriented()
 
+            Coverage(i+"_chloroplasts.hitstats",'bincov.txt').report_cov()
+            table_1 = work.table_1_2_df()
+
+            if table_1.empty:
+                print('There is no chloroplast reads!')
+    #            sys.exit()
+            else:
+                pl = work.specific_taxonomic_level2df(self.taxon_level)
+                Plots(pl).percentage_plot_x_oriented()
+                Plots(pl).percentage_plot_y_oriented()
             os.chdir(starting_dir)
 
 

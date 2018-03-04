@@ -25,7 +25,7 @@ __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
-from helpers import *
+from settings import *
 
 
 def fastq_dump_sra_file(station_name,sra_id,path):
@@ -41,10 +41,7 @@ class Pipeline_fetch:
     def __init__(self, list_sra, station_name,settings):
         self.list_sra = list_sra
         self.station_name = station_name
-        if settings == False:
-            self.path = ""
-        else:
-            self.path = Settings_loader(mode="sratoolkit").read_path()["sratoolkit"]
+        self.path = Settings_loader(mode="sratoolkit").read_path()["sratoolkit"]
 
     def create_station_dir(self):
         command  = "mkdir %s" % (self.station_name)
@@ -136,13 +133,8 @@ email address: michal.karlicki@gmail.com
                     formatter_class=argparse.RawDescriptionHelpFormatter,
                     epilog=epilog)
 
-
-
-
-    parser.add_argument('sra_ids', metavar='sra_ids', type=str)
-    parser.add_argument('station_name', metavar='station_name', type=str)
-
-
+    parser.add_argument('sra_ids', metavar='-sra_ids', type=str)
+    parser.add_argument('station_name', metavar='-station_name', type=str)
 
     if len(sys.argv) == 1:
         parser.print_help()

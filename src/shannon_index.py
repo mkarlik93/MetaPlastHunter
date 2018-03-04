@@ -28,8 +28,7 @@ __status__ = 'Development'
 
 from math import log as ln
 from kraken_out_parser import *
-# na species level only!!!!
-#This part works
+
 
 
 def species_level_shannon_index(df_dict):
