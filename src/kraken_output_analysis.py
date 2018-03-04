@@ -430,8 +430,7 @@ class Run_analysis:
             dir = "%s/%s/" % (self.station_name,i)
             os.chdir(dir)
             work = Output_Analyze(i+"_chloroplasts.hitstats",self.names,self.nodes,self.seqidmap,50)
-
-            Coverage(i+"_chloroplasts.hitstats",'bincov.txt').report_cov()
+            Coverage('bincov.txt',i+"_chloroplasts.hitstats").report_cov()
             table_1 = work.table_1_2_df()
 
             if table_1.empty:
@@ -446,4 +445,4 @@ class Run_analysis:
 
 
 #TODO
-#Naprawic zapis plikow csv!!!! Wazniejssze niz wykresy
+#Naprawic zapis plikow csv!!!! - Jest ok. !

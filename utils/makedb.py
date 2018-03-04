@@ -27,6 +27,9 @@ __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
 from Bio import Entrez
+import glob
+
+""" script for chloroplast genomes database  """
 
 def accession_from_file(file):
     file = open(file,"r")
@@ -65,6 +68,10 @@ class NCBI_fetch:
             filename = name+"_"+str(count)+"_.gb"
             with open(path+filename, 'w') as f:
                 f.write(record.read())
+
+
+
+
 
 if __name__ == "__main__":
 

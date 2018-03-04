@@ -74,6 +74,7 @@ class Coverage:
         dict_of_genomes = {}
         dict = self.loaded
         for i in dict:
+            name = i
             record = dict[i]
             mean =  np.mean(record)
             if mean > 0:
@@ -83,7 +84,7 @@ class Coverage:
 
                 if covered_part > 0.5:
                     if i is not 0:
-                        dict_of_genomes[i] = str(covered_part)
+                        dict_of_genomes[name] = str((covered_part*100.0))
                 else:
                     pass
         if len(dict_of_genomes) == 0:
@@ -91,7 +92,8 @@ class Coverage:
             sys.exit()
 
         else:
-            with open("covered_genomes.txt","w") as f:
+            with open("covered_genomes.csv","w") as f:
+                f.write("Genome name and id,coverage[%]")
                 for key in dict_of_genomes:
                     f.write("%s, %s" % (key, dict_of_genomes[key]))
-                    print "Report was generated"
+                    return "Report was generated"
