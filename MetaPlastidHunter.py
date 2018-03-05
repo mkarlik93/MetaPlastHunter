@@ -30,6 +30,8 @@ from src.bbpipe import BBpipe
 from src.krakenize import Pipeline_kraken
 from src.kraken_output_analysis import Run_analysis
 from src.get_data import Pipeline_fetch
+import multiprocessing as mp
+
 
 #LET's write whole main
 
@@ -108,10 +110,14 @@ This sofware was written by %s.
 
     parser.add_argument('-analysis_with_dumping_data','--full',action='store_true')
     parser.add_argument('-analysis','--partial',action='store_true')
-    parser.add_argument('sra_ids', metavar='-sra_ids', type=str)
+    parser.add_argument('sra_ids', metavar='sra_ids', type=str)
     parser.add_argument('station_name', metavar='station_name', type=str)
-    parser.add_argument('threads', metavar='threads', type=int)
     parser.add_argument('settings', metavar='settings', type=str)
+    parser.add_argument('threads',nargs='?', type=int,default=mp.cpu_count())
+
+    parser.add_argument('number', nargs='?', type=int,default=None)
+    parser.add_argument('format', nargs='?', type=str,default="fasta")
+
 
 
     if len(sys.argv) == 1:

@@ -28,6 +28,7 @@ __status__ = 'Development'
 
 from Bio import Entrez
 import glob
+import os
 
 """ script for chloroplast genomes database  """
 
@@ -38,6 +39,7 @@ def accession_from_file(file):
         splited = i.split("\t")
         accession_numbers.append(splited[1])
 
+
 class NCBI_fetch:
 
     def __init__(self, list_of_ids, path, format, number=None):
@@ -45,6 +47,11 @@ class NCBI_fetch:
         self.path = path
         self.format = format
         self.number = number
+
+    def make_db_direcory():
+        command = "mkdir "
+
+
 
     def fetcher(self):
         Entrez.email = "mich1@wp.pl"
@@ -70,7 +77,14 @@ class NCBI_fetch:
                 f.write(record.read())
 
 
+"""???"""
+    def run_repeat_masker():
+        pass
 
+
+
+    def cat_files_into_one():
+        pass
 
 
 if __name__ == "__main__":
@@ -119,7 +133,7 @@ email address: michal.karlicki@gmail.com
     args = parser.parse_args()
 
     start = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
-    run = NCBI_fetch(args.file_with_ids,args.location,args.format,aargs.number)
+    run = NCBI_fetch(args.file_with_ids,args.location,args.format,args.number)
     run.fetcher()
 
     end = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())

@@ -26,6 +26,9 @@ __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
 #Sra_id /name super istotny
+#TODO
+
+
 
 from settings import *
 import os
@@ -63,7 +66,7 @@ class BBmap:
     def SSU_n_LSU_rDNA_flitering_run(self,sample):
         path = self.path
         db = self.db_silva
-        command="%sbbmap.sh fast=t minidentity=0.70 reads=-1  in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq path=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best out=%s_filtered_mapped.sam" % (path, sample, sample, db, sample, sample, sample)
+        command="%sbbmap.sh fast=t minidentity=0.70 reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq path=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best out=%s_filtered_mapped.sam" % (path, sample, sample, db, sample, sample, sample)
         print "     Running command: [%s]" % command
         os.system(command)
 
@@ -71,7 +74,7 @@ class BBmap:
     def run(self,sample):
         path = self.path
         db = self.db
-        command="%sbbmap.sh fast=t minidentity=0.70 reads=-1  in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s outm1=%s_final_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq ambiguous=best  scafstats=%s_chloroplasts.hitstats out=%s_mapped.sam bincov=bincov.txt covbinsize=1000" % (path, sample, sample, db, sample, sample, sample, sample)
+        command="%sbbmap.sh fast=t minidentity=0.70 reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s outm1=%s_final_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq ambiguous=best  scafstats=%s_chloroplasts.hitstats out=%s_mapped.sam bincov=bincov.txt covbinsize=1000" % (path, sample, sample, db, sample, sample, sample, sample)
         print "     Running command: [%s]" % command
         os.system(command)
 

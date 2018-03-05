@@ -69,6 +69,9 @@ class Settings_loader:
         elif mode == 'silva':
             self.mode = 'silva'
 
+        elif mode == 'RepeatMasker':
+            self.mode = 'RepeatMasker'
+
         else:
             raise SettingsError("Mode %s not understood" % mode)
 

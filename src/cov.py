@@ -29,8 +29,8 @@ __status__ = 'Development'
 
 
 #TODO
-#For now this script doesn't work correctly
-#Take script named cov.py from the server and modify use modules from kraken_output_analysis
+
+
 from Bio import SeqIO
 import glob
 import numpy as np

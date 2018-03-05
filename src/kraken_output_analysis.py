@@ -445,4 +445,3 @@ class Run_analysis:
 
 
 #TODO
-#Naprawic zapis plikow csv!!!! - Jest ok. !

@@ -115,7 +115,7 @@ if __name__ == "__main__":
 
     description = """
 
-Version 1.01
+Version 1.00
 
 Script designed for getting data from SRA repository and evaluation.
 

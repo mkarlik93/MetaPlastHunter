@@ -11,6 +11,7 @@ seqtk=/../../../
 fastq-dump=../../
 bbduk.sh=../../../
 bbmap.sh=../../../
+RepeatMasker=../../../
 
 """ Databases """
 
