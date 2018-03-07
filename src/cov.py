@@ -30,7 +30,7 @@ __status__ = 'Development'
 
 #TODO
 
-
+from settings import  Settings_loader
 from Bio import SeqIO
 import glob
 import numpy as np
@@ -39,11 +39,13 @@ import sys
 
 class Coverage:
 
-    def __init__(self,filename, histstats):
+    def __init__(self,filename, histstats,settings):
 
         self.loaded = self.load_bincov(filename,histstats)
         self.filename = filename
         self.histstats = histstats
+
+        self.db = Settings_loader(mode="bbmap.sh",path=settings).read_database()["bbmap_base"]
 
     def load_genomes_len(self):
         genomes_dict = {}
@@ -67,6 +69,47 @@ class Coverage:
                     if splited[0][0] != "#":
                         organisms[splited[0]].append(float(splited[1]))
         return organisms
+
+
+#%COV |nonzero bins|/|bins|
+
+
+    def getpercentage_cov(self):
+        #percentile
+        percentile_tresh = 2.28
+        dict_of_genomes = {}
+        dict_gen_con = {}
+        dict = self.loaded
+        for i in dict:
+            name = i
+            record = dict[i]
+            mean =  np.mean(record)
+            if mean > 0:
+                all_seq = len(record)
+                list_tmp = [i for i,v in enumerate(record) if v > 0]
+                covered_part = len(list_tmp)/float(all_seq) * 100
+                dict_gen_con[covered_part] = name
+        percentages = sorted(dict_gen_con.keys())
+        sum_percentages = sum(percentages)
+
+#        print np.percentile(percentages,2.28)
+        percentile_value =  np.percentile(percentages,percentile_tresh)
+        percentages_ok = [i for i in percentages if i > percentile_value]
+        percentages_values_discared =  [i for i in percentages if i < percentile_value]
+
+        list_for_recalculation = []
+        for key in percentages_ok:
+            list_for_recalculation.append(dict_gen_con[key])
+        return list_for_recalculation
+
+#Remapping
+    def ref_for_remapping(self):
+        list_of_genomes = self.getpercentage_cov()
+        chloroplasts_ref = SeqIO.parse(self.db,"fasta")
+        chloroplast_ref_dict = {}
+        for record in chloroplasts_ref:
+            chloroplast_ref_dict[record.description] = record
+        SeqIO.write(list(map(lambda name: chloroplast_ref_dict[name],list_of_genomes)), "tmp_ref_base.fasta", "fasta")
 
 
     def report_cov(self):

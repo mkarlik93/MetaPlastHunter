@@ -29,7 +29,7 @@ __status__ = 'Development'
 #TODO
 
 
-
+from cov import Coverage
 from settings import *
 import os
 import sys
@@ -63,13 +63,20 @@ class BBmap:
             sys.exit()
 
 #For filtering out 16sRNA 'ALL' can be just bacterial and archean
-    def SSU_n_LSU_rDNA_flitering_run(self,sample):
+    def ssu_n_lsu_rDNA_flitering_run(self,sample):
         path = self.path
         db = self.db_silva
         command="%sbbmap.sh fast=t minidentity=0.70 reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq path=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best out=%s_filtered_mapped.sam" % (path, sample, sample, db, sample, sample, sample)
         print "     Running command: [%s]" % command
         os.system(command)
 
+
+#remapping with smaller database
+    def remap_run(self,sample):
+        path = self.path
+        command="%sbbmap.sh fast=t nodisk minidentity=0.70 idtag=t reads=-1 in1=%s_final_chloroplasts_reads_R1.fq in2=%s_final_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outu1=%s_f_chloroplasts_reads_R1.fq outu2=%s_f_chloroplasts_reads_R2.fq ambiguous=best  scafstats=%s_final_chloroplasts.hitstats out=%s_final_mapped.sam" % (path, sample, sample, sample, sample,sample, sample)
+        print "     Running command: [%s]" % command
+        os.system(command)
 
     def run(self,sample):
         path = self.path
@@ -123,6 +130,8 @@ class BBpipe:
             dir = "%s/%s/" % (self.station_name,i)
             os.chdir(dir)
             bbduk.run(i)
-            bbmap.SSU_n_LSU_rDNA_flitering_run(i)
+            bbmap.ssu_n_lsu_rDNA_flitering_run(i)
             bbmap.run(i)
+            Coverage('bincov.txt',i+"_chloroplasts.hitstats",self.settings).ref_for_remapping()
+            bbmap.remap_run(i)
             os.chdir(starting_dir)

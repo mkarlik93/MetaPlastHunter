@@ -34,7 +34,7 @@ import numpy as np
 import seaborn
 import matplotlib.pyplot as plt
 from settings import *
-from src.cov import Coverage
+from cov import Coverage
 
 
 #definitition of unclassified chloroplast
@@ -429,8 +429,8 @@ class Run_analysis:
             print "Procesing "+i
             dir = "%s/%s/" % (self.station_name,i)
             os.chdir(dir)
-            work = Output_Analyze(i+"_chloroplasts.hitstats",self.names,self.nodes,self.seqidmap,50)
-            Coverage('bincov.txt',i+"_chloroplasts.hitstats").report_cov()
+            work = Output_Analyze(i+"_final_chloroplasts.hitstats",self.names,self.nodes,self.seqidmap,50)
+            Coverage('bincov.txt',i+"_chloroplasts.hitstats",self.settings).report_cov()
             table_1 = work.table_1_2_df()
 
             if table_1.empty:
