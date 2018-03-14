@@ -25,3 +25,6 @@ seqid2taxid.map=/../../
 """ Thresholds """
 
 min_number_of_reads=
+percentile_treshold=
+min_bin_coverage=
+bincov4_report=

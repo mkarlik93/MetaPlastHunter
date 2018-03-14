@@ -39,8 +39,6 @@ from cov import Coverage
 
 #definitition of unclassified chloroplast
 #let's try with these settings
-#threshold 0.25
-# < unclassified chloroplast
 
 def filtering(kraken_out):
     with open(kraken_out, "r") as f:

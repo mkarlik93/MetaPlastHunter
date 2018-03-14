@@ -72,6 +72,15 @@ class Settings_loader:
         elif mode == 'RepeatMasker':
             self.mode = 'RepeatMasker'
 
+        elif mode == 'percentile_treshold':
+            self.mode = 'percentile_treshold'
+
+        elif mode == 'min_bin_coverage':
+            self.mode = 'min_bin_coverage'
+
+        elif mode == 'bincov4_report':
+            self.mode = 'bincov4_report'
+
         else:
             raise SettingsError("Mode %s not understood" % mode)
 
@@ -129,6 +138,26 @@ class Settings_loader:
             line = 'seqid2taxid.map'
         elif self.mode == 'silva':
             line = 'silva'
+
+        with open(self.path) as f:
+            dict = {}
+            for i in f:
+                splited = i.split("=")
+                if line == splited[0]:
+                    dict[splited[0]] = splited[1].strip("\n")
+                    print "  Checking for %s" % (splited[0])
+            return dict
+
+    def read_parameters(self):
+
+        if self.mode == 'percentile_treshold':
+            line = 'percentile_treshold'
+
+        elif self.mode == 'min_bin_coverage':
+            line = 'min_bin_coverage'
+
+        elif self.mode == 'bincov4_report':
+            line = 'bincov4_report'
 
         with open(self.path) as f:
             dict = {}

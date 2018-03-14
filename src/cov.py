@@ -27,7 +27,6 @@ __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
 
-
 #TODO
 
 from settings import  Settings_loader
@@ -46,6 +45,15 @@ class Coverage:
         self.histstats = histstats
 
         self.db = Settings_loader(mode="bbmap.sh",path=settings).read_database()["bbmap_base"]
+
+        self.min_bin_coverage = float(Settings_loader(mode="min_bin_coverage",path=settings).read_parameters()["min_bin_coverage"])
+        self.percentile_treshold = float(Settings_loader(mode="percentile_treshold",path=settings).read_parameters()["percentile_treshold"])
+        self.bin_cov_for_report =  float(Settings_loader(mode="bincov4_report",path=settings).read_parameters()["bincov4_report"])
+
+
+
+
+
 
     def load_genomes_len(self):
         genomes_dict = {}
@@ -70,13 +78,12 @@ class Coverage:
                         organisms[splited[0]].append(float(splited[1]))
         return organisms
 
-
-#%COV |nonzero bins|/|bins|
-
+#%COV |nonzero bins|/|bins|*100
 
     def getpercentage_cov(self):
         #percentile
-        percentile_tresh = 2.28
+        thresh = self.min_bin_coverage
+        percentile_tresh = self.percentile_treshold
         dict_of_genomes = {}
         dict_gen_con = {}
         dict = self.loaded
@@ -86,21 +93,28 @@ class Coverage:
             mean =  np.mean(record)
             if mean > 0:
                 all_seq = len(record)
-                list_tmp = [i for i,v in enumerate(record) if v > 0]
+                list_tmp = [i for i,v in enumerate(record) if v > thresh]
                 covered_part = len(list_tmp)/float(all_seq) * 100
                 dict_gen_con[covered_part] = name
         percentages = sorted(dict_gen_con.keys())
         sum_percentages = sum(percentages)
 
-#        print np.percentile(percentages,2.28)
+#       print np.percentile(percentages,2.28)
         percentile_value =  np.percentile(percentages,percentile_tresh)
         percentages_ok = [i for i in percentages if i > percentile_value]
         percentages_values_discared =  [i for i in percentages if i < percentile_value]
 
         list_for_recalculation = []
-        for key in percentages_ok:
-            list_for_recalculation.append(dict_gen_con[key])
+        with open("cov_list.txt","w") as f:
+
+            for key in percentages_ok:
+
+                list_for_recalculation.append(dict_gen_con[key])
+                f.write("%s,%s\n" % (dict_gen_con[key],key))
+
+
         return list_for_recalculation
+
 
 #Remapping
     def ref_for_remapping(self):
@@ -111,9 +125,8 @@ class Coverage:
             chloroplast_ref_dict[record.description] = record
         SeqIO.write(list(map(lambda name: chloroplast_ref_dict[name],list_of_genomes)), "tmp_ref_base.fasta", "fasta")
 
-
     def report_cov(self):
-        threshold = 1
+        threshold = self.bin_cov_for_report
         dict_of_genomes = {}
         dict = self.loaded
         for i in dict:
