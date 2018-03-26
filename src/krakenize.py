@@ -29,8 +29,9 @@ __status__ = 'Development'
 
 from kraken import *
 import glob
+logger = logging.getLogger('src.krakenize')
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+
 
 class Pipeline_kraken:
 

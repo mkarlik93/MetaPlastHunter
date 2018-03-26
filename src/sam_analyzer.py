@@ -40,12 +40,15 @@ from settings import  Settings_loader
 from cov import Coverage
 
 matplotlib.use('Agg')
+
+logger = logging.getLogger('src.sam_analyzer')
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+
 
 # TODO:
 
-# Integracja z reszta -> plus wykresy
+# Integracja z reszta ->
+# plus wykresy
 
 
 
@@ -65,7 +68,7 @@ logger = logging.getLogger(__name__)
 class Sam_analyzer:
 
     def __init__ (self,seqid_map):
-        #Na razie, przed integracja seqid_map bez settings_loadera
+
         #Cov_list ma byc domyslnie w miejscu operacji
         #"seqid2taxid.map"
         """Params
@@ -78,8 +81,6 @@ class Sam_analyzer:
         produced by bbmap during final alignment.
 
      """
-
-#       Settings_loader
         self._tree = self.get_NCBI_tree(seqid_map)
         self._seqid2taxid = self.seqid2taxid(seqid_map)
         self._cov_dict = self.cov_average("cov_list.txt")
@@ -364,8 +365,6 @@ class Sam_analyzer:
                 except ValueError:
                     pass
 
-#Sam_Analyzer("seqid2taxid.map").reads_processing("filtered_new.sam","test_debug.txt")
-
 " LCA POSTPROCESS "
 
 
@@ -510,7 +509,7 @@ class LCA_postprocess:
 #        return df
 
     def pandas_data_frame_fourth_level(self):
-
+        taxa_to_catch = ["Stramenopiles"]
         _species_level = self.species_level()
         df = pd.DataFrame(_species_level.items(),columns=['Taxon', 'Counts'])
         return df
@@ -599,7 +598,10 @@ class Run_analysis_sam_lca:
 #                pl = work.specific_taxonomic_level2df(self.taxon_level)
 #                Plots(pl).percentage_plot_x_oriented()
 #                Plots(pl).percentage_plot_y_oriented()
+
             os.chdir(starting_dir)
+
+
 
 
 

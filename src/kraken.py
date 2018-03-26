@@ -29,8 +29,10 @@ __status__ = 'Development'
 import os
 import sys
 from settings import *
+
+logger = logging.getLogger("src.kraken")
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+
 
 class KrakenError(BaseException):
     pass

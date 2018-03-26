@@ -35,8 +35,9 @@ import glob
 import numpy as np
 import sys
 
+
+logger = logging.getLogger("src.cov")
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 class Coverage:
 

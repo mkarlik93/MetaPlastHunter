@@ -26,8 +26,9 @@ __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
 from settings import *
+
+logger = logging.getLogger('src.get_data')
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 def fastq_dump_sra_file(station_name,sra_id,path):
@@ -48,7 +49,7 @@ class Pipeline_fetch:
     def create_station_dir(self):
         command  = "mkdir %s" % (self.station_name)
         os.system(command)
-        logger.info("Directory was created")
+        logger.info("Created direcory named: %s" % (self.station_name))
 
     def preprocess_sra_id(self):
         sra_ids = self.list_sra
@@ -63,7 +64,7 @@ class Pipeline_fetch:
         for i in list_sra_ids:
                 proc = Process(target=fastq_dump_sra_file, args=(self.station_name,i,path))
                 proc.start()
-                logger.info("Downloading has started")
+                logger.info("Downloading has been started")
 
     def evaluation(self):
         cwd = os.getcwd()
@@ -119,7 +120,7 @@ if __name__ == "__main__":
 
 Version 1.00
 
-Script designed for getting data from SRA repository and evaluation.
+Script was designed for getting data from SRA repository and evaluation.
 
 If you have any questions, please do not hesitate to contact me
 email address: michal.karlicki@gmail.com

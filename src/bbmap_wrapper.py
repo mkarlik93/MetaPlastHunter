@@ -25,14 +25,14 @@ __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
-#Sra_id /name super istotny
-#TODO
-
-
 from cov import Coverage
 from settings import *
 import os
 import sys
+
+logger = logging.getLogger('src.bbmap_wrapper')
+logging.basicConfig(level=logging.INFO)
+
 
 class BBmap:
 
@@ -59,7 +59,7 @@ class BBmap:
         try:
             subprocess.call(['bbmap.sh', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
         except:
-            print "     [Error] Make sure BBmap is on your system path or set usage to path in settings.txt"
+            logger.error("   Make sure BBmap is on your system path or set usage to path in settings.txt")
             sys.exit()
 
 #For filtering out 16sRNA 'ALL' can be just bacterial and archean
@@ -67,7 +67,7 @@ class BBmap:
         path = self.path
         db = self.db_silva
         command="%sbbmap.sh fast=t minidentity=0.70 reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq path=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best out=%s_filtered_mapped.sam" % (path, sample, sample, db, sample, sample, sample)
-        print "     Running command: [%s]" % command
+        logger.info("     Running command: [%s]" % command)
         os.system(command)
 
 
@@ -75,14 +75,14 @@ class BBmap:
     def remap_run(self,sample):
         path = self.path
         command="%sbbmap.sh fast=t nodisk minidentity=0.70 idtag=t reads=-1 in1=%s_final_chloroplasts_reads_R1.fq in2=%s_final_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outu1=%s_f_chloroplasts_reads_R1.fq outu2=%s_f_chloroplasts_reads_R2.fq ambiguous=all scafstats=%s_final_chloroplasts.hitstats out=%s_final_mapped.sam" % (path, sample, sample, sample, sample,sample, sample)
-        print "     Running command: [%s]" % command
+        logger.info("     Running command: [%s]" % command)
         os.system(command)
 
     def run(self,sample):
         path = self.path
         db = self.db
         command="%sbbmap.sh fast=t minidentity=0.70 reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s outm1=%s_final_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq ambiguous=best  scafstats=%s_chloroplasts.hitstats out=%s_mapped.sam bincov=bincov.txt covbinsize=200" % (path, sample, sample, db, sample, sample, sample, sample)
-        print "     Running command: [%s]" % command
+        logger.info("     Running command: [%s]" % command)
         os.system(command)
 
 #This comes first -> kraken_out
@@ -103,13 +103,13 @@ class BBduk:
         try:
             subprocess.call(['bbduk.sh', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
         except:
-            print "  [Error] Make sure BBduk is on your system path or set usage to path in settings.txt"
+            logger.error("Make sure BBduk is on your system path or set usage to path in settings.txt")
             sys.exit()
 
     def run(self, sample):
         path = self.path
         command="%sbbduk.sh in1=%s_classif_R1.fastq in2=%s_classif_R2.fastq out1=%s_de_complex_R1.fastq out2=%s_de_complex_R2.fastq  outm=%s_repeat_regions_R1.fq outm2=%s_repeat_regions_R2.fq entropy=0.8 overwrite=true" % (path, sample, sample, sample, sample, sample, sample)
-        print "     Running command: [%s]" % command
+        logger.info("     Running command: [%s]" % command)
         os.system(command)
 
 class BBpipe:
@@ -126,7 +126,7 @@ class BBpipe:
         bbduk = BBduk(self.settings)
         bbmap = BBmap(self.settings)
         for i in list_sra_ids:
-            print "Procesing "+i
+            logger.info("Procesing "+i)
             dir = "%s/%s/" % (self.station_name,i)
             os.chdir(dir)
             bbduk.run(i)

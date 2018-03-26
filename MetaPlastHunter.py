@@ -26,13 +26,7 @@ __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
 
-from src.bbpipe import BBpipe
-from src.krakenize import Pipeline_kraken
-from src.sam_analyzer import Run_analysis_sam_lca
-from src.get_data import Pipeline_fetch
-import multiprocessing as mp
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+
 
 
 #LET's write whole main
@@ -85,6 +79,14 @@ if __name__ == "__main__":
     import sys
     import os
     import argparse
+    from src.bbmap_wrapper import BBpipe
+    from src.krakenize import Pipeline_kraken
+    from src.sam_analyzer import Run_analysis_sam_lca
+    from src.get_data import Pipeline_fetch
+    import multiprocessing as mp
+
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
 
 
     description = """
