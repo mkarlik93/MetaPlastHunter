@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.6
 
 ###############################################################################
 #                                                                             #
@@ -26,45 +26,46 @@ __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
+from Bio import Entrez
 
-from kraken import *
-import glob
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+def accession_from_file(file):
+    file = open(file,"r")
+    accession_numbers = []
+    for i in file:
+#        splited = i.split("\t")
+        accession_numbers.append(i)
+    return accession_numbers
 
-class Pipeline_kraken:
+class NCBI_fetch:
 
-    def __init__(self, list_sra, station_name,settings,threads):
-        self.list_sra = list_sra
-        self.station_name = station_name
-        self.threads = threads
-        self.settings = settings
+    def __init__(self, list_of_ids, path, format, number=None):
+        self.list_of_ids = list_of_ids
+        self.path = path
+        self.format = format
+        self.number = number
 
-
-    def kraken_not_multi(self):
-        sra_ids = self.list_sra
-        list_sra_ids = sra_ids.split(",")
-        starting_dir = os.getcwd()
-        kraken = KrakenRunner(self.threads,self.settings)
-        for i in list_sra_ids:
-            print "kraken for "+i
-            read_name_1 = i+"_1.fastq"
-            read_name_2 = i+"_2.fastq"
-            dir = "%s/%s/" % (self.station_name,i)
-            os.chdir(dir)
-            if len(glob.glob(read_name_1)) == 1:
-                kraken.run_classification(read_name_1, read_name_2,i)
-                kraken.run_report(i)
-                os.chdir(starting_dir)
-                os.remove("%s/%s/%s" % (self.station_name,i,read_name_1))
-                os.remove("%s/%s/%s" % (self.station_name,i,read_name_2))
-            else:
-                logger.error("There is no fastq files")
-                os.chdir(starting_dir)
-
-    def run(self):
-        self.kraken_not_multi()
-
+    def fetcher(self):
+        Entrez.email = "mich1@wp.pl"
+        number = self.number
+        path = self.path
+        format = self.format
+        list1 = accession_from_file(self.list_of_ids)
+        count = 0
+        if number == None:
+            final_list = list1
+        else:
+            final_list = random.sample(list1, number)
+        for genome_id in final_list:
+            count = count + 1
+            handle = Entrez.efetch(db="nucleotide", id=genome_id, rettype="gb", retmode="text")
+            record = Entrez.efetch(db="nucleotide", id=genome_id, rettype=str(format), retmode="text")
+            x = SeqIO.read(handle, 'genbank')
+            name = x.annotations['organism']
+            name = name.replace(" ","_")
+            name = name.replace("/","")
+            filename = name+"_"+str(count)+"_."+str(format)
+            with open(path+filename, 'w') as f:
+                f.write(record.read())
 
 if __name__ == "__main__":
 
@@ -72,13 +73,15 @@ if __name__ == "__main__":
     import sys
     import os
     import argparse
-
+    from Bio import Entrez
+    from Bio import SeqIO
+    import random
 
     description = """
 
-Version 1.0
+Version 1.00
 
-This script was designed to use Kraken for metagenomic sequence classification.
+Script designed for downloading sequences using NC ids
 
 If you have any questions, please do not hesitate to contact me
 email address: michal.karlicki@gmail.com
@@ -97,10 +100,10 @@ email address: michal.karlicki@gmail.com
 
 
 
-    parser.add_argument('sra_ids', metavar='sra_ids', type=str)
-    parser.add_argument('station_name', metavar='station_name', type=str)
-    parser.add_argument('threads', metavar='threads', type=int)
-    parser.add_argument('settings', metavar='settings', type=str)
+    parser.add_argument('file_with_ids', metavar='file_with_ids', type=str)
+    parser.add_argument('location', metavar='location', type=str)
+    parser.add_argument('number', nargs='?', type=int,default=None)
+    parser.add_argument('format', nargs='?', type=str,default="fasta")
 
 
     if len(sys.argv) == 1:
@@ -110,7 +113,9 @@ email address: michal.karlicki@gmail.com
     args = parser.parse_args()
 
     start = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
-    run = Pipeline_kraken(args.sra_ids,args.station_name).run()
+    run = NCBI_fetch(args.file_with_ids,args.location,args.format,args.number)
+    run.fetcher()
+
     end = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
-    logger.info("Starting time: "+start)
-    logger.info("Ending time: "+end)
+    print "Starting time: "+start
+    print "Ending time: "+end

@@ -81,7 +81,7 @@ class BBmap:
     def run(self,sample):
         path = self.path
         db = self.db
-        command="%sbbmap.sh fast=t minidentity=0.70 reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s outm1=%s_final_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq ambiguous=best  scafstats=%s_chloroplasts.hitstats out=%s_mapped.sam bincov=bincov.txt covbinsize=1000" % (path, sample, sample, db, sample, sample, sample, sample)
+        command="%sbbmap.sh fast=t minidentity=0.70 reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s outm1=%s_final_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq ambiguous=best  scafstats=%s_chloroplasts.hitstats out=%s_mapped.sam bincov=bincov.txt covbinsize=200" % (path, sample, sample, db, sample, sample, sample, sample)
         print "     Running command: [%s]" % command
         os.system(command)
 

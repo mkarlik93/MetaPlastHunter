@@ -29,6 +29,8 @@ __status__ = 'Development'
 import os
 import sys
 from settings import *
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class KrakenError(BaseException):
     pass
@@ -67,5 +69,5 @@ class KrakenRunner:
         try:
             subprocess.call(['kraken', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
         except:
-            print "  [Error] Make sure kraken is on your system path or set usage to path in settings.txt"
+            logger.error("Make sure kraken is on your system path or set usage to path in settings.txt")
             sys.exit()

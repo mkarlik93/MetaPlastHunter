@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.6
 
 ###############################################################################
 #                                                                             #
@@ -24,13 +24,32 @@ __license__ = 'GPL3'
 __version__ = '1.0.0'
 __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
-__status__ = 'Development'
+__status__ = 'Undevelopment'
 
 from Bio import Entrez
 import glob
 import os
+import csv
+import os
 
-""" script for chloroplast genomes database  """
+""" script for creating chloroplast genomes database
+    Integration is needed ! ! ! ! ! ! ! ! !
+
+  """
+
+
+def chloroplast_list_maker(name,outdir,filename):
+    genomes_list = []
+
+    with open(filename, 'rb') as csvfile:
+        filereader = csv.reader(csvfile, delimiter=',', quotechar='|')
+        for row in filereader:
+            genomes_list.append((row[8].split("/")[0]).strip('""'))
+    with open(name,"w") as f:
+        for id in genomes_list[1:]:
+            f.write((id+"\n").strip("Pltd:"))
+
+
 
 def accession_from_file(file):
     file = open(file,"r")
@@ -43,14 +62,15 @@ def accession_from_file(file):
 class NCBI_fetch:
 
     def __init__(self, list_of_ids, path, format, number=None):
+
         self.list_of_ids = list_of_ids
         self.path = path
         self.format = format
         self.number = number
 
     def make_db_direcory():
-        command = "mkdir "
-
+        
+        command = "mkdir "+path
 
 
     def fetcher(self):
@@ -72,7 +92,7 @@ class NCBI_fetch:
             name = x.annotations['organism']
             name = name.replace(" ","_")
             name = name.replace("/","")
-            filename = name+"_"+str(count)+"_.gb"
+            filename = name+"_"+str(count)+"_."+format
             with open(path+filename, 'w') as f:
                 f.write(record.read())
 
@@ -121,7 +141,7 @@ email address: michal.karlicki@gmail.com
 
 
     parser.add_argument('file_with_ids', metavar='-file_with_ids', type=str)
-    parser.add_argument('location', metavar='-location', type=str)
+    parser.add_argument('out', metavar='-out', type=str)
     parser.add_argument('number', nargs='?', type=int,default=None)
     parser.add_argument('format', nargs='?', type=str,default="fasta")
 
@@ -133,7 +153,7 @@ email address: michal.karlicki@gmail.com
     args = parser.parse_args()
 
     start = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
-    run = NCBI_fetch(args.file_with_ids,args.location,args.format,args.number)
+    run = NCBI_fetch(args.file_with_ids,args.out,args.format,args.number)
     run.fetcher()
 
     end = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())

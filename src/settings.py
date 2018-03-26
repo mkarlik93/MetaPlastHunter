@@ -81,6 +81,9 @@ class Settings_loader:
         elif mode == 'bincov4_report':
             self.mode = 'bincov4_report'
 
+        elif mode == 'lca_treshold':
+            self.mode = 'lca_treshold'
+
         else:
             raise SettingsError("Mode %s not understood" % mode)
 
@@ -158,6 +161,9 @@ class Settings_loader:
 
         elif self.mode == 'bincov4_report':
             line = 'bincov4_report'
+
+        elif self.mode == 'lca_treshold'
+            line = 'lca_treshold'
 
         with open(self.path) as f:
             dict = {}

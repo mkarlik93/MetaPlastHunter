@@ -35,6 +35,8 @@ import glob
 import numpy as np
 import sys
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class Coverage:
 
@@ -49,11 +51,6 @@ class Coverage:
         self.min_bin_coverage = float(Settings_loader(mode="min_bin_coverage",path=settings).read_parameters()["min_bin_coverage"])
         self.percentile_treshold = float(Settings_loader(mode="percentile_treshold",path=settings).read_parameters()["percentile_treshold"])
         self.bin_cov_for_report =  float(Settings_loader(mode="bincov4_report",path=settings).read_parameters()["bincov4_report"])
-
-
-
-
-
 
     def load_genomes_len(self):
         genomes_dict = {}
@@ -79,7 +76,7 @@ class Coverage:
         return organisms
 
 #%COV |nonzero bins|/|bins|*100
-
+# This is based on percentile, maybe peaking finding performs better?
     def getpercentage_cov(self):
         #percentile
         thresh = self.min_bin_coverage
@@ -96,6 +93,8 @@ class Coverage:
                 list_tmp = [i for i,v in enumerate(record) if v > thresh]
                 covered_part = len(list_tmp)/float(all_seq) * 100
                 dict_gen_con[covered_part] = name
+
+
         percentages = sorted(dict_gen_con.keys())
         sum_percentages = sum(percentages)
 
@@ -105,6 +104,7 @@ class Coverage:
         percentages_values_discared =  [i for i in percentages if i < percentile_value]
 
         list_for_recalculation = []
+
         with open("cov_list.txt","w") as f:
 
             for key in percentages_ok:
@@ -112,11 +112,11 @@ class Coverage:
                 list_for_recalculation.append(dict_gen_con[key])
                 f.write("%s,%s\n" % (dict_gen_con[key],key))
 
-
         return list_for_recalculation
 
 
 #Remapping
+
     def ref_for_remapping(self):
         list_of_genomes = self.getpercentage_cov()
         chloroplasts_ref = SeqIO.parse(self.db,"fasta")
@@ -144,12 +144,12 @@ class Coverage:
                 else:
                     pass
         if len(dict_of_genomes) == 0:
-            print "There is no fully/partially covered genomes"
+            logger.info("There is no fully/partially covered genomes")
             sys.exit()
 
         else:
             with open("covered_genomes.csv","w") as f:
-                f.write("Genome name and id,coverage[%]")
+                f.write("Genome name and id\tcoverage[%]")
                 for key in dict_of_genomes:
-                    f.write("%s, %s" % (key, dict_of_genomes[key]))
+                    f.write("%s\t%s" % (key, dict_of_genomes[key]))
                     return "Report was generated"

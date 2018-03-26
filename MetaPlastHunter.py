@@ -28,9 +28,11 @@ __status__ = 'Development'
 
 from src.bbpipe import BBpipe
 from src.krakenize import Pipeline_kraken
-from src.kraken_output_analysis import Run_analysis
+from src.sam_analyzer import Run_analysis_sam_lca
 from src.get_data import Pipeline_fetch
 import multiprocessing as mp
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 #LET's write whole main
@@ -47,13 +49,15 @@ class WholePipeline:
         self.threads = threads
 
     def run(self):
-        print "     [%s] Dowloading data" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
+
+
+        logger.info( "     [%s] Dowloading data" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Pipeline_fetch(self.list_sra,self.station_name,self.settings).run()
-        print "     [%s] Kraken classification" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
+        logger.info("     [%s] Kraken classification" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Pipeline_kraken(self.list_sra, self.station_name,self.settings,self.threads).run()
-        print "     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
+        logger.info("     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         BBpipe(list_sra,station_name,settings).process()
-        print "     [%s] Output analysis" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
+        logger.info("     [%s] Output analysis" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Run_analysis(list_sra, station_name,4).process()
 
 class Pipeline_without_downloading:
@@ -67,11 +71,11 @@ class Pipeline_without_downloading:
 
     def run(self):
 
-        print "     [%s] Kraken classification" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
+        logger.info("     [%s] Kraken classification" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Pipeline_kraken(self.list_sra, self.station_name,self.settings,self.threads).run()
-        print "     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
+        logger.info("     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         BBpipe(self.list_sra,self.station_name,self.settings).process()
-        print "     [%s] Output analysis" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()))
+        logger.info("     [%s] Output analysis" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Run_analysis(self.list_sra, self.station_name,4,self.settings).process()
 
 
@@ -88,7 +92,7 @@ if __name__ == "__main__":
 Version %s
 
 
-The first version of MetaPlastidHunter.
+The first version of MetaPlastHunter.
 
 If you have any questions, please do not hesitate to contact me
 email address: michal.karlicki@gmail.com
@@ -132,8 +136,8 @@ This sofware was written by %s.
     if args.partial:
         Pipeline_without_downloading(args.sra_ids, args.station_name,args.settings,args.threads).run()
     else:
-        print "     [ERROR] Please specify pipeline"
+        logger.error("      Please specify pipeline")
         sys.exit()
     end = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
-    print "Starting time: "+start
-    print "Ending time: "+end
+    logger.info("Starting time: "+start)
+    logger.info("Ending time: "+end)
