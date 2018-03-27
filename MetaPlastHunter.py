@@ -25,6 +25,11 @@ __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
+import logging
+
+logger = logging.getLogger("MetaPlastHunter")
+logging.basicConfig(level=logging.INFO)
+
 
 
 
@@ -50,9 +55,9 @@ class WholePipeline:
         logger.info("     [%s] Kraken classification" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Pipeline_kraken(self.list_sra, self.station_name,self.settings,self.threads).run()
         logger.info("     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
-        BBpipe(list_sra,station_name,settings).process()
+        BBpipe(self.list_sra,self.station_name,settings).process()
         logger.info("     [%s] Output analysis" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
-        Run_analysis(list_sra, station_name,4).process()
+        Run_analysis_sam_lca(self.list_sra, self.station_name).process()
 
 class Pipeline_without_downloading:
 
@@ -69,8 +74,8 @@ class Pipeline_without_downloading:
         Pipeline_kraken(self.list_sra, self.station_name,self.settings,self.threads).run()
         logger.info("     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         BBpipe(self.list_sra,self.station_name,self.settings).process()
-        logger.info("     [%s] Output analysis" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
-        Run_analysis(self.list_sra, self.station_name,4,self.settings).process()
+        logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        Run_analysis_sam_lca(self.list_sra, self.station_name,self.settings).process()
 
 
 if __name__ == "__main__":
@@ -85,8 +90,6 @@ if __name__ == "__main__":
     from src.get_data import Pipeline_fetch
     import multiprocessing as mp
 
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(__name__)
 
 
     description = """
@@ -121,8 +124,8 @@ This sofware was written by %s.
     parser.add_argument('settings', metavar='settings', type=str)
     parser.add_argument('threads',nargs='?', type=int,default=mp.cpu_count())
 
-    parser.add_argument('number', nargs='?', type=int,default=None)
-    parser.add_argument('format', nargs='?', type=str,default="fasta")
+#    parser.add_argument('number', nargs='?', type=int,default=None)
+#    parser.add_argument('format', nargs='?', type=str,default="fasta")
 
 
 

@@ -28,6 +28,7 @@ __status__ = 'Development'
 
 
 import subprocess
+import logging
 
 """ This is wrapper for RepeatMasker """
 

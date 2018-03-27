@@ -31,6 +31,7 @@ import glob
 import os
 import sys
 import subprocess
+import logging
 
 
 
@@ -162,7 +163,7 @@ class Settings_loader:
         elif self.mode == 'bincov4_report':
             line = 'bincov4_report'
 
-        elif self.mode == 'lca_treshold'
+        elif self.mode == 'lca_treshold':
             line = 'lca_treshold'
 
         with open(self.path) as f:

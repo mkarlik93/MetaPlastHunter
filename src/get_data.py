@@ -26,6 +26,7 @@ __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
 from settings import *
+import logging
 
 logger = logging.getLogger('src.get_data')
 logging.basicConfig(level=logging.INFO)

@@ -26,12 +26,54 @@ __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
-
-from kraken import *
 import glob
+import logging
+import os
+import sys
+from settings import *
+
 logger = logging.getLogger('src.krakenize')
 logging.basicConfig(level=logging.INFO)
 
+class KrakenError(BaseException):
+    pass
+
+class KrakenRunner:
+
+    """Wrapper for running kraken."""
+
+    def __init__(self,threads,settings):
+        self.threads = threads
+        self.settings = settings
+        # make sure kraken is installed
+        if settings == None:
+            self.checkForKraken()
+            self.path = ""
+        else:
+            self.path = Settings_loader(mode="kraken",path=self.settings).read_path()["kraken"]
+            self.db = Settings_loader(mode="kraken",path=self.settings).read_database()["kraken_db"]
+
+    def run_classification(self,reads_1, reads_2,name):
+        path = self.path
+        db = self.db
+        threads = self.threads
+        command = "%skraken -t %s --db %s --paired %s %s --out-fmt paired --fastq-output --classified-out %s_classif > %s_kraken_out" % (path,str(self.threads),db,reads_1,reads_2,name,name)
+        os.system(command)
+
+    def run_report(self,name):
+        path = self.path
+        db = self.db
+        command_report = "%sscripts/kraken-report --db %s %s_kraken_out > kraken_report.txt" % (path, db,name)
+        os.system(command_report)
+
+    def checkForKraken(self):
+        """Check to see if Kraken is on the system before we try to run it."""
+
+        try:
+            subprocess.call(['kraken', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
+        except:
+            logger.error("Make sure kraken is on your system path or set usage to path in settings.txt")
+            sys.exit()
 
 class Pipeline_kraken:
 
@@ -94,9 +136,6 @@ email address: michal.karlicki@gmail.com
                     description=description,
                     formatter_class=argparse.RawDescriptionHelpFormatter,
                     epilog=epilog)
-
-
-
 
     parser.add_argument('sra_ids', metavar='sra_ids', type=str)
     parser.add_argument('station_name', metavar='station_name', type=str)

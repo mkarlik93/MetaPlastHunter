@@ -25,6 +25,8 @@ __version__ = '1.0.0'
 __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
+import matplotlib
+matplotlib.use("Agg")
 
 import pysam
 from ete3 import Tree
@@ -34,12 +36,12 @@ from matplotlib import pyplot as plt
 from math import log as ln
 import pandas as pd
 import logging
-import matplotlib
+import os
+import sys
 
 from settings import  Settings_loader
 from cov import Coverage
 
-matplotlib.use('Agg')
 
 logger = logging.getLogger('src.sam_analyzer')
 logging.basicConfig(level=logging.INFO)
@@ -49,8 +51,6 @@ logging.basicConfig(level=logging.INFO)
 
 # Integracja z reszta ->
 # plus wykresy
-
-
 
 """Voting algorithm was described below
 #Algorytm glosujacy
@@ -62,8 +62,6 @@ logging.basicConfig(level=logging.INFO)
 #Jesli para_1 oraz para_2 to inny takson -> LCA
 
 """
-
-
 
 class Sam_analyzer:
 
@@ -370,7 +368,7 @@ class Sam_analyzer:
 
 class LCA_postprocess:
 
-    def __init__ (self,treshold):
+    def __init__ (self,filename,treshold):
 
         """Params
 
@@ -384,7 +382,7 @@ class LCA_postprocess:
         """
 
         self.treshold = treshold
-        self._lca_graph = self.lca_graph("processed_sam.txt")
+        self._lca_graph = self.lca_graph(filename)
         self._graph = self.lca_graph_analysis(treshold)
 
 
@@ -397,7 +395,7 @@ class LCA_postprocess:
         try:
             count = self.get_count(filename)
         except IOError:
-            logger.error("There is no processed_sam.txt in working directory")
+            logger.error("There is no taxonomic_assigment in working directory")
             sys.exit()
 
 
@@ -564,7 +562,7 @@ class Run_analysis_sam_lca:
         try:
 
             self.seqidmap = Settings_loader(mode="seqid2taxid.map",path=self.settings).read_database()["seqid2taxid.map"]
-            self.lca_treshold = Settings_loader(mode="lca_treshold",path=self.settings).read_parameters()["lca_treshold"]
+            self.lca_treshold = float(Settings_loader(mode="lca_treshold",path=self.settings).read_parameters()["lca_treshold"])
 
         except KeyError:
 
@@ -582,22 +580,12 @@ class Run_analysis_sam_lca:
             os.chdir(dir)
 
             Coverage('bincov.txt',i+"_chloroplasts.hitstats",self.settings).report_cov()
-            Sam_Analyzer(self.seqidmap).reads_processing(i+"_final_mapped.sam",i+"_taxonomic_assignment.txt")
+            Sam_analyzer(self.seqidmap).reads_processing(i+"_final_mapped.sam",i+"_taxonomic_assignment.txt")
 
-            lca_postprocess =  LCA_postprocess(self.lca_treshold)
+            lca_postprocess =  LCA_postprocess(i+"_taxonomic_assignment.txt",self.lca_treshold)
             lca_postprocess.pandas_data_frame_species_level()
             lca_postprocess.species_level_shannon_index()
             lca.postprocess.count_plot_species_level()
-
-#          table_1 = work.table_1_2_df()
-
-#            if table_1.empty:
-#                print('There is no chloroplast reads!')
-#    #            sys.exit()
-#            else:
-#                pl = work.specific_taxonomic_level2df(self.taxon_level)
-#                Plots(pl).percentage_plot_x_oriented()
-#                Plots(pl).percentage_plot_y_oriented()
 
             os.chdir(starting_dir)
 

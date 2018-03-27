@@ -34,7 +34,7 @@ from Bio import SeqIO
 import glob
 import numpy as np
 import sys
-
+import logging
 
 logger = logging.getLogger("src.cov")
 logging.basicConfig(level=logging.INFO)
@@ -43,12 +43,18 @@ class Coverage:
 
     def __init__(self,filename, histstats,settings):
 
+
+        """ Params
+
+        param loaded: coverage data
+
+        param filename: keeps bincov.txt, draft coverage file, produced during mapping
+
+        param histstats: keeps data from histstats file
+
+        """
         self.loaded = self.load_bincov(filename,histstats)
-        self.filename = filename
-        self.histstats = histstats
-
         self.db = Settings_loader(mode="bbmap.sh",path=settings).read_database()["bbmap_base"]
-
         self.min_bin_coverage = float(Settings_loader(mode="min_bin_coverage",path=settings).read_parameters()["min_bin_coverage"])
         self.percentile_treshold = float(Settings_loader(mode="percentile_treshold",path=settings).read_parameters()["percentile_treshold"])
         self.bin_cov_for_report =  float(Settings_loader(mode="bincov4_report",path=settings).read_parameters()["bincov4_report"])
@@ -61,7 +67,6 @@ class Coverage:
                 genomes_dict[splited[0]] = splited[1].strip("\n")
                 unique_names.add(splited[0])
         return genomes_dict
-
 
     def load_bincov(self,filename,hist):
 
@@ -78,6 +83,8 @@ class Coverage:
 
 #%COV |nonzero bins|/|bins|*100
 # This is based on percentile, maybe peaking finding performs better?
+
+
     def getpercentage_cov(self):
         #percentile
         thresh = self.min_bin_coverage
@@ -115,10 +122,12 @@ class Coverage:
 
         return list_for_recalculation
 
-
 #Remapping
 
     def ref_for_remapping(self):
+
+        " Creates fasta file for further remapping "
+
         list_of_genomes = self.getpercentage_cov()
         chloroplasts_ref = SeqIO.parse(self.db,"fasta")
         chloroplast_ref_dict = {}
@@ -127,6 +136,10 @@ class Coverage:
         SeqIO.write(list(map(lambda name: chloroplast_ref_dict[name],list_of_genomes)), "tmp_ref_base.fasta", "fasta")
 
     def report_cov(self):
+
+        " Reports almoast fully/partially covered chloroplast genomes "
+
+
         threshold = self.bin_cov_for_report
         dict_of_genomes = {}
         dict = self.loaded

@@ -32,13 +32,16 @@ import os
 import csv
 import os
 
-""" script for creating chloroplast genomes database
+""" Script for creating chloroplast genomes database
     Integration is needed ! ! ! ! ! ! ! ! !
 
   """
 
 
 def chloroplast_list_maker(name,outdir,filename):
+
+    "Can be from NCBI"
+
     genomes_list = []
 
     with open(filename, 'rb') as csvfile:
@@ -69,7 +72,7 @@ class NCBI_fetch:
         self.number = number
 
     def make_db_direcory():
-        
+
         command = "mkdir "+path
 
 
@@ -102,8 +105,11 @@ class NCBI_fetch:
         pass
 
 
-
     def cat_files_into_one():
+        pass
+
+
+    def run():
         pass
 
 

@@ -29,6 +29,7 @@ from cov import Coverage
 from settings import *
 import os
 import sys
+import logging
 
 logger = logging.getLogger('src.bbmap_wrapper')
 logging.basicConfig(level=logging.INFO)
@@ -54,7 +55,8 @@ class BBmap:
 
 
     def checkForBBmap(self):
-        """Check to see if Kraken is on the system before we try to run it."""
+
+        """Checks that Kraken is on the system before we try to run it."""
 
         try:
             subprocess.call(['bbmap.sh', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
@@ -66,7 +68,7 @@ class BBmap:
     def ssu_n_lsu_rDNA_flitering_run(self,sample):
         path = self.path
         db = self.db_silva
-        command="%sbbmap.sh fast=t minidentity=0.70 reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq path=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best out=%s_filtered_mapped.sam" % (path, sample, sample, db, sample, sample, sample)
+        command="%sbbmap.sh fast=t minidentity=0.70 reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq nodisk ref=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best out=%s_filtered_mapped.sam" % (path, sample, sample, db, sample, sample, sample)
         logger.info("     Running command: [%s]" % command)
         os.system(command)
 
@@ -82,7 +84,7 @@ class BBmap:
         path = self.path
         db = self.db
         command="%sbbmap.sh fast=t minidentity=0.70 reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s outm1=%s_final_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq ambiguous=best  scafstats=%s_chloroplasts.hitstats out=%s_mapped.sam bincov=bincov.txt covbinsize=200" % (path, sample, sample, db, sample, sample, sample, sample)
-        logger.info("     Running command: [%s]" % command)
+        logger.info("      Running command: [%s]" % command)
         os.system(command)
 
 #This comes first -> kraken_out
@@ -103,7 +105,7 @@ class BBduk:
         try:
             subprocess.call(['bbduk.sh', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
         except:
-            logger.error("Make sure BBduk is on your system path or set usage to path in settings.txt")
+            logger.error("Make sure BBduk is on your system path or set proper path in settings.txt")
             sys.exit()
 
     def run(self, sample):
