@@ -28,6 +28,7 @@ __status__ = 'Development'
 
 
 #TODO
+#Description of remapping
 
 from settings import  Settings_loader
 from Bio import SeqIO
@@ -106,7 +107,6 @@ class Coverage:
         percentages = sorted(dict_gen_con.keys())
         sum_percentages = sum(percentages)
 
-#       print np.percentile(percentages,2.28)
         percentile_value =  np.percentile(percentages,percentile_tresh)
         percentages_ok = [i for i in percentages if i > percentile_value]
         percentages_values_discared =  [i for i in percentages if i < percentile_value]
@@ -137,8 +137,7 @@ class Coverage:
 
     def report_cov(self):
 
-        " Reports almoast fully/partially covered chloroplast genomes "
-
+        " Reports fully/partially covered chloroplast genomes "
 
         threshold = self.bin_cov_for_report
         dict_of_genomes = {}
@@ -157,13 +156,13 @@ class Coverage:
                         dict_of_genomes[name] = str((covered_part*100.0))
                 else:
                     pass
+
         if len(dict_of_genomes) == 0:
             logger.info("There is no fully/partially covered genomes")
-            sys.exit()
 
         else:
             with open("covered_genomes.csv","w") as f:
                 f.write("Genome name and id\tcoverage[%]")
                 for key in dict_of_genomes:
                     f.write("%s\t%s" % (key, dict_of_genomes[key]))
-                    return "Report was generated"
+                    logger.info("Report was generated")

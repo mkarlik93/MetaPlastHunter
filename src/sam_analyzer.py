@@ -49,7 +49,7 @@ logging.basicConfig(level=logging.INFO)
 
 # TODO:
 
-# Integracja z reszta ->
+#Sprawdzic liczby readow
 # plus wykresy
 
 """Voting algorithm was described below
@@ -368,7 +368,7 @@ class Sam_analyzer:
 
 class LCA_postprocess:
 
-    def __init__ (self,filename,treshold):
+    def __init__ (self,i,treshold):
 
         """Params
 
@@ -382,8 +382,9 @@ class LCA_postprocess:
         """
 
         self.treshold = treshold
-        self._lca_graph = self.lca_graph(filename)
+        self._lca_graph = self.lca_graph(i+"_taxonomic_assignment.txt")
         self._graph = self.lca_graph_analysis(treshold)
+        self._sample_name = i
 
 
     def get_count(self,filename):
@@ -497,17 +498,20 @@ class LCA_postprocess:
         plt.ylabel("counts")
         plt.xlabel("Species names")
         plt.title("Read counts")
-        plt.savefig("species_level.png")
+        plt.savefig(self._sample_name+"_species_level.png")
 
     def pandas_data_frame_species_level(self):
 
         _species_level = self.species_level()
         df = pd.DataFrame(_species_level.items(),columns=['Taxon', 'Counts'])
-        df.to_csv("table_1.csv")
+        df.to_csv(self._sample_name+"_species_level_table.csv")
 #        return df
 
+    #Trzeba dorobic!
     def pandas_data_frame_fourth_level(self):
-        taxa_to_catch = ["Stramenopiles"]
+
+        #TODO - dodac tu wszystkie z czwartego poziomou
+        taxa_to_catch = ["Stramenopiles","Haptophycae","Viridiplantae","Chromista"]
         _species_level = self.species_level()
         df = pd.DataFrame(_species_level.items(),columns=['Taxon', 'Counts'])
         return df
@@ -527,6 +531,7 @@ class LCA_postprocess:
     def species_level_shannon_index(self):
 
         " Writes shannon index [shannon.txt] for given sample"
+
         df_dict = self.species_level()
 
         def p(n, N):
@@ -544,15 +549,8 @@ class LCA_postprocess:
             f.write("Shannon index\t%s" % (shannon))
 #        return shannon
 
-
-
-#for i in LCA_postprocess(0.01).tree_reconstruction_of_nodes():
-#    print i
-
-
-
-
 class Run_analysis_sam_lca:
+
     def __init__ (self,  list_sra, station_name,settings):
 
         self.list_sra = list_sra
@@ -582,27 +580,12 @@ class Run_analysis_sam_lca:
             Coverage('bincov.txt',i+"_chloroplasts.hitstats",self.settings).report_cov()
             Sam_analyzer(self.seqidmap).reads_processing(i+"_final_mapped.sam",i+"_taxonomic_assignment.txt")
 
-            lca_postprocess =  LCA_postprocess(i+"_taxonomic_assignment.txt",self.lca_treshold)
+            lca_postprocess =  LCA_postprocess(i,self.lca_treshold)
             lca_postprocess.pandas_data_frame_species_level()
             lca_postprocess.species_level_shannon_index()
-            lca.postprocess.count_plot_species_level()
+            lca_postprocess.count_plot_species_level()
 
             os.chdir(starting_dir)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #ANALIZA GRAFU

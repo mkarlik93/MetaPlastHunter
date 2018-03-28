@@ -26,18 +26,16 @@ __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
 from settings import *
+from time import gmtime, strftime
+import sys
+import os
+import argparse
+from multiprocessing import Process
+import glob
 import logging
 
 logger = logging.getLogger('src.get_data')
 logging.basicConfig(level=logging.INFO)
-
-
-def fastq_dump_sra_file(station_name,sra_id,path):
-    command_create_dir = "mkdir %s/%s" % (station_name,sra_id)
-    os.system(command_create_dir)
-    command = "%sfastq-dump %s --skip-technical -I --split-3" % (path,sra_id)
-    os.chdir("%s/%s/" % (station_name,sra_id))
-    os.system(command)
 
 
 class Pipeline_fetch:
@@ -45,7 +43,15 @@ class Pipeline_fetch:
     def __init__(self, list_sra, station_name,settings):
         self.list_sra = list_sra
         self.station_name = station_name
-        self.path = Settings_loader(mode="sratoolkit").read_path()["sratoolkit"]
+        self.path = Settings_loader(mode="fastq-dump",path=settings).read_path()["fastq-dump"]
+
+
+    def fastq_dump_sra_file(self):
+        command_create_dir = "mkdir %s/%s" % (self.station_name,self.sra_id)
+        os.system(command_create_dir)
+        command = "%sfastq-dump %s --skip-technical -I --split-3" % (self.path,self.sra_id)
+        os.chdir("%s/%s/" % (self.station_name,self.sra_id))
+        os.system(command)
 
     def create_station_dir(self):
         command  = "mkdir %s" % (self.station_name)
@@ -53,6 +59,7 @@ class Pipeline_fetch:
         logger.info("Created direcory named: %s" % (self.station_name))
 
     def preprocess_sra_id(self):
+        'Splits sra_ids line into list of sra ids'
         sra_ids = self.list_sra
         list_sra_ids = sra_ids.split(",")
         return list_sra_ids
@@ -63,10 +70,11 @@ class Pipeline_fetch:
         list_sra_ids = sra_ids.split(",")
         path = self.path
         for i in list_sra_ids:
-                proc = Process(target=fastq_dump_sra_file, args=(self.station_name,i,path))
+                proc = Process(target=self.fastq_dump_sra_file, args=(self.station_name,i,path))
                 proc.start()
                 logger.info("Downloading has been started")
 
+    #CHECK THIS
     def evaluation(self):
         cwd = os.getcwd()
         station_name = self.station_name
@@ -103,18 +111,12 @@ class Pipeline_fetch:
     def run(self):
         self.create_station_dir()
         self.multiprocess()
-        self.evaluation()
+#        self.evaluation()
         self.fastqc_report()
 
 
 if __name__ == "__main__":
 
-    from time import gmtime, strftime
-    import sys
-    import os
-    import argparse
-    from multiprocessing import Process
-    import glob
 
 
     description = """

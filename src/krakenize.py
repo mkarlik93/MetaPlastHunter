@@ -32,6 +32,11 @@ import os
 import sys
 from settings import *
 
+#TODO
+
+# Description
+#
+
 logger = logging.getLogger('src.krakenize')
 logging.basicConfig(level=logging.INFO)
 
@@ -78,6 +83,7 @@ class KrakenRunner:
 class Pipeline_kraken:
 
     def __init__(self, list_sra, station_name,settings,threads):
+
         self.list_sra = list_sra
         self.station_name = station_name
         self.threads = threads
@@ -90,7 +96,7 @@ class Pipeline_kraken:
         starting_dir = os.getcwd()
         kraken = KrakenRunner(self.threads,self.settings)
         for i in list_sra_ids:
-            print "kraken for "+i
+            logger.info("reads prelimnary classification by kraken, for "+i)
             read_name_1 = i+"_1.fastq"
             read_name_2 = i+"_2.fastq"
             dir = "%s/%s/" % (self.station_name,i)
@@ -103,6 +109,7 @@ class Pipeline_kraken:
                 os.remove("%s/%s/%s" % (self.station_name,i,read_name_2))
             else:
                 logger.error("There is no fastq files")
+#                sys.exit()
                 os.chdir(starting_dir)
 
     def run(self):

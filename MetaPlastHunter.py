@@ -33,6 +33,10 @@ logging.basicConfig(level=logging.INFO)
 
 
 
+#TODO
+
+# Dorobic wersje z kraken
+# Dorobic po kraken
 
 #LET's write whole main
 
@@ -49,10 +53,9 @@ class WholePipeline:
 
     def run(self):
 
-
         logger.info( "     [%s] Dowloading data" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Pipeline_fetch(self.list_sra,self.station_name,self.settings).run()
-        logger.info("     [%s] Kraken classification" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        logger.info("     [%s] Preliminary classification" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Pipeline_kraken(self.list_sra, self.station_name,self.settings,self.threads).run()
         logger.info("     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         BBpipe(self.list_sra,self.station_name,settings).process()
@@ -70,11 +73,11 @@ class Pipeline_without_downloading:
 
     def run(self):
 
-        logger.info("     [%s] Kraken classification" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        logger.info("     [%s] Preliminary classification" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
         Pipeline_kraken(self.list_sra, self.station_name,self.settings,self.threads).run()
-        logger.info("     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        logger.info("     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
         BBpipe(self.list_sra,self.station_name,self.settings).process()
-        logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
         Run_analysis_sam_lca(self.list_sra, self.station_name,self.settings).process()
 
 
@@ -117,7 +120,7 @@ This sofware was written by %s.
                     epilog=epilog)
 
 
-    parser.add_argument('-analysis_with_dumping_data','--full',action='store_true')
+    parser.add_argument('-analysis_with_fetching_data','--full',action='store_true')
     parser.add_argument('-analysis','--partial',action='store_true')
     parser.add_argument('sra_ids', metavar='sra_ids', type=str)
     parser.add_argument('station_name', metavar='station_name', type=str)
@@ -137,7 +140,7 @@ This sofware was written by %s.
 
     start = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
     if args.full:
-        WholePipeline(args.list_sra, args.station_name,args.settings,args.threads).run()
+        WholePipeline(args.sra_ids, args.station_name,args.settings,args.threads).run()
     if args.partial:
         Pipeline_without_downloading(args.sra_ids, args.station_name,args.settings,args.threads).run()
     else:

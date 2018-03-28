@@ -26,6 +26,7 @@ __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
+import csv
 
 """ Project managment part  """
 
@@ -37,13 +38,44 @@ __status__ = 'Development'
 #    os.system("mkdir all_"+station_name)
 #    os.chdir(base_cwd)
 
+
+
+
+
 class Concatenate:
     def __init__(self,station_name):
+
+        self.base_cwd = os.getcwd()
         self.station_name = station_name
 
+
+    def fromcsv2dict(self,file):
+        reader = csv.reader(file)
+        dict =  {}
+        for row in reader:
+            splited_row = row.split("\t")
+            dict[splited_row[1]] = splited_row[2]
+        return dict
+
+    def get_species_results_from_site(self):
+
+        os.chdir(self.base_cwd+"/"+self.station_name+"/")
+        thedir = self.station_name
+        directories =  [ name for name in os.listdir(thedir) if os.path.isdir(os.path.join(thedir, name)) ]
+        list_of_dict = []
+        cwd = os.getcwd()
+        for i in directories:
+            os.chdir(cwd+"/"+i+"/")
+            files = glob.glob("*_species_level_table.csv"")
+            for file in files:
+                unique_names.add(self.fromcsv2dict(file))
+        os.chdir(self.base_cwd)
+        return list_of_dict
+
+
     def get_unique_among_folders(self):
-        base_cwd = os.getcwd()
-        os.chdir(os.getcwd()+"/"+self.station_name+"/")
+#        base_cwd = os.getcwd()
+        os.chdir(self.base_cwd+"/"+self.station_name+"/")
         thedir = self.station_name
         directories =  [ name for name in os.listdir(thedir) if os.path.isdir(os.path.join(thedir, name)) ]
         unique_names = set()
@@ -53,11 +85,11 @@ class Concatenate:
             files = glob.glob("extracted_reads_*")
             for file in files:
                 unique_names.add(file)
-        os.chdir(base_cwd)
+        os.chdir(self.base_cwd)
         return unique_names
 
     def concatenate(self):
-        base_cwd = os.getcwd()
+
         unique_names = get_unique_among_folders(self.station_name)
         os.chdir(os.getcwd()+"/"+self.station_name+"/")
         thedir = self.station_name
@@ -74,7 +106,7 @@ class Concatenate:
             for file in files:
                 for record in SeqIO.parse(file, ext):
                     reads_in_memory[file].append(record)
-        os.chdir(base_cwd)
+        os.chdir(self.base_cwd)
         os.chdir(os.getcwd()+"/"+self.station_name+"/")
         for key in reads_in_memory:
             SeqIO.write(reads_in_memory[key], "all_"+key, ext)

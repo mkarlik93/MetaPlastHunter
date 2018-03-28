@@ -30,7 +30,7 @@ __status__ = 'Development'
 import subprocess
 import logging
 
-""" This is wrapper for RepeatMasker """
+""" This is wrapper for RepeatMasker - ??????? """
 
 
 class RMasker(BaseException):
@@ -53,7 +53,7 @@ def run_masking(self,fastafile):
     os.system(command)
 
 
-def checkForRMasker(self):
+def check_for_rmasker(self):
     """Check to see if RepeatMasker is on the system before we try to run it."""
 
     try:

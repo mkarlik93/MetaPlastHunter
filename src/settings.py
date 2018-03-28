@@ -113,7 +113,7 @@ class Settings_loader:
 
 
         with open(self.path) as f:
-            print "  Loaded settings.txt"
+            logger.info("  Loaded settings.txt")
             dict = {}
             for i in f:
                 splited = i.split("=")
@@ -122,9 +122,9 @@ class Settings_loader:
                     print "  Checking for %s" % (splited[0])
                     try:
                         subprocess.call([splited[1].strip("\n")+splited[0], '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
-                        print "  Status OK synek!"
+                        logger.info("  Status OK synek!")
                     except:
-                        print "  [Error] Make sure %s path is in settings.txt or was set correctly, synek." % splited[0]
+                        logger.info("  [Error] Make sure %s path is in settings.txt or was set correctly, synek." % splited[0])
                         sys.exit()
             return dict
 
@@ -172,5 +172,5 @@ class Settings_loader:
                 splited = i.split("=")
                 if line == splited[0]:
                     dict[splited[0]] = splited[1].strip("\n")
-                    print "  Checking for %s" % (splited[0])
+                    logger.info("  Checking for %s" % (splited[0]))
             return dict
