@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 ###############################################################################
-#                                                                             #
+#    Entry point for MetaPlastHunter                                          #
 #    This program is free software: you can redistribute it and/or modify     #
 #    it under the terms of the GNU General Public License as published by     #
 #    the Free Software Foundation, either version 3 of the License, or        #
@@ -32,17 +32,18 @@ logging.basicConfig(level=logging.INFO)
 
 
 
-
-#TODO
-
-# Dorobic wersje z kraken
-# Dorobic po kraken
-
 #LET's write whole main
 
 
+#TU inaczej -> jedna klasa, wiele funkcji
 
-class WholePipeline:
+
+class Run:
+
+    """
+    Main class for running MetaPlastHunter
+
+    """
 
     def __init__(self,list_sra, station_name,settings,threads):
 
@@ -51,34 +52,33 @@ class WholePipeline:
         self.settings = settings
         self.threads = threads
 
-    def run(self):
+    def full_wf(self):
 
         logger.info( "     [%s] Dowloading data" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Pipeline_fetch(self.list_sra,self.station_name,self.settings).run()
         logger.info("     [%s] Preliminary classification" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Pipeline_kraken(self.list_sra, self.station_name,self.settings,self.threads).run()
-        logger.info("     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        logger.info("     [%s] BBmap initial mapping" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         BBpipe(self.list_sra,self.station_name,settings).process()
-        logger.info("     [%s] Output analysis" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Run_analysis_sam_lca(self.list_sra, self.station_name).process()
 
-class Pipeline_without_downloading:
-
-    def __init__(self,list_sra, station_name,settings,threads):
-
-        self.list_sra = list_sra
-        self.station_name = station_name
-        self.settings = settings
-        self.threads = threads
-
-    def run(self):
+    def classification_wf(self):
 
         logger.info("     [%s] Preliminary classification" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
         Pipeline_kraken(self.list_sra, self.station_name,self.settings,self.threads).run()
+        logger.info("     [%s] BBmap initial mapping" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
+        BBpipe(self.list_sra,self.station_name,self.settings).process()
+        logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
+        Run_analysis_sam_lca(self.list_sra, self.station_name,self.settings).process()
+
+    def recalculation_wf(self):
+
         logger.info("     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
         BBpipe(self.list_sra,self.station_name,self.settings).process()
         logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
         Run_analysis_sam_lca(self.list_sra, self.station_name,self.settings).process()
+
 
 
 if __name__ == "__main__":
@@ -87,6 +87,7 @@ if __name__ == "__main__":
     import sys
     import os
     import argparse
+
     from src.bbmap_wrapper import BBpipe
     from src.krakenize import Pipeline_kraken
     from src.sam_analyzer import Run_analysis_sam_lca
@@ -120,8 +121,9 @@ This sofware was written by %s.
                     epilog=epilog)
 
 
-    parser.add_argument('-analysis_with_fetching_data','--full',action='store_true')
-    parser.add_argument('-analysis','--partial',action='store_true')
+    parser.add_argument('-full_wf','--full',action='store_true')
+    parser.add_argument('-classification_wf','--classify',action='store_true')
+    parser.add_argument('-recalculation_wf','--recalculate',action='store_true')
     parser.add_argument('sra_ids', metavar='sra_ids', type=str)
     parser.add_argument('station_name', metavar='station_name', type=str)
     parser.add_argument('settings', metavar='settings', type=str)
@@ -139,10 +141,21 @@ This sofware was written by %s.
     args = parser.parse_args()
 
     start = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
+
+#    _settings_path = os.getcwd()
+
     if args.full:
-        WholePipeline(args.sra_ids, args.station_name,args.settings,args.threads).run()
-    if args.partial:
-        Pipeline_without_downloading(args.sra_ids, args.station_name,args.settings,args.threads).run()
+
+        Run(args.sra_ids, args.station_name,args.settings,args.threads).full_wf()
+
+    if args.classify:
+
+        Run(args.sra_ids, args.station_name,args.settings,args.threads).classification_wf()
+
+    if args.recalculate:
+        
+        Run(args.sra_ids, args.station_name,args.settings,args.threads).recalculation_wf()
+
     else:
         logger.error("      Please specify pipeline")
         sys.exit()

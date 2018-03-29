@@ -45,16 +45,23 @@ class KrakenError(BaseException):
 
 class KrakenRunner:
 
-    """Wrapper for running kraken."""
+    """ Params
+
+
+
+
+    Wrapper for running kraken."""
 
     def __init__(self,threads,settings):
         self.threads = threads
         self.settings = settings
-        # make sure kraken is installed
+
         if settings == None:
+
             self.checkForKraken()
             self.path = ""
         else:
+
             self.path = Settings_loader(mode="kraken",path=self.settings).read_path()["kraken"]
             self.db = Settings_loader(mode="kraken",path=self.settings).read_database()["kraken_db"]
 
@@ -65,11 +72,11 @@ class KrakenRunner:
         command = "%skraken -t %s --db %s --paired %s %s --out-fmt paired --fastq-output --classified-out %s_classif > %s_kraken_out" % (path,str(self.threads),db,reads_1,reads_2,name,name)
         os.system(command)
 
-    def run_report(self,name):
-        path = self.path
-        db = self.db
-        command_report = "%sscripts/kraken-report --db %s %s_kraken_out > kraken_report.txt" % (path, db,name)
-        os.system(command_report)
+#    def run_report(self,name):
+#        path = self.path
+#        db = self.db
+#        command_report = "%sscripts/kraken-report --db %s %s_kraken_out > kraken_report.txt" % (path, db,name)
+#        os.system(command_report)
 
     def checkForKraken(self):
         """Check to see if Kraken is on the system before we try to run it."""
@@ -103,13 +110,13 @@ class Pipeline_kraken:
             os.chdir(dir)
             if len(glob.glob(read_name_1)) == 1:
                 kraken.run_classification(read_name_1, read_name_2,i)
-                kraken.run_report(i)
+#                kraken.run_report(i)
                 os.chdir(starting_dir)
                 os.remove("%s/%s/%s" % (self.station_name,i,read_name_1))
                 os.remove("%s/%s/%s" % (self.station_name,i,read_name_2))
             else:
-                logger.error("There is no fastq files")
-#                sys.exit()
+                logger.error("There is no fastq files, consider option recalculate ")
+                sys.exit()
                 os.chdir(starting_dir)
 
     def run(self):

@@ -54,7 +54,7 @@ class Coverage:
         param histstats: keeps data from histstats file
 
         """
-        self.loaded = self.load_bincov(filename,histstats)
+        self.loaded_bin_cov = self.load_bincov(filename,histstats)
         self.db = Settings_loader(mode="bbmap.sh",path=settings).read_database()["bbmap_base"]
         self.min_bin_coverage = float(Settings_loader(mode="min_bin_coverage",path=settings).read_parameters()["min_bin_coverage"])
         self.percentile_treshold = float(Settings_loader(mode="percentile_treshold",path=settings).read_parameters()["percentile_treshold"])
@@ -92,7 +92,7 @@ class Coverage:
         percentile_tresh = self.percentile_treshold
         dict_of_genomes = {}
         dict_gen_con = {}
-        dict = self.loaded
+        dict = self.loaded_bin_cov
         for i in dict:
             name = i
             record = dict[i]
@@ -141,7 +141,7 @@ class Coverage:
 
         threshold = self.bin_cov_for_report
         dict_of_genomes = {}
-        dict = self.loaded
+        dict = self.loaded_bin_cov
         for i in dict:
             name = i
             record = dict[i]
@@ -165,4 +165,4 @@ class Coverage:
                 f.write("Genome name and id\tcoverage[%]")
                 for key in dict_of_genomes:
                     f.write("%s\t%s" % (key, dict_of_genomes[key]))
-                    logger.info("Report was generated")
+                    logger.info("Genome of %s is almost fully covered: %s [%]" % (key,dict_of_genomes[key]))

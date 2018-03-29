@@ -76,7 +76,7 @@ class BBmap:
 #remapping with smaller database
     def remap_run(self,sample):
         path = self.path
-        command="%sbbmap.sh fast=t nodisk minidentity=0.70 idtag=t reads=-1 in1=%s_final_chloroplasts_reads_R1.fq in2=%s_final_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outu1=%s_f_chloroplasts_reads_R1.fq outu2=%s_f_chloroplasts_reads_R2.fq ambiguous=all scafstats=%s_final_chloroplasts.hitstats out=%s_final_mapped.sam" % (path, sample, sample, sample, sample,sample, sample)
+        command="%sbbmap.sh fast=t nodisk minidentity=0.70 idtag=t reads=-1 in1=%s_final_chloroplasts_reads_R1.fq in2=%s_final_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outu1=%s_f_chloroplasts_reads_R1.fq outu2=%s_f_chloroplasts_reads_R2.fq ambiguous=all scafstats=%s_final_chloroplasts.hitstats out=%s_final_mapped.sam bincov=bincov.txt covbinsize=200" % (path, sample, sample, sample, sample,sample, sample)
         logger.info("     Running command: [%s]" % command)
         os.system(command)
 
@@ -100,7 +100,7 @@ class BBduk:
             self.path = Settings_loader(mode="bbduk.sh",path=self.settings).read_path()["bbduk.sh"]
 
     def checkForBBduk(self):
-        """Check to see if BBduk is on the system before we try to run it."""
+        """Checks to see if BBduk is on the system's path before we try to run it."""
 
         try:
             subprocess.call(['bbduk.sh', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)

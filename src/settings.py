@@ -33,7 +33,8 @@ import sys
 import subprocess
 import logging
 
-
+logger = logging.getLogger('src.settings')
+logging.basicConfig(level=logging.INFO)
 
 
 class SettingsError(BaseException):

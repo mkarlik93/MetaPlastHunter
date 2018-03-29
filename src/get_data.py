@@ -72,7 +72,7 @@ class Pipeline_fetch:
         for i in list_sra_ids:
                 proc = Process(target=self.fastq_dump_sra_file, args=(self.station_name,i,path))
                 proc.start()
-                logger.info("Downloading has been started")
+                logger.info("Downloading of %s  has been started")
 
     #CHECK THIS
     def evaluation(self):

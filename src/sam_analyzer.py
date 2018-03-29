@@ -38,7 +38,6 @@ import pandas as pd
 import logging
 import os
 import sys
-
 from settings import  Settings_loader
 from cov import Coverage
 
