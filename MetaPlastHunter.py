@@ -33,8 +33,6 @@ logging.basicConfig(level=logging.INFO)
 
 
 #LET's write whole main
-
-
 #TU inaczej -> jedna klasa, wiele funkcji
 
 
@@ -101,7 +99,18 @@ if __name__ == "__main__":
 Version %s
 
 
-The first version of MetaPlastHunter.
+MetaPlastHunter - The efficient and accurate plastid reads classification pipeline.
+
+
+Quantitative aproach for eukaryotic metagenomics.
+
+
+-full_wf/--full From downloading data to classification and visualization
+
+-classification_wf/--classify Classification and visualization
+
+-recalculation_wf/--recalculate Use it for recalculate taxonomic assignemnt based on LCA algorithm
+
 
 If you have any questions, please do not hesitate to contact me
 email address: michal.karlicki@gmail.com
@@ -153,7 +162,7 @@ This sofware was written by %s.
         Run(args.sra_ids, args.station_name,args.settings,args.threads).classification_wf()
 
     if args.recalculate:
-        
+
         Run(args.sra_ids, args.station_name,args.settings,args.threads).recalculation_wf()
 
     else:

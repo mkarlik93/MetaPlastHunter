@@ -162,7 +162,7 @@ class Coverage:
 
         else:
             with open("covered_genomes.csv","w") as f:
-                f.write("Genome name and id\tcoverage[%]")
+                f.write("Genome name and id\tcoverage[%]\n")
                 for key in dict_of_genomes:
-                    f.write("%s\t%s" % (key, dict_of_genomes[key]))
+                    f.write("%s\t%s\n" % (key, dict_of_genomes[key]))
                     logger.info("Genome of %s is almost fully covered: %s [%]" % (key,dict_of_genomes[key]))

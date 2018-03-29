@@ -38,20 +38,23 @@ logger = logging.getLogger('src.get_data')
 logging.basicConfig(level=logging.INFO)
 
 
+def fastq_dump_sra_file(station_name,list_sra,path):
+    command_create_dir = "mkdir %s/%s" % (station_name,list_sra)
+    os.system(command_create_dir)
+    command = "%sfastq-dump %s --skip-technical -I --split-3" % (path,list_sra)
+    os.chdir("%s/%s/" % (station_name,list_sra))
+    os.system(command)
+    logger.info("Downloading of %s has been started" % list_sra)
+
+
 class Pipeline_fetch:
 
     def __init__(self, list_sra, station_name,settings):
+
         self.list_sra = list_sra
         self.station_name = station_name
         self.path = Settings_loader(mode="fastq-dump",path=settings).read_path()["fastq-dump"]
 
-
-    def fastq_dump_sra_file(self):
-        command_create_dir = "mkdir %s/%s" % (self.station_name,self.sra_id)
-        os.system(command_create_dir)
-        command = "%sfastq-dump %s --skip-technical -I --split-3" % (self.path,self.sra_id)
-        os.chdir("%s/%s/" % (self.station_name,self.sra_id))
-        os.system(command)
 
     def create_station_dir(self):
         command  = "mkdir %s" % (self.station_name)
@@ -70,9 +73,10 @@ class Pipeline_fetch:
         list_sra_ids = sra_ids.split(",")
         path = self.path
         for i in list_sra_ids:
-                proc = Process(target=self.fastq_dump_sra_file, args=(self.station_name,i,path))
-                proc.start()
-                logger.info("Downloading of %s  has been started")
+
+                job = Process(target=fastq_dump_sra_file, args=(self.station_name,self.list_sra,self.path))
+                job.start()
+                job.join()
 
     #CHECK THIS
     def evaluation(self):
@@ -111,8 +115,8 @@ class Pipeline_fetch:
     def run(self):
         self.create_station_dir()
         self.multiprocess()
-#        self.evaluation()
-        self.fastqc_report()
+        self.evaluation()
+#        self.fastqc_report()
 
 
 if __name__ == "__main__":

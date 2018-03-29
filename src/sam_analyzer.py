@@ -48,7 +48,7 @@ logging.basicConfig(level=logging.INFO)
 
 # TODO:
 
-#Sprawdzic liczby readow
+#Sprawdzic liczby readow - znow cos nie gra... moze to opcja is_mapped?
 # plus wykresy
 
 """Voting algorithm was described below
