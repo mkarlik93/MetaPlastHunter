@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 if __name__ == '__main__':
     setup(
         name='MetaPlastHunter',
-        version='0.0.1',
+        version='1.0.0',
         author='Michal Karlicki',
         packages=find_packages(exclude=['tests']),
         include_package_data=True,

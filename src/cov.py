@@ -88,7 +88,7 @@ class Coverage:
 
     def getpercentage_cov(self):
         #percentile
-        thresh = self.min_bin_coverage
+#       thresh = self.min_bin_coverage
         percentile_tresh = self.percentile_treshold
         dict_of_genomes = {}
         dict_gen_con = {}
@@ -99,7 +99,7 @@ class Coverage:
             mean =  np.mean(record)
             if mean > 0:
                 all_seq = len(record)
-                list_tmp = [i for i,v in enumerate(record) if v > thresh]
+                list_tmp = [i for i,v in enumerate(record) if v >  self.min_bin_coverage]
                 covered_part = len(list_tmp)/float(all_seq) * 100
                 dict_gen_con[covered_part] = name
 
@@ -139,7 +139,7 @@ class Coverage:
 
         " Reports fully/partially covered chloroplast genomes "
 
-        threshold = self.bin_cov_for_report
+#        threshold = self.bin_cov_for_report
         dict_of_genomes = {}
         dict = self.loaded_bin_cov
         for i in dict:
@@ -148,7 +148,7 @@ class Coverage:
             mean =  np.mean(record)
             if mean > 0:
                 all_seq = len(record)
-                list_tmp = [i for i,v in enumerate(record) if v > threshold]
+                list_tmp = [i for i,v in enumerate(record) if v > self.bin_cov_for_report]
                 covered_part = len(list_tmp)/float(all_seq)
 
                 if covered_part > 0.5:

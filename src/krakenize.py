@@ -96,7 +96,6 @@ class Pipeline_kraken:
         self.threads = threads
         self.settings = settings
 
-
     def kraken_not_multi(self):
         sra_ids = self.list_sra
         list_sra_ids = sra_ids.split(",")

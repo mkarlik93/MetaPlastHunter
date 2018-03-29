@@ -48,7 +48,7 @@ logging.basicConfig(level=logging.INFO)
 
 # TODO:
 
-#Sprawdzic liczby readow - znow cos nie gra... moze to opcja is_mapped?
+#Sprawdzic liczby readow - znow cos nie gra... DOKLADNIE Sprawdzic!
 # plus wykresy
 
 """Voting algorithm was described below
@@ -349,6 +349,10 @@ class Sam_analyzer:
 
                                     lca = self._tree.get_common_ancestor(_r1_taxid[index_max_r1],_r2_taxid[index_max_r2])
 
+                                    f.write("%s\t%s\n" % (record+".1",";".join(self.get_lineage(lca.taxid))))
+                                    f.write("%s\t%s\n" % (record+".2",";".join(self.get_lineage(lca.taxid))))
+
+
                             else:
 
                                  lca = self._tree.get_common_ancestor(_r1_taxid + _r2_taxid)
@@ -485,6 +489,11 @@ class LCA_postprocess:
                 species[node] = self._graph.nodes[node]['count']
         return species
 
+    def pandas_data_frame_species_level(self):
+
+        _species_level = self.species_level()
+        df = pd.DataFrame(_species_level.items(),columns=['Taxon', 'Counts'])
+        df.to_csv(self._sample_name+"_species_level_table.csv")
 
     def count_plot_species_level(self):
 
@@ -499,21 +508,38 @@ class LCA_postprocess:
         plt.title("Read counts")
         plt.savefig(self._sample_name+"_species_level.png")
 
-    def pandas_data_frame_species_level(self):
 
-        _species_level = self.species_level()
-        df = pd.DataFrame(_species_level.items(),columns=['Taxon', 'Counts'])
-        df.to_csv(self._sample_name+"_species_level_table.csv")
-#        return df
+    def fourth_level(self):
+
+        #TODO - dodac tu wszystkie z czwartego poziomou i chlorophyta
+        taxa_to_catch = ["Stramenopiles","Haptophyceae","Chlorophyta","Rhodophyta", "Alveolata","Rhizaria","Euglenozoa"]
+        taxons_from_list = {}
+        for node in self._graph.nodes():
+            if node in taxa_to_catch:
+                taxons_from_list[node] = self._graph.nodes[node]['count']
+        return taxons_from_list
 
     #Trzeba dorobic!
     def pandas_data_frame_fourth_level(self):
 
-        #TODO - dodac tu wszystkie z czwartego poziomou
-        taxa_to_catch = ["Stramenopiles","Haptophycae","Viridiplantae","Chromista"]
-        _species_level = self.species_level()
-        df = pd.DataFrame(_species_level.items(),columns=['Taxon', 'Counts'])
-        return df
+
+        _fourth_level = self.fourth_level()
+        df = pd.DataFrame(_fourth_level.items(),columns=['Taxon', 'Counts'])
+        df.to_csv(self._sample_name+"_fourth_level_table.csv")
+
+    def count_plot_fourth_level(self):
+
+        'Plots barplot of counted reads on species level'
+
+        #Plot_counts
+
+        _fourth_level = self.fourth_level()
+        plt.bar(range(len(_fourth_level)), list(_fourth_level.values()), align='center')
+        plt.xticks(range(len(_fourth_level)), list(_fourth_level.keys()),rotation=20)
+        plt.ylabel("counts")
+        plt.xlabel("Taxa names")
+        plt.title("Read counts")
+        plt.savefig(self._sample_name+"_fourth_taxonomic_level.png")
 
     def tree_reconstruction_of_nodes(self):
 
@@ -583,6 +609,8 @@ class Run_analysis_sam_lca:
             lca_postprocess.pandas_data_frame_species_level()
             lca_postprocess.species_level_shannon_index()
             lca_postprocess.count_plot_species_level()
+            lca_postprocess.pandas_data_frame_fourth_level()
+            lca_postprocess.count_plot_fourth_level()
 
             os.chdir(starting_dir)
 

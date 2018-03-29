@@ -115,6 +115,7 @@ class BBduk:
         os.system(command)
 
 class BBpipe:
+
     def __init__(self, list_sra, station_name,settings):
 
         self.list_sra = list_sra
@@ -122,11 +123,13 @@ class BBpipe:
         self.settings = settings
 
     def process(self):
+
         sra_ids = self.list_sra
         list_sra_ids = sra_ids.split(",")
         starting_dir = os.getcwd()
         bbduk = BBduk(self.settings)
         bbmap = BBmap(self.settings)
+
         for i in list_sra_ids:
             logger.info("Procesing "+i)
             dir = "%s/%s/" % (self.station_name,i)

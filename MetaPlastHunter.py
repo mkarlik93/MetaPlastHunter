@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 ###############################################################################
+#                                                                             #
 #    Entry point for MetaPlastHunter                                          #
 #    This program is free software: you can redistribute it and/or modify     #
 #    it under the terms of the GNU General Public License as published by     #
@@ -33,8 +34,6 @@ logging.basicConfig(level=logging.INFO)
 
 
 #LET's write whole main
-#TU inaczej -> jedna klasa, wiele funkcji
-
 
 class Run:
 
@@ -52,7 +51,7 @@ class Run:
 
     def full_wf(self):
 
-        logger.info( "     [%s] Dowloading data" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        logger.info( "     [%s] Downloading data from SRArchive" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Pipeline_fetch(self.list_sra,self.station_name,self.settings).run()
         logger.info("     [%s] Preliminary classification" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Pipeline_kraken(self.list_sra, self.station_name,self.settings,self.threads).run()
@@ -60,6 +59,11 @@ class Run:
         BBpipe(self.list_sra,self.station_name,settings).process()
         logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Run_analysis_sam_lca(self.list_sra, self.station_name).process()
+
+    def fetch_wf(self):
+
+        logger.info( "     [%s] Downloading data from SRArchive" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        Pipeline_fetch(self.list_sra,self.station_name,self.settings).run()
 
     def classification_wf(self):
 
@@ -85,7 +89,6 @@ if __name__ == "__main__":
     import sys
     import os
     import argparse
-
     from src.bbmap_wrapper import BBpipe
     from src.krakenize import Pipeline_kraken
     from src.sam_analyzer import Run_analysis_sam_lca
@@ -105,11 +108,30 @@ MetaPlastHunter - The efficient and accurate plastid reads classification pipeli
 Quantitative aproach for eukaryotic metagenomics.
 
 
--full_wf/--full From downloading data to classification and visualization
+Options:
 
--classification_wf/--classify Classification and visualization
+[-full_wf/--full] From downloading data to classification and visualization
 
--recalculation_wf/--recalculate Use it for recalculate taxonomic assignemnt based on LCA algorithm
+[-download_data/--fetch] Downloading data and directories preparation
+
+[-classification_wf/--classify] Classification and visualization
+
+[-recalculation_wf/--recalculate] Use it for recalculate taxonomic assignemnt based on LCA algorithm
+
+
+Obligatory arguments:
+
+sra_ids
+
+station_name
+
+settings
+
+
+Facultative arguments:
+
+threads
+
 
 
 If you have any questions, please do not hesitate to contact me
@@ -120,6 +142,9 @@ This sofware was written by %s.
 """ % (__version__,__author__)
 
     epilog = """
+
+
+
 
 """
 
@@ -133,13 +158,14 @@ This sofware was written by %s.
     parser.add_argument('-full_wf','--full',action='store_true')
     parser.add_argument('-classification_wf','--classify',action='store_true')
     parser.add_argument('-recalculation_wf','--recalculate',action='store_true')
+    parser.add_argument('-download_data','--fetch',action='store_true')
     parser.add_argument('sra_ids', metavar='sra_ids', type=str)
     parser.add_argument('station_name', metavar='station_name', type=str)
     parser.add_argument('settings', metavar='settings', type=str)
     parser.add_argument('threads',nargs='?', type=int,default=mp.cpu_count())
 
-#    parser.add_argument('number', nargs='?', type=int,default=None)
-#    parser.add_argument('format', nargs='?', type=str,default="fasta")
+#   parser.add_argument('number', nargs='?', type=int,default=None)
+#   parser.add_argument('format', nargs='?', type=str,default="fasta")
 
 
 
@@ -164,6 +190,10 @@ This sofware was written by %s.
     if args.recalculate:
 
         Run(args.sra_ids, args.station_name,args.settings,args.threads).recalculation_wf()
+
+    if args.fetch:
+
+        Run(args.sra_ids, args.station_name,args.settings,args.threads).fetch_wf()
 
     else:
         logger.error("      Please specify pipeline")

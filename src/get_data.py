@@ -39,12 +39,20 @@ logging.basicConfig(level=logging.INFO)
 
 
 def fastq_dump_sra_file(station_name,list_sra,path):
-    command_create_dir = "mkdir %s/%s" % (station_name,list_sra)
-    os.system(command_create_dir)
-    command = "%sfastq-dump %s --skip-technical -I --split-3" % (path,list_sra)
-    os.chdir("%s/%s/" % (station_name,list_sra))
-    os.system(command)
-    logger.info("Downloading of %s has been started" % list_sra)
+
+    if os.path.exists(station_name+"/"+list_sra):
+
+        command = "%sfastq-dump %s --skip-technical -I --split-3" % (path,list_sra)
+        os.chdir("%s/%s/" % (station_name,list_sra))
+        os.system(command)
+        logger.info("Downloading of %s has been started" % list_sra)
+    else:
+        command_create_dir = "mkdir %s/%s" % (station_name,list_sra)
+        os.system(command_create_dir)
+        command = "%sfastq-dump %s --skip-technical -I --split-3" % (path,list_sra)
+        os.chdir("%s/%s/" % (station_name,list_sra))
+        os.system(command)
+        logger.info("Downloading of %s has been started" % list_sra)
 
 
 class Pipeline_fetch:
@@ -57,9 +65,14 @@ class Pipeline_fetch:
 
 
     def create_station_dir(self):
-        command  = "mkdir %s" % (self.station_name)
-        os.system(command)
-        logger.info("Created direcory named: %s" % (self.station_name))
+
+        if os.path.exists(self.station_name):
+
+            logger.info("It's seems folder named already exists %s, ommiting this step." % self.station_name)
+        else:
+            command  = "mkdir %s" % (self.station_name)
+            os.system(command)
+            logger.info("Created direcory named: %s" % (self.station_name))
 
     def preprocess_sra_id(self):
         'Splits sra_ids line into list of sra ids'
