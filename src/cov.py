@@ -55,7 +55,7 @@ class Coverage:
 
         """
         self.loaded_bin_cov = self.load_bincov(filename,histstats)
-        self.db = Settings_loader(mode="bbmap.sh",path=settings).read_database()["bbmap_base"]
+        self.database = Settings_loader(mode="bbmap.sh",path=settings).read_database()["bbmap_base"]
         self.min_bin_coverage = float(Settings_loader(mode="min_bin_coverage",path=settings).read_parameters()["min_bin_coverage"])
         self.percentile_treshold = float(Settings_loader(mode="percentile_treshold",path=settings).read_parameters()["percentile_treshold"])
         self.bin_cov_for_report =  float(Settings_loader(mode="bincov4_report",path=settings).read_parameters()["bincov4_report"])
@@ -129,7 +129,7 @@ class Coverage:
         " Creates fasta file for further remapping "
 
         list_of_genomes = self.getpercentage_cov()
-        chloroplasts_ref = SeqIO.parse(self.db,"fasta")
+        chloroplasts_ref = SeqIO.parse(self.database,"fasta")
         chloroplast_ref_dict = {}
         for record in chloroplasts_ref:
             chloroplast_ref_dict[record.description] = record
@@ -165,4 +165,4 @@ class Coverage:
                 f.write("Genome name and id\tcoverage[%]\n")
                 for key in dict_of_genomes:
                     f.write("%s\t%s\n" % (key, dict_of_genomes[key]))
-                    logger.info("Genome of %s is almost fully covered: %s [%]" % (key,dict_of_genomes[key]))
+                    logger.info("Genome of %s is almost fully covered" % key)

@@ -94,7 +94,7 @@ class Settings_loader:
 
     def check_settings(self):
         if glob.glob("../settings.txt") == 0:
-            print "  [ERROR] There is no settings file"
+            logger.error("  [ERROR] There is no settings file")
             sys.exit()
 
 
@@ -150,7 +150,7 @@ class Settings_loader:
                 splited = i.split("=")
                 if line == splited[0]:
                     dict[splited[0]] = splited[1].strip("\n")
-                    print "  Checking for %s" % (splited[0])
+                    logger.info("  Checking for %s" % (splited[0]))
             return dict
 
     def read_parameters(self):
@@ -174,4 +174,5 @@ class Settings_loader:
                 if line == splited[0]:
                     dict[splited[0]] = splited[1].strip("\n")
                     logger.info("  Checking for %s" % (splited[0]))
+                    logger.info("Is ok!")
             return dict

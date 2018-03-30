@@ -130,13 +130,13 @@ class BBpipe:
         bbduk = BBduk(self.settings)
         bbmap = BBmap(self.settings)
 
-        for i in list_sra_ids:
-            logger.info("Procesing "+i)
-            dir = "%s/%s/" % (self.station_name,i)
+        for sra_id in list_sra_ids:
+            logger.info("Procesing "+sra_id)
+            dir = "%s/%s/" % (self.station_name,sra_id)
             os.chdir(dir)
-            bbduk.run(i)
-            bbmap.ssu_n_lsu_rDNA_flitering_run(i)
-            bbmap.run(i)
-            Coverage('bincov.txt',i+"_chloroplasts.hitstats",self.settings).ref_for_remapping()
-            bbmap.remap_run(i)
+            bbduk.run(sra_id)
+            bbmap.ssu_n_lsu_rDNA_flitering_run(sra_id)
+            bbmap.run(sra_id)
+            Coverage('bincov.txt',sra_id+"_chloroplasts.hitstats",self.settings).ref_for_remapping()
+            bbmap.remap_run(sra_id)
             os.chdir(starting_dir)

@@ -32,9 +32,6 @@ logger = logging.getLogger("MetaPlastHunter")
 logging.basicConfig(level=logging.INFO)
 
 
-
-#LET's write whole main
-
 class Run:
 
     """
@@ -56,9 +53,9 @@ class Run:
         logger.info("     [%s] Preliminary classification" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Pipeline_kraken(self.list_sra, self.station_name,self.settings,self.threads).run()
         logger.info("     [%s] BBmap initial mapping" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
-        BBpipe(self.list_sra,self.station_name,settings).process()
+        BBpipe(self.list_sra,self.station_name,self.settings).process()
         logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
-        Run_analysis_sam_lca(self.list_sra, self.station_name).process()
+        Run_analysis_sam_lca(self.list_sra, self.station_name,self.settings).process()
 
     def fetch_wf(self):
 
@@ -108,7 +105,7 @@ MetaPlastHunter - The efficient and accurate plastid reads classification pipeli
 Quantitative aproach for eukaryotic metagenomics.
 
 
-Options:
+Available workflows:
 
 [-full_wf/--full] From downloading data to classification and visualization
 
@@ -177,27 +174,29 @@ This sofware was written by %s.
 
     start = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
 
-#    _settings_path = os.getcwd()
+    process = Run(args.sra_ids, args.station_name,args.settings,args.threads)
 
     if args.full:
 
-        Run(args.sra_ids, args.station_name,args.settings,args.threads).full_wf()
+        process.full_wf()
 
-    if args.classify:
+    elif args.classify:
 
-        Run(args.sra_ids, args.station_name,args.settings,args.threads).classification_wf()
+        process.classification_wf()
 
-    if args.recalculate:
+    elif args.recalculate:
 
-        Run(args.sra_ids, args.station_name,args.settings,args.threads).recalculation_wf()
+        process.recalculation_wf()
 
-    if args.fetch:
+    elif args.fetch:
 
-        Run(args.sra_ids, args.station_name,args.settings,args.threads).fetch_wf()
+        process.fetch_wf()
 
     else:
+
         logger.error("      Please specify pipeline")
         sys.exit()
+
     end = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
     logger.info("Starting time: "+start)
     logger.info("Ending time: "+end)
