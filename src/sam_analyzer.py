@@ -62,17 +62,20 @@ logging.basicConfig(level=logging.INFO)
 
 """
 
+'Sam file parsing and Taxonomic Assignment '
+
 class Sam_analyzer:
 
     def __init__ (self,seqid_map):
 
         #Cov_list ma byc domyslnie w miejscu operacji
         #"seqid2taxid.map"
+
         """Params
 
-        param _tree: NCBI tree instance
+        param _tree: NCBI tree instance (ete3 package)
 
-        param _seqid2taxid: dictonary instance
+        param _seqid2taxid: dictionary instance (from seqidmap file)
 
         param _cov_dict: dictonary instance, contains coverage info for every reference genome
         produced by bbmap during final alignment.
@@ -103,6 +106,7 @@ class Sam_analyzer:
         return lin
 
     def extract_id(self,string):
+
         "In case of custom - chloroplast genome"
 
         if "chloroplast_seq" not in string:
@@ -139,7 +143,6 @@ class Sam_analyzer:
                 taxids.append(splited[1].strip("\n"))
         tree = ncbi.get_topology(taxids,intermediate_nodes=True)
         return tree
-
 
     def seqid2taxid(self,seqidmap):
 
@@ -216,155 +219,165 @@ class Sam_analyzer:
 
     #    return dict_reads
 
-    def reads_processing(self,samfile,out_file_name):
+    def reads_processing(self,samfile):
 
 
         logger.info("Processing of sam file has started")
         dict_of_reads = self.sam_parse(samfile)
 
-        with open(out_file_name,"w") as f:
 
-            for record in dict_of_reads:
+        for record in dict_of_reads:
 
-                r1 = dict_of_reads[record][0]
-                r2 = dict_of_reads[record][1]
+            r1 = dict_of_reads[record][0]
+            r2 = dict_of_reads[record][1]
 
-                try:
-                    if len(r1) == 1 and len(r2) == 1:
+            try:
+                if len(r1) == 1 and len(r2) == 1:
 
-                        if r1[0].reference_name == r2[0].reference_name:
+                    if r1[0].reference_name == r2[0].reference_name:
 
-                            # Output ->
+                        # Output ->
 
-                            f.write("%s\t%s\n" % (record+".1", ";".join(self.get_lineage(self._seqid2taxid[self.extract_id(r1[0].reference_name)]))))
+                        yield "%s\t%s\n" % (record+".1", ";".join(self.get_lineage(self._seqid2taxid[self.extract_id(r1[0].reference_name)])))
 
-                            f.write("%s\t%s\n" % (record+".2", ";".join(self.get_lineage(self._seqid2taxid[self.extract_id(r1[0].reference_name)]))))
+                        yield "%s\t%s\n" % (record+".2", ";".join(self.get_lineage(self._seqid2taxid[self.extract_id(r1[0].reference_name)])))
 
-    #                        print record+".1", get_lineage(_seqid2taxid[extract_id(r1[0].reference_name)])
-    #                        print record+".2", get_lineage(_seqid2taxid[extract_id(r1[0].reference_name)])
+#                        print record+".1", get_lineage(_seqid2taxid[extract_id(r1[0].reference_name)])
+#                        print record+".2", get_lineage(_seqid2taxid[extract_id(r1[0].reference_name)])
 
+
+
+                    else:
+
+                       lca = self._tree.get_common_ancestor(self._seqid2taxid[self.extract_id(r1[0].reference_name)], self._seqid2taxid[self.extract_id(r2[0].reference_name)])
+
+                       yield "%s\t%s\n" % (record+".1",";".join(self.get_lineage(lca.taxid)))
+                       yield "%s\t%s\n" % (record+".2",";".join(self.get_lineage(lca.taxid)))
+
+#                      print record+".1", get_lineage(lca.taxid)
+#                      print record+".2", get_lineage(lca.taxid)
+
+                elif len(r1) > 1 and len(r2) == 0:
+
+                    lca = self._tree.get_common_ancestor([self._seqid2taxid[self.extract_id(read.reference_name)] for read in r1])
+
+                    yield "%s\t%s\n" % (record+".1",";".join(self.get_lineage(lca.taxid)))
+                    #print  record+".1", get_lineage(lca.taxid)
+
+                elif len(r1) == 0 and len(r2) == 1:
+
+                    yield "%s\t%s\n" % (record+".2", ";".join(self.get_lineage(self._seqid2taxid[self.extract_id(r2[0].reference_name)])))
+#                    print record+".2", get_lineage(_seqid2taxid[extract_id(r2[0].reference_name)])
+
+
+
+                elif len(r1) == 0 and len(r2) > 1:
+
+                    lca = self._tree.get_common_ancestor([self._seqid2taxid[self.extract_id(read.reference_name)] for read in r2])
+
+#                    print  record+".2", get_lineage(lca.taxid)
+                    yield "%s\t%s\n" % (record+".2",";".join(self.get_lineage(lca.taxid)))
+
+                elif len(r1) > 1 and len(r2) >= 1:
+
+                    #TU bedzie LCA z wagami -> suma pokrycia genomu pozostalych referencji musi byc wieksza niz najwiekszego z postostalych
+
+                    #Linking with coverage
+                    #Case when it's only one mate
+        #            if len(r2) == 1:
+
+
+                    _r1_taxid = [self._seqid2taxid[self.extract_id(read.reference_name)] for read in r1]
+                    _r1_cov = [float(self._cov_dict[self.extract_id(read.reference_name)]) for read in r1]
+                    _max_r1 = max(_r1_cov)
+                    index_max_r1 = _r1_cov.index(_max_r1)
+
+                    without_max = _r1_cov[:index_max_r1] + _r1_cov[index_max_r1+1 :]
+
+                    if len(r2) == 1:
+
+                        _r2 = self._seqid2taxid[self.extract_id(r2[0].reference_name)]
+                        if (float(_max_r1) -  sum(cov for cov in without_max)) < 0:
+
+                            lca = self._tree.get_common_ancestor(_r1_taxid + [_r2])
+
+                            yield "%s\t%s\n" % (record+".1",";".join(self.get_lineage(lca.taxid)))
+                            yield "%s\t%s\n" % (record+".2",";".join(self.get_lineage(lca.taxid)))
+
+                            #print record+".1", get_lineage(lca.taxid)
+                            #print record+".2", get_lineage(lca.taxid)
+
+
+                        else:
+                            if _r1_taxid[index_max_r1] == _r2:
+
+                                yield "%s\t%s\n" % (record+".1",";".join(self.get_lineage(_r1_taxid[index_max_r1])))
+                                yield "%s\t%s\n" % (record+".2",";".join(self.get_lineage(_r1_taxid[index_max_r1])))
+
+#                                print record+".1", get_lineage(_r1_taxid[index_max_r1])
+#                                print record+".2", get_lineage(_r1_taxid[index_max_r1])
+
+                            else:
+
+                                lca = self._tree.get_common_ancestor(_r1_taxid[index_max_r1],_r2)
+
+
+                                yield "%s\t%s\n" % (record+".1",";".join(self.get_lineage(lca.taxid)))
+                                yield "%s\t%s\n" % (record+".2",";".join(self.get_lineage(lca.taxid)))
+
+
+#                                print  record+".1", get_lineage(lca.taxid)
+#                                print  record+".2", get_lineage(lca.taxid)
+
+                    if len(r2) > 1:
+
+                        _r2_taxid = [self._seqid2taxid[self.extract_id(read.reference_name)] for read in r1]
+                        _r2_cov = [float(self._cov_dict[self.extract_id(read.reference_name)]) for read in r1]
+                        _max_r2 = max(_r1_cov)
+                        index_max_r2 = _r1_cov.index(_max_r1)
+
+                        without_max_r2 = _r2_cov[:index_max_r1] + _r1_cov[index_max_r2+1 :]
+
+                        if (float(_max_r1) -  sum(cov for cov in without_max)) > 0 and  (float(_max_r2) -  sum(cov for cov in without_max_r2)) > 0:
+
+                            if _r1_taxid[index_max_r1] == _r2_taxid[index_max_r2]:
+
+                                yield "%s\t%s\n" % (record+".1",";".join(self.get_lineage(_r1_taxid[index_max_r1])))
+                                yield "%s\t%s\n" % (record+".2",";".join(self.get_lineage(_r1_taxid[index_max_r1])))
+
+                                #print record+".1", get_lineage(_r1_taxid[index_max_r1])
+                                #print record+".2", get_lineage(_r1_taxid[index_max_r1])
+
+                            else:
+
+                                lca = self._tree.get_common_ancestor(_r1_taxid[index_max_r1],_r2_taxid[index_max_r2])
+
+                                yield "%s\t%s\n" % (record+".1",";".join(self.get_lineage(lca.taxid)))
+                                yield "%s\t%s\n" % (record+".2",";".join(self.get_lineage(lca.taxid)))
 
 
                         else:
 
-                           lca = self._tree.get_common_ancestor(self._seqid2taxid[self.extract_id(r1[0].reference_name)], self._seqid2taxid[self.extract_id(r2[0].reference_name)])
+                             lca = self._tree.get_common_ancestor(_r1_taxid + _r2_taxid)
+                             yield "%s\t%s\n" % (record+".1",";".join(self.get_lineage(lca.taxid)))
+                             yield "%s\t%s\n" % (record+".2",";".join(self.get_lineage(lca.taxid)))
 
-                           f.write("%s\t%s\n" % (record+".1",";".join(self.get_lineage(lca.taxid))))
-                           f.write("%s\t%s\n" % (record+".2",";".join(self.get_lineage(lca.taxid))))
-
-    #                      print record+".1", get_lineage(lca.taxid)
-    #                      print record+".2", get_lineage(lca.taxid)
-
-                    elif len(r1) > 1 and len(r2) == 0:
-
-                        lca = self._tree.get_common_ancestor([self._seqid2taxid[self.extract_id(read.reference_name)] for read in r1])
-
-                        f.write("%s\t%s\n" % (record+".1",";".join(self.get_lineage(lca.taxid))))
-                        #print  record+".1", get_lineage(lca.taxid)
-
-                    elif len(r1) == 0 and len(r2) == 1:
-
-                        f.write("%s\t%s\n" % (record+".2", ";".join(self.get_lineage(self._seqid2taxid[self.extract_id(r2[0].reference_name)]))))
-    #                    print record+".2", get_lineage(_seqid2taxid[extract_id(r2[0].reference_name)])
+#                             print record+".1", get_lineage(lca.taxid)
+#                             print record+".2", get_lineage(lca.taxid)
 
 
-
-                    elif len(r1) == 0 and len(r2) > 1:
-                        lca = self._tree.get_common_ancestor([self._seqid2taxid[self.extract_id(read.reference_name)] for read in r2])
-
-    #                    print  record+".2", get_lineage(lca.taxid)
-                        f.write("%s\t%s\n" % (record+".2",";".join(self.get_lineage(lca.taxid))))
-
-                    elif len(r1) > 1 and len(r2) >= 1:
-
-                        #TU bedzie LCA z wagami -> suma pokrycia genomu pozostalych referencji musi byc wieksza niz najwiekszego z postostalych
-
-                        #Linking with coverage
-                        #Case when it's only one mate
-            #            if len(r2) == 1:
+            except ValueError:
+                pass
 
 
-                        _r1_taxid = [self._seqid2taxid[self.extract_id(read.reference_name)] for read in r1]
-                        _r1_cov = [float(self._cov_dict[self.extract_id(read.reference_name)]) for read in r1]
-                        _max_r1 = max(_r1_cov)
-                        index_max_r1 = _r1_cov.index(_max_r1)
+    def process_taxonomic_assignment_to_file(self, samfile, file_out):
 
-                        without_max = _r1_cov[:index_max_r1] + _r1_cov[index_max_r1+1 :]
+        to_write = list(self.reads_processing(samfile))
 
-                        if len(r2) == 1:
-
-                            _r2 = self._seqid2taxid[self.extract_id(r2[0].reference_name)]
-                            if (float(_max_r1) -  sum(cov for cov in without_max)) < 0:
-
-                                lca = self._tree.get_common_ancestor(_r1_taxid + [_r2])
-
-                                f.write("%s\t%s\n" % (record+".1",";".join(self.get_lineage(lca.taxid))))
-                                f.write("%s\t%s\n" % (record+".2",";".join(self.get_lineage(lca.taxid))))
-
-                                #print record+".1", get_lineage(lca.taxid)
-                                #print record+".2", get_lineage(lca.taxid)
+        #It's better to call function 'write' once than couple thousnd times
+        open(file_out, "wb").write(''.join(to_write))
 
 
-                            else:
-                                if _r1_taxid[index_max_r1] == _r2:
-
-                                    f.write("%s\t%s\n" % (record+".1",";".join(self.get_lineage(_r1_taxid[index_max_r1]))))
-                                    f.write("%s\t%s\n" % (record+".2",";".join(self.get_lineage(_r1_taxid[index_max_r1]))))
-
-    #                                print record+".1", get_lineage(_r1_taxid[index_max_r1])
-    #                                print record+".2", get_lineage(_r1_taxid[index_max_r1])
-
-                                else:
-
-                                    lca = self._tree.get_common_ancestor(_r1_taxid[index_max_r1],_r2)
-
-
-                                    f.write("%s\t%s\n" % (record+".1",";".join(self.get_lineage(lca.taxid))))
-                                    f.write("%s\t%s\n" % (record+".2",";".join(self.get_lineage(lca.taxid))))
-
-
-    #                                print  record+".1", get_lineage(lca.taxid)
-    #                                print  record+".2", get_lineage(lca.taxid)
-
-                        if len(r2) > 1:
-
-                            _r2_taxid = [self._seqid2taxid[self.extract_id(read.reference_name)] for read in r1]
-                            _r2_cov = [float(self._cov_dict[self.extract_id(read.reference_name)]) for read in r1]
-                            _max_r2 = max(_r1_cov)
-                            index_max_r2 = _r1_cov.index(_max_r1)
-
-                            without_max_r2 = _r2_cov[:index_max_r1] + _r1_cov[index_max_r2+1 :]
-
-                            if (float(_max_r1) -  sum(cov for cov in without_max)) > 0 and  (float(_max_r2) -  sum(cov for cov in without_max_r2)) > 0:
-
-                                if _r1_taxid[index_max_r1] == _r2_taxid[index_max_r2]:
-
-                                    f.write("%s\t%s\n" % (record+".1",";".join(self.get_lineage(_r1_taxid[index_max_r1]))))
-                                    f.write("%s\t%s\n" % (record+".2",";".join(self.get_lineage(_r1_taxid[index_max_r1]))))
-
-                                    #print record+".1", get_lineage(_r1_taxid[index_max_r1])
-                                    #print record+".2", get_lineage(_r1_taxid[index_max_r1])
-
-                                else:
-
-                                    lca = self._tree.get_common_ancestor(_r1_taxid[index_max_r1],_r2_taxid[index_max_r2])
-
-                                    f.write("%s\t%s\n" % (record+".1",";".join(self.get_lineage(lca.taxid))))
-                                    f.write("%s\t%s\n" % (record+".2",";".join(self.get_lineage(lca.taxid))))
-
-
-                            else:
-
-                                 lca = self._tree.get_common_ancestor(_r1_taxid + _r2_taxid)
-                                 f.write("%s\t%s\n" % (record+".1",";".join(self.get_lineage(lca.taxid))))
-                                 f.write("%s\t%s\n" % (record+".2",";".join(self.get_lineage(lca.taxid))))
-
-    #                             print record+".1", get_lineage(lca.taxid)
-    #                             print record+".2", get_lineage(lca.taxid)
-
-
-                except ValueError:
-                    pass
 
 " LCA POSTPROCESS "
 
@@ -543,7 +556,7 @@ class LCA_postprocess:
 
     def tree_reconstruction_of_nodes(self):
 
-        " Returns lineage of node in graph of degree one, except the root"
+        "Returns lineage of node in graph of degree one, except the root"
 
         avaible_paths = []
         for node in self._graph.nodes():
@@ -555,7 +568,7 @@ class LCA_postprocess:
 
     def species_level_shannon_index(self):
 
-        " Writes shannon index [shannon.txt] for given sample"
+        "Writes shannon index [shannon.txt] for given sample"
 
         df_dict = self.species_level()
 
@@ -603,7 +616,7 @@ class Run_analysis_sam_lca:
             os.chdir(dir)
 
             Coverage('bincov.txt',i+"_chloroplasts.hitstats",self.settings).report_cov()
-            Sam_analyzer(self.seqidmap).reads_processing(i+"_final_mapped.sam",i+"_taxonomic_assignment.txt")
+            Sam_analyzer(self.seqidmap).process_taxonomic_assignment_to_file(i+"_final_mapped.sam",i+"_taxonomic_assignment.txt")
 
             lca_postprocess =  LCA_postprocess(i,self.lca_treshold)
             lca_postprocess.pandas_data_frame_species_level()

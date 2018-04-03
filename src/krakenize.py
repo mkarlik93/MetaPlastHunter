@@ -53,17 +53,16 @@ class KrakenRunner:
     Wrapper for running kraken."""
 
     def __init__(self,threads,settings):
+
         self.threads = threads
         self.settings = settings
+        self.path = Settings_loader(mode="kraken",path=self.settings).read_path()["kraken"]
+        self.db = Settings_loader(mode="kraken",path=self.settings).read_database()["kraken_db"]
 
-        if settings == None:
-
+        if self.path == "":
             self.checkForKraken()
-            self.path = ""
-        else:
 
-            self.path = Settings_loader(mode="kraken",path=self.settings).read_path()["kraken"]
-            self.db = Settings_loader(mode="kraken",path=self.settings).read_database()["kraken_db"]
+
 
     def run_classification(self,reads_1, reads_2,name):
         path = self.path

@@ -39,19 +39,13 @@ class BBmap:
 
     def __init__(self,settings):
 
-        if settings == None:
+        self.settings = settings
+        self.path = Settings_loader(mode="bbmap.sh",path=self.settings).read_path()["bbmap.sh"]
+        self.db = Settings_loader(mode="bbmap.sh",path=self.settings).read_database()["bbmap_base"]
+        self.db_silva = Settings_loader(mode="silva",path=self.settings).read_database()["silva"]
+
+        if self.path == "":
             self.checkForBBmap()
-            self.path = ""
-            self.db = Settings_loader(mode="ref_base",path=self.path).read_path()["ref_base"]
-            self.db_silva = Settings_loader(mode="silva",path=self.path).read_path()["silva"]
-
-
-        else:
-
-            self.settings = settings
-            self.path = Settings_loader(mode="bbmap.sh",path=self.settings).read_path()["bbmap.sh"]
-            self.db = Settings_loader(mode="bbmap.sh",path=self.settings).read_database()["bbmap_base"]
-            self.db_silva = Settings_loader(mode="silva",path=self.settings).read_database()["silva"]
 
 
     def checkForBBmap(self):
@@ -66,24 +60,20 @@ class BBmap:
 
 #For filtering out 16sRNA 'ALL' can be just bacterial and archean
     def ssu_n_lsu_rDNA_flitering_run(self,sample):
-        path = self.path
-        db = self.db_silva
-        command="%sbbmap.sh fast=t minidentity=0.70 reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq nodisk ref=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best out=%s_filtered_mapped.sam" % (path, sample, sample, db, sample, sample, sample)
+        command="%sbbmap.sh fast=t minidentity=0.70 reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq nodisk ref=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best out=%s_filtered_mapped.sam" % (self.path, sample, sample, self.db_silva, sample, sample, sample)
         logger.info("     Running command: [%s]" % command)
         os.system(command)
 
 
 #remapping with smaller database
     def remap_run(self,sample):
-        path = self.path
-        command="%sbbmap.sh fast=t nodisk minidentity=0.70 idtag=t reads=-1 in1=%s_final_chloroplasts_reads_R1.fq in2=%s_final_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outu1=%s_f_chloroplasts_reads_R1.fq outu2=%s_f_chloroplasts_reads_R2.fq ambiguous=all scafstats=%s_final_chloroplasts.hitstats out=%s_final_mapped.sam bincov=bincov.txt covbinsize=200" % (path, sample, sample, sample, sample,sample, sample)
+        command="%sbbmap.sh fast=t nodisk minidentity=0.70 idtag=t reads=-1 in1=%s_final_chloroplasts_reads_R1.fq in2=%s_final_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outu1=%s_f_chloroplasts_reads_R1.fq outu2=%s_f_chloroplasts_reads_R2.fq ambiguous=all scafstats=%s_final_chloroplasts.hitstats statsfile=%s_final_mapping_stats.txt out=%s_final_mapped.sam bincov=bincov.txt covbinsize=200" % (self.path, sample, sample, sample, sample,sample,sample,sample)
         logger.info("     Running command: [%s]" % command)
         os.system(command)
 
     def run(self,sample):
-        path = self.path
-        db = self.db
-        command="%sbbmap.sh fast=t minidentity=0.70 nodisk reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s outm1=%s_final_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq ambiguous=best  scafstats=%s_chloroplasts.hitstats out=%s_mapped.sam bincov=bincov.txt covbinsize=200" % (path, sample, sample, db, sample, sample, sample, sample)
+
+        command="%sbbmap.sh fast=t minidentity=0.70 nodisk reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s outm1=%s_final_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq ambiguous=best  scafstats=%s_chloroplasts.hitstats out=%s_mapped.sam bincov=bincov.txt covbinsize=200" % (self.path, sample, sample, self.db, sample, sample, sample, sample)
         logger.info("      Running command: [%s]" % command)
         os.system(command)
 
@@ -92,14 +82,15 @@ class BBduk:
 
     def __init__(self,settings):
 
-        if settings == False:
+        self.settings = settings
+        self.path = Settings_loader(mode="bbduk.sh",path=self.settings).read_path()["bbduk.sh"]
+
+        if self.path == "":
             self.checkForBBduk()
-            self.path = ""
-        else:
-            self.settings = settings
-            self.path = Settings_loader(mode="bbduk.sh",path=self.settings).read_path()["bbduk.sh"]
+
 
     def checkForBBduk(self):
+
         """Checks to see if BBduk is on the system's path before we try to run it."""
 
         try:
