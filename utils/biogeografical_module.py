@@ -39,13 +39,14 @@ import pandas as pd
 # species
 # species
 
-# samples column have to be connected
 #TODO
 #Function for gathering data is needed with many  options.
-#Tu cos jest skopanego 
+#Tu cos jest skopanego
 
 
 class Biogeography:
+
+
     def __init__ (self):
         pass
 

@@ -44,15 +44,16 @@ def fastq_dump_sra_file(station_name,list_sra,path):
 
         command = "%sfastq-dump %s --skip-technical -I --split-3" % (path,list_sra)
         os.chdir("%s/%s/" % (station_name,list_sra))
-        os.system(command)
         logger.info("Downloading of %s has been started" % list_sra)
+        os.system(command)
+
     else:
         command_create_dir = "mkdir %s/%s" % (station_name,list_sra)
         os.system(command_create_dir)
         command = "%sfastq-dump %s --skip-technical -I --split-3" % (path,list_sra)
         os.chdir("%s/%s/" % (station_name,list_sra))
-        os.system(command)
         logger.info("Downloading of %s has been started" % list_sra)
+        os.system(command)
 
 
 class Pipeline_fetch:
@@ -85,11 +86,13 @@ class Pipeline_fetch:
         sra_ids = self.list_sra
         list_sra_ids = sra_ids.split(",")
         path = self.path
+        jobs = []
         for i in list_sra_ids:
-
-                job = Process(target=fastq_dump_sra_file, args=(self.station_name,self.list_sra,self.path))
-                job.start()
-                job.join()
+            job = Process(target=fastq_dump_sra_file, args=(self.station_name,i,self.path))
+            jobs.append(job)
+            job.start()
+        for job in jobs:
+            job.join()
 
     #CHECK THIS
     def evaluation(self):

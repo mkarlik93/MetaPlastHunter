@@ -67,7 +67,7 @@ class BBmap:
 
 #remapping with smaller database
     def remap_run(self,sample):
-        command="%sbbmap.sh fast=t nodisk minidentity=0.70 idtag=t reads=-1 in1=%s_final_chloroplasts_reads_R1.fq in2=%s_final_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outu1=%s_f_chloroplasts_reads_R1.fq outu2=%s_f_chloroplasts_reads_R2.fq ambiguous=all scafstats=%s_final_chloroplasts.hitstats statsfile=%s_final_mapping_stats.txt out=%s_final_mapped.sam bincov=bincov.txt covbinsize=200" % (self.path, sample, sample, sample, sample,sample,sample,sample)
+        command="%sbbmap.sh nodisk minidentity=0.70 idtag=t in1=%s_final_chloroplasts_reads_R1.fq in2=%s_final_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outu1=%s_f_chloroplasts_reads_R1.fq outu2=%s_f_chloroplasts_reads_R2.fq ambiguous=all scafstats=%s_final_chloroplasts.hitstats statsfile=%s_final_mapping_stats.txt out=%s_final_mapped.sam bincov=bincov.txt covbinsize=200" % (self.path, sample, sample, sample, sample,sample,sample,sample)
         logger.info("     Running command: [%s]" % command)
         os.system(command)
 

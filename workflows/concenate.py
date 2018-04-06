@@ -40,9 +40,73 @@ import csv
 
 
 
+#Index,Station identifier [TARA_station#],Taxon ,Reads number
+#0,TARA_031,taxa_1,3000
+#1,TARA_032,taxa_1,400
+#2,TARA_033,taxa_1,40000
+#3,TARA_034,taxa_1,1
+#4,TARA_035,taxa_1,100
+#5,TARA_036,taxa_1,25000
+
+
+
+class Project_managment:
+
+    def __init__(self,station_name_list):
+
+        self.station_name_list = station_name_list.split(',')
+        self.base_cwd = os.getcwd()
+
+    def fromcsv2dict(self,file):
+        reader = csv.reader(file)
+        dict =  {}
+        for row in reader:
+            splited_row = row.split("\t")
+            dict[splited_row[1]] = splited_row[2]
+        return dict
+
+
+    def get_species_results_from_site(self,sample_site):
+
+        os.chdir(self.base_cwd+"/"+str(sample_site)+"/")
+        thedir = str(sample_site)
+        directories =  [ name for name in os.listdir(thedir) if os.path.isdir(os.path.join(thedir, name)) ]
+        list_of_dict = []
+        cwd = os.getcwd()
+        for directory in directories:
+            os.chdir(cwd+"/"+directory+"/")
+            files = glob.glob("*_species_level_table.csv"")
+            for file in files:
+                #?Tu czy na pewno tak?
+                unique_names.add(self.fromcsv2dict(file))
+        os.chdir(self.base_cwd)
+        return list_of_dict
+
+
+    def get_fourth_taxa_level_from_site(self,sample_site):
+
+        os.chdir(self.base_cwd+"/"+str(sample_site)+"/")
+        thedir = str(sample_site)
+        directories =  [ name for name in os.listdir(thedir) if os.path.isdir(os.path.join(thedir, name)) ]
+        list_of_dict = []
+        cwd = os.getcwd()
+        for i in directories:
+            os.chdir(cwd+"/"+i+"/")
+            files = glob.glob("*_species_level_table.csv"")
+            for file in files:
+                unique_names.add(self.fromcsv2dict(file))
+        os.chdir(self.base_cwd)
+        return list_of_dict
+
+
+
+
+
+
 
 
 class Concatenate:
+
     def __init__(self,station_name):
 
         self.base_cwd = os.getcwd()
@@ -71,6 +135,9 @@ class Concatenate:
                 unique_names.add(self.fromcsv2dict(file))
         os.chdir(self.base_cwd)
         return list_of_dict
+
+
+
 
 
     def get_unique_among_folders(self):

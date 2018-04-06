@@ -12,7 +12,7 @@ if __name__ == '__main__':
         description='Efficent pipeline for fast searching of chloroplast reads in huge metagenomic datasets',
         long_description=open('README.md').read(),
 #        entry_points={'console_scripts': ['HiCEnterprise=HiCEnterprise.__main__:main']},
-        keywords=['bioinformatics', 'metagenomes', 'chloroplast', 'classification'],
+        keywords=['bioinformatics', 'metagenomics', 'chloroplast', 'classification'],
         classifiers=[
             'Development Status :: 2 - Pre-Alpha'
             'Environment :: Console',
