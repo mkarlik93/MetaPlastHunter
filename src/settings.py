@@ -26,153 +26,87 @@ __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
-import pandas as pd
-import glob
 import os
 import sys
 import subprocess
 import logging
+import yaml
 
 logger = logging.getLogger('src.settings')
 logging.basicConfig(level=logging.INFO)
 
 
-class SettingsError(BaseException):
-    pass
+#class SettingsError(BaseException):
+#    pass
 
-class Settings_loader:
 
-    def __init__(self,mode="kraken",path='path'):
+#    raise SettingsError("Mode %s not understood" % mode)
 
+
+#YAML
+
+
+class Settings_loader_yaml:
+    def __init__(self,path):
         self.path = path
 
-        if mode == "kraken":
-            self.mode = 'kraken'
-        elif mode == "seqtk":
-            self.mode = 'seqtk'
-#in case of more software
-        elif mode == 'fastq-dump':
-            self.mode = 'fastq-dump'
-        elif mode == 'bbmap.sh':
-            self.mode = 'bbmap.sh'
+    def check_software(self,software):
+        """Check to see if software is on the system before we try to run it."""
 
-        elif mode == 'bbduk.sh':
-            self.mode = 'bbduk.sh'
+        for key in software:
 
-        elif mode == 'names.dmp':
-            self.mode = 'names.dmp'
+            if software[key] == None:
 
-        elif mode == 'nodes.dmp':
-            self.mode =  'nodes.dmp'
+                try:
+                    subprocess.call([key, '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
+                    logger.info("%s has been installed correctly!" % key)
+                except:
 
-        elif mode == 'seqid2taxid.map':
-            self.mode = 'seqid2taxid.map'
+                    logger.error("Make sure %s is on your system path or set propere to path in settings.txt" % key)
+                    sys.exit()
+            else:
 
-        elif mode == 'silva':
-            self.mode = 'silva'
+                try:
+                    subprocess.call([software[key]+key, '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
+                    logger.info("%s has been installed correctly!" % key)
+                except:
 
-        elif mode == 'RepeatMasker':
-            self.mode = 'RepeatMasker'
+                    logger.error("Make sure %s is on your system path or set propere to path in settings.txt" % key)
+                    sys.exit()
 
-        elif mode == 'percentile_treshold':
-            self.mode = 'percentile_treshold'
+    def check_db(self,db):
 
-        elif mode == 'min_bin_coverage':
-            self.mode = 'min_bin_coverage'
+        for key in db:
 
-        elif mode == 'bincov4_report':
-            self.mode = 'bincov4_report'
+            if os.path.isfile(db[key]) or os.path.isdir(db[key]):
+                logger.info("%s database has been added correctly" % key)
 
-        elif mode == 'lca_treshold':
-            self.mode = 'lca_treshold'
+            else:
 
-        else:
-            raise SettingsError("Mode %s not understood" % mode)
+                logger.error("Check path of %s" % key )
+                sys.exit()
 
-        self.check_settings()
+    def check_params(self,params):
 
+        for key in params:
+            if params[key] == None:
+                logger.error("Param cannot be empty! Please fill those fields")
+                sys.exit()
+            else:
+                logger.info("Param %s is fine" % key)
 
-    def check_settings(self):
-        if glob.glob("../settings.txt") == 0:
-            logger.error("  [ERROR] There is no settings file")
-            sys.exit()
-
-
-    def read_path(self):
-        if self.mode == 'kraken':
-            line = 'kraken'
-        elif self.mode == 'seqtk':
-            line = 'seqtk'
-        elif self.mode == 'fastq-dump':
-            line = 'fastq-dump'
-
-        elif self.mode == "bbduk.sh":
-            line = 'bbduk.sh'
-
-        elif self.mode == 'bbmap.sh':
-            line = 'bbmap.sh'
+    def yaml_handler(self):
+        with open(self.path, 'r') as stream:
+            try:
+                settings = yaml.load(stream)
+            except yaml.YAMLError as exc:
+                print(exc)
+        return settings
 
 
-        with open(self.path) as f:
-            logger.info("  Loaded settings.txt")
-            dict = {}
-            for i in f:
-                splited = i.split("=")
-                if line == splited[0]:
-                    dict[splited[0]] = splited[1].strip("\n")
-                    print "  Checking for %s" % (splited[0])
-                    try:
-                        subprocess.call([splited[1].strip("\n")+splited[0], '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
-                        logger.info("  Status OK synek!")
-                    except:
-                        logger.info("  [Error] Make sure %s path is in settings.txt or was set correctly, synek." % splited[0])
-                        sys.exit()
-            return dict
+    def yaml_check_settings_file(self):
 
-    def read_database(self):
-
-        if self.mode == 'kraken':
-            line = 'kraken_db'
-        elif self.mode == 'bbmap.sh':
-            line = 'bbmap_base'
-        elif self.mode == 'names.dmp':
-            line = 'names.dmp'
-        elif self.mode == 'nodes.dmp':
-            line = 'nodes.dmp'
-        elif self.mode == 'seqid2taxid.map':
-            line = 'seqid2taxid.map'
-        elif self.mode == 'silva':
-            line = 'silva'
-
-        with open(self.path) as f:
-            dict = {}
-            for i in f:
-                splited = i.split("=")
-                if line == splited[0]:
-                    dict[splited[0]] = splited[1].strip("\n")
-                    logger.info("  Checking for %s" % (splited[0]))
-            return dict
-
-    def read_parameters(self):
-
-        if self.mode == 'percentile_treshold':
-            line = 'percentile_treshold'
-
-        elif self.mode == 'min_bin_coverage':
-            line = 'min_bin_coverage'
-
-        elif self.mode == 'bincov4_report':
-            line = 'bincov4_report'
-
-        elif self.mode == 'lca_treshold':
-            line = 'lca_treshold'
-
-        with open(self.path) as f:
-            dict = {}
-            for i in f:
-                splited = i.split("=")
-                if line == splited[0]:
-                    dict[splited[0]] = splited[1].strip("\n")
-                    logger.info("  Checking for %s" % (splited[0]))
-                    logger.info("Is ok!")
-            return dict
+        settings_to_check = self.yaml_handler()
+        self.check_software(settings_to_check["Software dependencies"])
+        self.check_db(settings_to_check["Databases and mapping files"])
+        self.check_params(settings_to_check["Params"])

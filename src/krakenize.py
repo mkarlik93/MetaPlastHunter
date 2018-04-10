@@ -56,10 +56,13 @@ class KrakenRunner:
 
         self.threads = threads
         self.settings = settings
-        self.path = Settings_loader(mode="kraken",path=self.settings).read_path()["kraken"]
-        self.db = Settings_loader(mode="kraken",path=self.settings).read_database()["kraken_db"]
+        #self.path = Settings_loader(mode="kraken",path=self.settings).read_path()["kraken"]
+        #self.db = Settings_loader(mode="kraken",path=self.settings).read_database()["kraken_db"]
 
-        if self.path == "":
+        self.path = Settings_loader_yaml(self.settings).yaml_handler()["Software dependencies"]["kraken"]
+        self.db = Settings_loader_yaml(self.settings).yaml_handler()["Databases and mapping files"]["kraken_db"]
+
+        if self.path == None:
             self.checkForKraken()
 
 
@@ -101,7 +104,7 @@ class Pipeline_kraken:
         starting_dir = os.getcwd()
         kraken = KrakenRunner(self.threads,self.settings)
         for i in list_sra_ids:
-            logger.info("reads prelimnary classification by kraken, for "+i)
+            logger.info("Prelimnary classification by kraken (Kraken acceleration), for "+i)
             read_name_1 = i+"_1.fastq"
             read_name_2 = i+"_2.fastq"
             dir = "%s/%s/" % (self.station_name,i)

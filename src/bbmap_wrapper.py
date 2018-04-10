@@ -40,9 +40,15 @@ class BBmap:
     def __init__(self,settings):
 
         self.settings = settings
-        self.path = Settings_loader(mode="bbmap.sh",path=self.settings).read_path()["bbmap.sh"]
-        self.db = Settings_loader(mode="bbmap.sh",path=self.settings).read_database()["bbmap_base"]
-        self.db_silva = Settings_loader(mode="silva",path=self.settings).read_database()["silva"]
+    #    self.path = Settings_loader(mode="bbmap.sh",path=self.settings).read_path()["bbmap.sh"]
+    #    self.db = Settings_loader(mode="bbmap.sh",path=self.settings).read_database()["bbmap_base"]
+    #    self.db_silva = Settings_loader(mode="silva",path=self.settings).read_database()["silva"]
+
+        self.path = Settings_loader_yaml(path=self.settings).yaml_handler()["Software dependencies"]["bbmap.sh"]
+        self.db = Settings_loader_yaml(path=self.settings).yaml_handler()["Databases and mapping files"]["bbmap_base"]
+        self.db_silva = Settings_loader_yaml(path=self.settings).yaml_handler()["Databases and mapping files"]["silva"]
+
+
 
         if self.path == "":
             self.checkForBBmap()
@@ -66,14 +72,19 @@ class BBmap:
 
 
 #remapping with smaller database
+#    def remap_run(self,sample):
+#        command="%sbbmap.sh nodisk minidentity=0.70 idtag=t in1=%s_final_chloroplasts_reads_R1.fq in2=%s_final_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outu1=%s_f_chloroplasts_reads_R1.fq outu2=%s_f_chloroplasts_reads_R2.fq ambiguous=all scafstats=%s_final_chloroplasts.hitstats statsfile=%s_final_mapping_stats.txt out=%s_final_mapped.sam bincov=bincov.txt covbinsize=200" % (self.path, sample, sample, sample, sample,sample,sample,sample)
+#        logger.info("     Running command: [%s]" % command)
+#        os.system(command)
+
     def remap_run(self,sample):
-        command="%sbbmap.sh nodisk minidentity=0.70 idtag=t in1=%s_final_chloroplasts_reads_R1.fq in2=%s_final_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outu1=%s_f_chloroplasts_reads_R1.fq outu2=%s_f_chloroplasts_reads_R2.fq ambiguous=all scafstats=%s_final_chloroplasts.hitstats statsfile=%s_final_mapping_stats.txt out=%s_final_mapped.sam bincov=bincov.txt covbinsize=200" % (self.path, sample, sample, sample, sample,sample,sample,sample)
+        command="%sbbmap.sh nodisk minidentity=0.70 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outu1=%s_f_chloroplasts_reads_R1.fq outu2=%s_f_chloroplasts_reads_R2.fq ambiguous=all scafstats=%s_final_chloroplasts.hitstats statsfile=%s_final_mapping_stats.txt out=%s_final_mapped.sam bincov=bincov.txt covbinsize=200" % (self.path, sample, sample, sample, sample,sample,sample,sample)
         logger.info("     Running command: [%s]" % command)
         os.system(command)
 
     def run(self,sample):
 
-        command="%sbbmap.sh fast=t minidentity=0.70 nodisk reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s outm1=%s_final_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq ambiguous=best  scafstats=%s_chloroplasts.hitstats out=%s_mapped.sam bincov=bincov.txt covbinsize=200" % (self.path, sample, sample, self.db, sample, sample, sample, sample)
+        command="%sbbmap.sh fast=t minidentity=0.70 nodisk reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s scafstats=%s_chloroplasts.hitstats out=%s_mapped.sam bincov=bincov.txt covbinsize=200" % (self.path, sample, sample, self.db,sample, sample)
         logger.info("      Running command: [%s]" % command)
         os.system(command)
 
@@ -83,7 +94,7 @@ class BBduk:
     def __init__(self,settings):
 
         self.settings = settings
-        self.path = Settings_loader(mode="bbduk.sh",path=self.settings).read_path()["bbduk.sh"]
+        self.path = Settings_loader_yaml(path=self.settings).yaml_handler()["Software dependencies"]["bbduk.sh"]
 
         if self.path == "":
             self.checkForBBduk()

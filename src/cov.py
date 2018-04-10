@@ -30,7 +30,7 @@ __status__ = 'Development'
 #TODO
 #Description of remapping
 
-from settings import  Settings_loader
+from settings import  Settings_loader_yaml
 from Bio import SeqIO
 import glob
 import numpy as np
@@ -54,11 +54,19 @@ class Coverage:
         param histstats: keeps data from histstats file
 
         """
+#        self.loaded_bin_cov = self.load_bincov(filename,histstats)
+#        self.database = Settings_loader(mode="bbmap.sh",path=settings).read_database()["bbmap_base"]
+#        self.min_bin_coverage = float(Settings_loader(mode="min_bin_coverage",path=settings).read_parameters()["min_bin_coverage"])
+#        self.percentile_treshold = float(Settings_loader(mode="percentile_treshold",path=settings).read_parameters()["percentile_treshold"])
+#        self.bin_cov_for_report =  float(Settings_loader(mode="bincov4_report",path=settings).read_parameters()["bincov4_report"])
+
+
         self.loaded_bin_cov = self.load_bincov(filename,histstats)
-        self.database = Settings_loader(mode="bbmap.sh",path=settings).read_database()["bbmap_base"]
-        self.min_bin_coverage = float(Settings_loader(mode="min_bin_coverage",path=settings).read_parameters()["min_bin_coverage"])
-        self.percentile_treshold = float(Settings_loader(mode="percentile_treshold",path=settings).read_parameters()["percentile_treshold"])
-        self.bin_cov_for_report =  float(Settings_loader(mode="bincov4_report",path=settings).read_parameters()["bincov4_report"])
+        self.database = Settings_loader_yaml(settings).yaml_handler()["Databases and mapping files"]["bbmap_base"]
+        self.min_bin_coverage = Settings_loader_yaml(settings).yaml_handler()["Params"]["min_bin_coverage"]
+        self.percentile_treshold = Settings_loader_yaml(settings).yaml_handler()["Params"]["percentile_treshold"]
+        self.bin_cov_for_report =  Settings_loader_yaml(settings).yaml_handler()["Params"]["bincov4_report"]
+
 
     def load_genomes_len(self):
         genomes_dict = {}

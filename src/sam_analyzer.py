@@ -38,7 +38,7 @@ import pandas as pd
 import logging
 import os
 import sys
-from settings import  Settings_loader
+from settings import  Settings_loader_yaml
 from cov import Coverage
 
 
@@ -597,8 +597,11 @@ class Run_analysis_sam_lca:
 
         try:
 
-            self.seqidmap = Settings_loader(mode="seqid2taxid.map",path=self.settings).read_database()["seqid2taxid.map"]
-            self.lca_treshold = float(Settings_loader(mode="lca_treshold",path=self.settings).read_parameters()["lca_treshold"])
+#            self.seqidmap = Settings_loader(mode="seqid2taxid.map",path=self.settings).read_database()["seqid2taxid.map"]
+#            self.lca_treshold = float(Settings_loader(mode="lca_treshold",path=self.settings).read_parameters()["lca_treshold"])
+
+            self.seqidmap = Settings_loader_yaml(self.settings).yaml_handler()["Databases and mapping files"]["seqid2taxid.map"]
+            self.lca_treshold = Settings_loader_yaml(self.settings).yaml_handler()["Params"]["lca_treshold"]
 
         except KeyError:
 

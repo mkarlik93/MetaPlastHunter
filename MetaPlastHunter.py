@@ -47,7 +47,8 @@ class Run:
         self.threads = threads
 
     def full_wf(self):
-
+        logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        Settings_loader_yaml(self.settings).yaml_check_settings_file()
         logger.info( "     [%s] Downloading data from SRArchive" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Pipeline_fetch(self.list_sra,self.station_name,self.settings).run()
         logger.info("     [%s] Preliminary classification" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
@@ -59,11 +60,15 @@ class Run:
 
     def fetch_wf(self):
 
+        logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        Settings_loader_yaml(self.settings).yaml_check_settings_file()
         logger.info( "     [%s] Downloading data from SRArchive" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Pipeline_fetch(self.list_sra,self.station_name,self.settings).run()
 
     def classification_wf(self):
 
+        logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        Settings_loader_yaml(self.settings).yaml_check_settings_file()
         logger.info("     [%s] Preliminary classification" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
         Pipeline_kraken(self.list_sra, self.station_name,self.settings,self.threads).run()
         logger.info("     [%s] BBmap initial mapping" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
@@ -73,6 +78,8 @@ class Run:
 
     def recalculation_wf(self):
 
+        logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        Settings_loader_yaml(self.settings).yaml_check_settings_file()
         logger.info("     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
         BBpipe(self.list_sra,self.station_name,self.settings).process()
         logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
@@ -90,6 +97,7 @@ if __name__ == "__main__":
     from src.krakenize import Pipeline_kraken
     from src.sam_analyzer import Run_analysis_sam_lca
     from src.get_data import Pipeline_fetch
+    from src.settings import Settings_loader_yaml
     import multiprocessing as mp
 
 

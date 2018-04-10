@@ -25,7 +25,7 @@ __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
-from settings import *
+from settings import Settings_loader_yaml
 from time import gmtime, strftime
 import sys
 import os
@@ -62,7 +62,7 @@ class Pipeline_fetch:
 
         self.list_sra = list_sra
         self.station_name = station_name
-        self.path = Settings_loader(mode="fastq-dump",path=settings).read_path()["fastq-dump"]
+        self.path = Settings_loader_yaml(settings).yaml_handler()["Software dependencies"]["fastq-dump"]
 
 
     def create_station_dir(self):
