@@ -56,15 +56,8 @@ class KrakenRunner:
 
         self.threads = threads
         self.settings = settings
-        #self.path = Settings_loader(mode="kraken",path=self.settings).read_path()["kraken"]
-        #self.db = Settings_loader(mode="kraken",path=self.settings).read_database()["kraken_db"]
-
         self.path = Settings_loader_yaml(self.settings).yaml_handler()["Software dependencies"]["kraken"]
         self.db = Settings_loader_yaml(self.settings).yaml_handler()["Databases and mapping files"]["kraken_db"]
-
-        if self.path == None:
-            self.checkForKraken()
-
 
 
     def run_classification(self,reads_1, reads_2,name):

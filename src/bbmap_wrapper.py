@@ -40,29 +40,20 @@ class BBmap:
     def __init__(self,settings):
 
         self.settings = settings
-    #    self.path = Settings_loader(mode="bbmap.sh",path=self.settings).read_path()["bbmap.sh"]
-    #    self.db = Settings_loader(mode="bbmap.sh",path=self.settings).read_database()["bbmap_base"]
-    #    self.db_silva = Settings_loader(mode="silva",path=self.settings).read_database()["silva"]
-
         self.path = Settings_loader_yaml(path=self.settings).yaml_handler()["Software dependencies"]["bbmap.sh"]
         self.db = Settings_loader_yaml(path=self.settings).yaml_handler()["Databases and mapping files"]["bbmap_base"]
         self.db_silva = Settings_loader_yaml(path=self.settings).yaml_handler()["Databases and mapping files"]["silva"]
 
 
-
-        if self.path == "":
-            self.checkForBBmap()
-
-
-    def checkForBBmap(self):
-
-        """Checks that Kraken is on the system before we try to run it."""
-
-        try:
-            subprocess.call(['bbmap.sh', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
-        except:
-            logger.error("   Make sure BBmap is on your system path or set usage to path in settings.txt")
-            sys.exit()
+#    def checkForBBmap(self):
+#
+#        """Checks that Kraken is on the system before we try to run it."""
+#
+#        try:
+#            subprocess.call(['bbmap.sh', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
+#        except:
+#            logger.error("   Make sure BBmap is on your system path or set usage to path in settings.txt")
+#            sys.exit()
 
 #For filtering out 16sRNA 'ALL' can be just bacterial and archean
     def ssu_n_lsu_rDNA_flitering_run(self,sample):
