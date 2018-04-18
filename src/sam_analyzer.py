@@ -154,10 +154,18 @@ class Sam_analyzer:
 
         return seqid2taxid
 
+#    def transform_read_name(self,readname):
+#        split_1 = readname.split(".")
+#        split_2 = split_1[2].split(" ")
+#        return  "%s.%s.%s" % (split_1[0],split_1[1],split_2[0])
+
     def transform_read_name(self,readname):
-        split_1 = readname.split(".")
-        split_2 = split_1[2].split(" ")
-        return  "%s.%s.%s" % (split_1[0],split_1[1],split_2[0])
+        if len(readname.split(" ")) > 1:
+            split_1 = readname.split(".")
+            split_2 = split_1[2].split(" ")
+            return  "%s.%s.%s" % (split_1[0],split_1[1],split_2[0])
+        else:
+            return readname
 
     def sam_parse(self,samfile):
 

@@ -59,7 +59,7 @@ class Coverage:
         self.min_bin_coverage = Settings_loader_yaml(settings).yaml_handler()["Params"]["min_bin_coverage"]
         self.percentile_treshold = Settings_loader_yaml(settings).yaml_handler()["Params"]["percentile_treshold"]
         self.bin_cov_for_report =  Settings_loader_yaml(settings).yaml_handler()["Params"]["bincov4_report"]
-
+        self.static_treshold = Settings_loader_yaml(settings).yaml_handler()["Params"]["static_coverage_treshold[%]"]
 
     def load_genomes_len(self):
         genomes_dict = {}
@@ -110,13 +110,15 @@ class Coverage:
 
         percentile_value =  np.percentile(percentages,percentile_tresh)
         percentages_ok = [i for i in percentages if i > percentile_value]
+        """ static filtration """
+        percentages_ready = [i for i in percentages if i > self.static_treshold]
         percentages_values_discared =  [i for i in percentages if i < percentile_value]
 
         list_for_recalculation = []
 
         with open("cov_list.txt","w") as f:
 
-            for key in percentages_ok:
+            for key in percentages_ready:
 
                 list_for_recalculation.append(dict_gen_con[key])
                 f.write("%s,%s\n" % (dict_gen_con[key],key))

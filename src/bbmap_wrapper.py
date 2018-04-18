@@ -57,7 +57,7 @@ class BBmap:
 
 #For filtering out 16sRNA 'ALL' can be just bacterial and archean
     def ssu_n_lsu_rDNA_flitering_run(self,sample):
-        command="%sbbmap.sh fast=t minidentity=0.70 reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq nodisk ref=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best out=%s_filtered_mapped.sam" % (self.path, sample, sample, self.db_silva, sample, sample, sample)
+        command="%sbbmap.sh fast=t minidentity=0.70 reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq nodisk ref=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best out=%s_filtered_mapped.sam scafstats=filter_ribosomal.stats" % (self.path, sample, sample, self.db_silva, sample, sample, sample)
         logger.info("     Running command: [%s]" % command)
         os.system(command)
 
