@@ -86,6 +86,16 @@ class Run:
         Run_analysis_sam_lca(self.list_sra, self.station_name,self.settings).process()
 
 
+    def classification_with_kmer_method(self):
+        logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        Settings_loader_yaml(self.settings).yaml_check_settings_file()
+        logger.info("     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
+        BBpipe_with_bbduk_preliminary(self.list_sra,self.station_name,self.settings).process()
+        logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
+        Run_analysis_sam_lca(self.list_sra, self.station_name,self.settings).process()
+
+
+
 
 if __name__ == "__main__":
 
@@ -94,6 +104,7 @@ if __name__ == "__main__":
     import os
     import argparse
     from src.bbmap_wrapper import BBpipe
+    from src.bbmap_wrapper import BBpipe_with_bbduk_preliminary
     from src.krakenize import Pipeline_kraken
     from src.sam_analyzer import Run_analysis_sam_lca
     from src.get_data import Pipeline_fetch
@@ -122,6 +133,8 @@ Available workflows:
 [-classification_wf/--classify] Classification and visualization
 
 [-recalculation_wf/--recalculate] Use it for recalculate taxonomic assignemnt based on LCA algorithm
+
+
 
 
 Obligatory arguments:
@@ -164,6 +177,7 @@ This sofware was written by %s.
     parser.add_argument('-classification_wf','--classify',action='store_true')
     parser.add_argument('-recalculation_wf','--recalculate',action='store_true')
     parser.add_argument('-download_data','--fetch',action='store_true')
+    parser.add_argument('-process_with_kmer_classif','--kmer_classif',action='store_true')
     parser.add_argument('sra_ids', metavar='sra_ids', type=str)
     parser.add_argument('station_name', metavar='station_name', type=str)
     parser.add_argument('settings', metavar='settings', type=str)
@@ -199,6 +213,10 @@ This sofware was written by %s.
     elif args.fetch:
 
         process.fetch_wf()
+
+    elif arg.kmer_classif:
+
+        process.classification_with_kmer_method()
 
     else:
 
