@@ -48,13 +48,9 @@ class BBmap:
         self.db = Settings_loader_yaml(path=self.settings).yaml_handler()["Databases and mapping files"]["bbmap_base"]
         self.db_silva = Settings_loader_yaml(path=self.settings).yaml_handler()["Databases and mapping files"]["silva"]
         self.db_kmers = Settings_loader_yaml(path=self.settings).yaml_handler()["Databases and mapping files"]["kmers"]
-#       self.minkmerhits = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["minkmerhits"]
-#       self.kmer_len = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["kmer_len"]
-#
-#
-#
-
-
+        self.minkmerhits = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["minkmerhits"]
+        self.kmer_len = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["kmer_len"]
+        self.remap_min_identity = Settings_loader_yaml(path=self.settings).yaml_handler()["Params"]["min_identity"]
 
 #    def checkForBBmap(self):
 #
@@ -68,7 +64,7 @@ class BBmap:
 
 #For filtering out 16sRNA 'ALL' can be just bacterial and archean
     def ssu_n_lsu_rDNA_flitering_run(self,sample):
-        command="%sbbmap.sh fast=t minidentity=0.70 reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq nodisk ref=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best out=%s_filtered_mapped.sam scafstats=filter_ribosomal.stats" % (self.path, sample, sample, self.db_silva, sample, sample, sample)
+        command="%sbbmap.sh fast=t minidentity=0.70 reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq nodisk ref=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best outm1=%s_filtered_mapped_conserved_1.fq outm2=%s_filtered_mapped_conserved_2  scafstats=filter_ribosomal.stats" % (self.path, sample, sample, self.db_silva, sample, sample, sample,sample)
         logger.info("     Running command: [%s]" % command)
         os.system(command)
 
@@ -79,14 +75,14 @@ class BBmap:
 #        logger.info("     Running command: [%s]" % command)
 #        os.system(command)
 
-   def bbduk_preliminary_classification(self, sample):
-        command="%bbduk.sh  in1=%s_1.fastq in2=%s_2.fastq outm1=%s_classif_R1.fastq  outm2=%s_classif_R2.fastq minkmerhits=%s k=%s ref=%s" % (sample, sample,sample,sample,self.db_kmers)
+    def bbduk_preliminary_classification(self, sample):
+        command="%sbbduk.sh  in1=%s_1.fastq in2=%s_2.fastq outm1=%s_classif_R1.fastq  outm2=%s_classif_R2.fastq minkmerhits=%s k=%s ref=%s" % (self.path,sample, sample,sample,sample,self.db_kmers)
         logger.info("     Running command: [%s]" % command)
         os.system(command)
 
 
     def remap_run(self,sample):
-        command="%sbbmap.sh nodisk minidentity=0.85 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outu1=%s_f_chloroplasts_reads_R1.fq outu2=%s_f_chloroplasts_reads_R2.fq ambiguous=all scafstats=%s_final_chloroplasts.hitstats statsfile=%s_final_mapping_stats.txt out=%s_final_mapped.sam bincov=bincov.txt covbinsize=200" % (self.path, sample, sample, sample, sample,sample,sample,sample)
+        command="%sbbmap.sh nodisk minidentity=%s idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outu1=%s_f_chloroplasts_reads_R1.fq outu2=%s_f_chloroplasts_reads_R2.fq ambiguous=all scafstats=%s_final_chloroplasts.hitstats statsfile=%s_final_mapping_stats.txt out=%s_final_mapped.sam bincov=bincov.txt covbinsize=200" % (self.path,self.remap_min_identity ,sample, sample, sample, sample,sample,sample,sample)
         logger.info("     Running command: [%s]" % command)
         os.system(command)
 
