@@ -164,6 +164,7 @@ class Coverage:
             logger.info("There is no fully/partially covered genomes")
 
         else:
+
             with open("covered_genomes.csv","w") as f:
                 f.write("Genome name and id\tcoverage[%]\n")
                 for key in dict_of_genomes:
