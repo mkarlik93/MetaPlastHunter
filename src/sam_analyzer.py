@@ -382,7 +382,7 @@ class Sam_analyzer:
 
         to_write = list(self.reads_processing(samfile))
 
-        #It's better to call function 'write' once than couple thousnd times
+        #It's better to call function 'write' once than many sam_analyzer times
         open(file_out, "wb").write(''.join(to_write))
 
 
@@ -396,7 +396,7 @@ class LCA_postprocess:
 
         """Params
 
-        param treshold: To set min number of readsa are needed for support given taxa
+        param treshold: To set min number of reads are needed for support given taxa
         during graph prunning.
 
         param _lca_graph:  Lca graph instance, takes file produced by Sam_analyzer class and run lca_graph function

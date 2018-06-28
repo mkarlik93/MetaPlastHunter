@@ -134,7 +134,7 @@ Available workflows:
 
 [-recalculation_wf/--recalculate] Use it for recalculate taxonomic assignemnt based on LCA algorithm
 
-
+[-process_with_kmer_classif, --kmer_classif] Use it to lunch pipeline with in house kmer based preliminary classification istead kraken step
 
 
 Obligatory arguments:
@@ -143,7 +143,7 @@ sra_ids
 
 station_name
 
-settings
+settings [Includes the rest of pipeline parameters]
 
 
 Facultative arguments:
@@ -152,8 +152,17 @@ threads
 
 
 
+
 If you have any questions, please do not hesitate to contact me
 email address: michal.karlicki@gmail.com
+
+
+Usig it please cite:
+
+Wood DE, Salzberg SL: Kraken: ultrafast metagenomic sequence classification using exact alignments. Genome Biology 2014, 15:R46.
+
+https://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/bbmap-guide/
+
 
 
 This sofware was written by %s.
