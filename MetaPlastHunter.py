@@ -56,7 +56,7 @@ class Run:
         logger.info("     [%s] BBmap initial mapping" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         BBpipe(self.list_sra,self.station_name,self.settings).process()
         logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
-        Run_analysis_sam_lca(self.list_sra, self.station_name,self.settings).process()
+        Taxonomic_assignment_Runner(self.list_sra, self.station_name,self.settings).process()
 
     def fetch_wf(self):
 
@@ -74,7 +74,7 @@ class Run:
         logger.info("     [%s] BBmap initial mapping" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
         BBpipe(self.list_sra,self.station_name,self.settings).process()
         logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
-        Run_analysis_sam_lca(self.list_sra, self.station_name,self.settings).process()
+        Taxonomic_assignment_Runner(self.list_sra, self.station_name,self.settings).process()
 
     def recalculation_wf(self):
 
@@ -83,7 +83,7 @@ class Run:
         logger.info("     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
         BBpipe(self.list_sra,self.station_name,self.settings).process()
         logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
-        Run_analysis_sam_lca(self.list_sra, self.station_name,self.settings).process()
+        Taxonomic_assignment_Runner(self.list_sra, self.station_name,self.settings).process()
 
 
     def classification_with_kmer_method(self):
@@ -92,7 +92,7 @@ class Run:
         logger.info("     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
         BBpipe_with_bbduk_preliminary(self.list_sra,self.station_name,self.settings).process()
         logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
-        Run_analysis_sam_lca(self.list_sra, self.station_name,self.settings).process()
+        Taxonomic_assignment_Runner(self.list_sra, self.station_name,self.settings).process()
 
 
 
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     from src.bbmap_wrapper import BBpipe
     from src.bbmap_wrapper import BBpipe_with_bbduk_preliminary
     from src.krakenize import Pipeline_kraken
-    from src.sam_analyzer import Run_analysis_sam_lca
+    from src.taxonomic_assignment import Taxonomic_assignment_Runner
     from src.get_data import Pipeline_fetch
     from src.settings import Settings_loader_yaml
     import multiprocessing as mp
