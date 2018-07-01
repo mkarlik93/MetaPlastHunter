@@ -29,20 +29,30 @@ from cov import Coverage
 from settings import *
 import os
 import sys
+from subprocess import Popen, PIPE
 import logging
 
 #TODO
-#Wlaczenie tego we wstepna klasyfikacje -> zamiast kraken-a. Jeden pakiet, szybkosc, efekty sa okej.
-#Dwie klasyfikacje -> Krakenowa oraz kmerow-a
 
 logger = logging.getLogger('src.bbmap_wrapper')
 logging.basicConfig(level=logging.INFO)
+#TODO
+
+#Tworzenie log-a bbmapowego
+#Moze lepiej przerobic na nazwe pliku
+#Typu: -1 -2 -o jak w spades
 
 
 class BBmap:
 
-    def __init__(self,settings):
+    """ This class is bbmap wrapper for mapping, filtering of metagenomic reads.
+        Log goes to seperate file called sample_id+log.txt
 
+
+     """
+
+    def __init__(self,settings):
+        " Below initial parameters taken from settings file "
         self.settings = settings
         self.path = Settings_loader_yaml(path=self.settings).yaml_handler()["Software dependencies"]["bbmap.sh"]
         self.db = Settings_loader_yaml(path=self.settings).yaml_handler()["Databases and mapping files"]["bbmap_base"]
@@ -52,49 +62,46 @@ class BBmap:
         self.kmer_len = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["kmer_len"]
         self.remap_min_identity = Settings_loader_yaml(path=self.settings).yaml_handler()["Params"]["min_identity"]
 
-#    def checkForBBmap(self):
-#
-#        """Checks that Kraken is on the system before we try to run it."""
-#
-#        try:
-#            subprocess.call(['bbmap.sh', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
-#        except:
-#            logger.error("   Make sure BBmap is on your system path or set usage to path in settings.txt")
-#            sys.exit()
+    def filtering_conserved_regions(self,sample):
+        " Filters out 16S rDNA and 18S rDNA "
 
-#For filtering out 16sRNA 'ALL' can be just bacterial and archean
-    def ssu_n_lsu_rDNA_flitering_run(self,sample):
-        command="%sbbmap.sh fast=t minidentity=0.70 reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq nodisk ref=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best outm1=%s_filtered_mapped_conserved_1.fq outm2=%s_filtered_mapped_conserved_2  scafstats=filter_ribosomal.stats" % (self.path, sample, sample, self.db_silva, sample, sample, sample,sample)
-        logger.info("     Running command: [%s]" % command)
-        os.system(command)
+        command="%sbbmap.sh fast=t minidentity=0.70 reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq nodisk ref=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best outm1=%s_filtered_mapped_conserved_1.fq outm2=%s_filtered_mapped_conserved_2.fq  scafstats=filter_ribosomal.stats" % (self.path, sample, sample, self.db_silva, sample, sample, sample,sample)
+        command = command.split(" ")
+        process = Popen(command, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+        return stderr
 
 
-#remapping with smaller database
-#    def remap_run(self,sample):
-#        command="%sbbmap.sh nodisk minidentity=0.70 idtag=t in1=%s_final_chloroplasts_reads_R1.fq in2=%s_final_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outu1=%s_f_chloroplasts_reads_R1.fq outu2=%s_f_chloroplasts_reads_R2.fq ambiguous=all scafstats=%s_final_chloroplasts.hitstats statsfile=%s_final_mapping_stats.txt out=%s_final_mapped.sam bincov=bincov.txt covbinsize=200" % (self.path, sample, sample, sample, sample,sample,sample,sample)
-#        logger.info("     Running command: [%s]" % command)
-#        os.system(command)
+    def primary_mapping(self,sample):
+        " Maps filtered reads to the reference chloroplast database "
 
-    def bbduk_preliminary_classification(self, sample):
-        command="%sbbduk.sh  in1=%s_1.fastq in2=%s_2.fastq outm1=%s_classif_R1.fastq  outm2=%s_classif_R2.fastq minkmerhits=%s k=%s ref=%s" % (self.path,sample, sample,sample,sample,self.db_kmers)
-        logger.info("     Running command: [%s]" % command)
-        os.system(command)
+        command="%sbbmap.sh fast=t minidentity=0.70 nodisk reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s scafstats=%s_chloroplasts.hitstats bincov=bincov.txt covbinsize=200" % (self.path, sample, sample, self.db,sample)
+        command = command.split(" ")
+        logger.info("     Running primary mapping")
+        process = Popen(command, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+        return stderr
+
+    def secondary_mapping(self,sample):
+        " Maps reads again to the smaller database "
+
+        command="%sbbmap.sh nodisk minidentity=%s idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outm1=%s_final_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq ambiguous=all scafstats=%s_final_chloroplasts.hitstats statsfile=%s_final_mapping_stats.txt out=%s_final_mapped.sam bincov=bincov.txt covbinsize=200" % (self.path,self.remap_min_identity ,sample, sample, sample,sample,sample,sample,sample)
+        command = command.split(" ")
+        logger.info("     Running secondary mapping")
+        process = Popen(command, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+        return stderr
 
 
-    def remap_run(self,sample):
-        command="%sbbmap.sh nodisk minidentity=%s idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outu1=%s_f_chloroplasts_reads_R1.fq outu2=%s_f_chloroplasts_reads_R2.fq ambiguous=all scafstats=%s_final_chloroplasts.hitstats statsfile=%s_final_mapping_stats.txt out=%s_final_mapped.sam bincov=bincov.txt covbinsize=200" % (self.path,self.remap_min_identity ,sample, sample, sample, sample,sample,sample,sample)
-        logger.info("     Running command: [%s]" % command)
-        os.system(command)
-
-    def run(self,sample):
-
-        command="%sbbmap.sh fast=t minidentity=0.70 nodisk reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s scafstats=%s_chloroplasts.hitstats out=%s_mapped.sam bincov=bincov.txt covbinsize=200" % (self.path, sample, sample, self.db,sample, sample)
-        logger.info("      Running command: [%s]" % command)
-        os.system(command)
 
 #This comes first -> kraken_out
 class BBduk:
-
+    """
+    This class is a wrapper of bbduk programme from bbtools package.
+    It contains:
+        a) Function for filtering out low complex metagenomic reads
+        b) Module for in-house made preliminary classification
+    """
     def __init__(self,settings):
 
         self.settings = settings
@@ -114,11 +121,42 @@ class BBduk:
             logger.error("Make sure BBduk is on your system path or set proper path in settings.txt")
             sys.exit()
 
-    def run(self, sample):
+    def filtering(self,sample):
+
+        """ Filters out low complexity reads """
+
         path = self.path
+        logger.info("     Running  filtering" )
         command="%sbbduk.sh in1=%s_classif_R1.fastq in2=%s_classif_R2.fastq out1=%s_de_complex_R1.fastq out2=%s_de_complex_R2.fastq  outm=%s_repeat_regions_R1.fq outm2=%s_repeat_regions_R2.fq entropy=0.8 overwrite=true" % (path, sample, sample, sample, sample, sample, sample)
-        logger.info("     Running command: [%s]" % command)
-        os.system(command)
+        command = command.split(" ")
+        process = Popen(command, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+        return "DECOMPLEXATION"+"\n"+stderr
+
+    def bbduk_pre_classification(self,sample):
+
+        """
+
+        Module for very fast preliminary classification. It needs specially prepared by programme
+        from bbtools package
+
+         """
+
+        command="%sbbduk.sh  in1=%s_1.fastq in2=%s_2.fastq outm1=%s_classif_R1.fastq  outm2=%s_classif_R2.fastq minkmerhits=%s k=%s ref=%s" % (self.path,sample, sample,sample,sample,self.db_kmers)
+        command = command.split(" ")
+        process = Popen(command, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+        logger.info("     Running  preliminary classification")
+        return stderr
+
+
+def log_writing(list,sample_id):
+
+    with open(sample_id+"_log.txt","w") as f:
+        for rec in list:
+            print rec
+            f.write(rec+"\n")
+
 
 class BBpipe:
 
@@ -137,14 +175,17 @@ class BBpipe:
         bbmap = BBmap(self.settings)
 
         for sra_id in list_sra_ids:
+
+            bblog = []
             logger.info("Procesing "+sra_id)
             dir = "%s/%s/" % (self.station_name,sra_id)
             os.chdir(dir)
-            bbduk.run(sra_id)
-            bbmap.ssu_n_lsu_rDNA_flitering_run(sra_id)
-            bbmap.run(sra_id)
+            bblog.append(bbduk.filtering(sra_id))
+            bblog.append(bbmap.filtering_conserved_regions(sra_id))
+            bblog.append(bbmap.primary_mapping(sra_id))
             Coverage('bincov.txt',sra_id+"_chloroplasts.hitstats",self.settings).ref_for_remapping()
-            bbmap.remap_run(sra_id)
+            bblog.append(bbmap.secondary_mapping(sra_id))
+            log_writing(bblog,sra_id)
             os.chdir(starting_dir)
 
 class BBpipe_with_bbduk_preliminary:
@@ -156,13 +197,16 @@ class BBpipe_with_bbduk_preliminary:
         self.settings = settings
 
         for sra_id in list_sra_ids:
+
+            bblog = []
             logger.info("Procesing "+sra_id)
             dir = "%s/%s/" % (self.station_name,sra_id)
             os.chdir(dir)
-            bbmap.bbduk_preliminary_classification(sra_id)
-            bbduk.run(sra_id)
-            bbmap.ssu_n_lsu_rDNA_flitering_run(sra_id)
-            bbmap.run(sra_id)
+            bblog.append(bbduk.bbduk_pre_classification(sra_id))
+            bblog.append(bbduk.filtering(sra_id))
+            bblog.append(bbmap.filtering_conserved_regions(sra_id))
+            bblog.append(bbmap.primary_mapping(sra_id))
             Coverage('bincov.txt',sra_id+"_chloroplasts.hitstats",self.settings).ref_for_remapping()
-            bbmap.remap_run(sra_id)
+            bblog.append(bbmap.secondary_mapping(sra_id))
+            log_writing(bblog,sra_id)
             os.chdir(starting_dir)

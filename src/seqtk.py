@@ -32,7 +32,7 @@ from kraken_out_parser import *
 from seqtk_wrapper import *
 
 #Do klasy_czas na ten skrypt
-#To trzeba by zmienic - jesli chcielibysmy uzywac
+#To trzeba by zmienic - jesli chcielibysmy uzywac - tego zupelnie nie ma 
 
 
 
@@ -61,7 +61,7 @@ class ReadExtraction:
         reads = taxonomic_level_to_dict(df)
         segregated = {}
         unique = parse_unique(df)
-        
+
         for i in unique:
             segregated[i] = []
 

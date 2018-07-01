@@ -38,11 +38,13 @@ import itertools
 import sys
 import logging
 import pandas as pd
+from settings import *
+from  cov import Coverage
 
 
-logger = logging.getLogger("MetaPlastHunter")
+
+logger = logging.getLogger("src.taxonomic_assignment")
 logging.basicConfig(level=logging.INFO)
-
 
 
 def sam_get_min_identity_of_covered_genome(target_genome):
@@ -80,11 +82,9 @@ def merge_two_dicts(x, y):
 class Taxonomic_assignment(object):
 
     ncbi = NCBITaxa()
-    samfile = glob.glob("*_final_mapped.sam")[0]
 
 
-
-    def __init__ (self,sample,treshold):
+    def __init__ (self,sample,treshold,seqidmap):
 
         """Params
 
@@ -96,12 +96,13 @@ class Taxonomic_assignment(object):
         param _graph: Transformed graph instance
 
         """
-        self._seqid = self.seqid2taxid("seqid2taxid.map")
+        self._seqid = self.seqid2taxid(seqidmap)
         self._sample_name = sample
         self._seqid_inverted = self._seqid_inverted(self._seqid)
         self._dict_of_reads = self.sam_parse()
         self.treshold = treshold
         self.lca_assign,self.almost_full = self.lca_assignment_just_taxids()
+        self.run = self.process_taxonomic_assignment_to_file_easy()
         self._lca_graph = self.lca_graph()
         self.analyzed_graf = self.lca_graph_analysis()
 
@@ -157,7 +158,8 @@ class Taxonomic_assignment(object):
         with open(seqidmap,"r") as f:
             for line in f:
                 splited = line.split("\t")
-                seqid2taxid[splited[0]] = splited[1].strip("\n")
+                tmp = splited[1].strip("\n")
+                seqid2taxid[splited[0]] = tmp.strip(" ")
 
         return seqid2taxid
 
@@ -257,8 +259,8 @@ class Taxonomic_assignment(object):
             return readname
 
     def sam_parse(self):
-
-        samfile = pysam.AlignmentFile(self.samfile)
+        _samfile = glob.glob("*_final_mapped.sam")[0]
+        samfile = pysam.AlignmentFile(_samfile)
         dict_reads = {}
 
         for read in samfile.fetch():
@@ -315,12 +317,12 @@ class Taxonomic_assignment(object):
                 try:
 
                     if len(r1) != 0:
-                        name_r1 = str(name2taxid(r1[0].reference_name))
+                        name_r1 = str(self.name2taxid(r1[0].reference_name))
         #                print name2taxid(name_r1,_seqid)
                         yield "%s\t%s\n" % (record+".1", ";".join(self.get_lineage(self.lca_assign[name_r1])))
 
                     elif len(r2) != 0:
-                        name_r2 = str(name2taxid(r2[0].reference_name))
+                        name_r2 = str(self.name2taxid(r2[0].reference_name))
                         yield "%s\t%s\n" % (record+".2", ";".join(self.get_lineage(self.lca_assign[name_r2])))
 
 
@@ -361,7 +363,7 @@ class Taxonomic_assignment(object):
                 pass
         return the_cdr_data_structure
 
-    def process_taxonomic_assignment_to_file_easy():
+    def process_taxonomic_assignment_to_file_easy(self):
 
         to_write = list(self.reads_processing_easy())
         #It's better to call function 'write' once than many sam_analyzer times
@@ -546,9 +548,9 @@ class Taxonomic_assignment_Runner:
             dir = "%s/%s/" % (self.station_name,i)
             os.chdir(dir)
             Coverage('bincov.txt',i+"_chloroplasts.hitstats",self.settings).report_cov()
-            Sam_analyzer(self.seqidmap).process_taxonomic_assignment_to_file(i+"_final_mapped.sam",i+"_taxonomic_assignment.txt")
 
-            lca_postprocess =  Taxonomic_assignment(i,self.lca_treshold)
+            lca_postprocess =  Taxonomic_assignment(i,self.lca_treshold,self.seqidmap)
+#            lca_postprocess.process_taxonomic_assignment_to_file_easy()
             lca_postprocess.pandas_data_frame_species_level()
 #            lca_postprocess.species_level_shannon_index()
 #            lca_postprocess.count_plot_species_level()
