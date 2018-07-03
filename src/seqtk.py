@@ -31,8 +31,10 @@ import glob
 from kraken_out_parser import *
 from seqtk_wrapper import *
 
+#To trzeba by bylo zmienic by zaczelo dzialac
+
 #Do klasy_czas na ten skrypt
-#To trzeba by zmienic - jesli chcielibysmy uzywac - tego zupelnie nie ma 
+#To trzeba by zmienic - jesli chcielibysmy uzywac - tego zupelnie nie ma
 
 
 

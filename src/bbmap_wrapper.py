@@ -65,7 +65,7 @@ class BBmap:
     def filtering_conserved_regions(self,sample):
         " Filters out 16S rDNA and 18S rDNA "
 
-        command="%sbbmap.sh fast=t minidentity=0.70 reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq nodisk ref=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best outm1=%s_filtered_mapped_conserved_1.fq outm2=%s_filtered_mapped_conserved_2.fq  scafstats=filter_ribosomal.stats" % (self.path, sample, sample, self.db_silva, sample, sample, sample,sample)
+        command="%sbbmap.sh fast=t reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq nodisk ref=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best outm1=%s_filtered_mapped_conserved_1.fq outm2=%s_filtered_mapped_conserved_2.fq  scafstats=filter_ribosomal.stats" % (self.path, sample, sample, self.db_silva, sample, sample, sample,sample)
         command = command.split(" ")
         process = Popen(command, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
@@ -75,7 +75,7 @@ class BBmap:
     def primary_mapping(self,sample):
         " Maps filtered reads to the reference chloroplast database "
 
-        command="%sbbmap.sh fast=t minidentity=0.70 nodisk reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s scafstats=%s_chloroplasts.hitstats bincov=bincov.txt covbinsize=200" % (self.path, sample, sample, self.db,sample)
+        command="%sbbmap.sh fast=t nodisk reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s scafstats=%s_chloroplasts.hitstats out=%s_final_mapped.sam bincov=bincov.txt minidentity=0.70 covbinsize=101" % (self.path, sample, sample, self.db,sample,sample)
         command = command.split(" ")
         logger.info("     Running primary mapping")
         process = Popen(command, stdout=PIPE, stderr=PIPE)
@@ -85,7 +85,7 @@ class BBmap:
     def secondary_mapping(self,sample):
         " Maps reads again to the smaller database "
 
-        command="%sbbmap.sh nodisk minidentity=%s idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outm1=%s_final_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq ambiguous=all scafstats=%s_final_chloroplasts.hitstats statsfile=%s_final_mapping_stats.txt out=%s_final_mapped.sam bincov=bincov.txt covbinsize=200" % (self.path,self.remap_min_identity ,sample, sample, sample,sample,sample,sample,sample)
+        command="%sbbmap.sh nodisk minidentity=%s idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outm1=%s_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq ambiguous=all scafstats=%s_final_chloroplasts.hitstats statsfile=%s_final_mapping_stats.txt out=%s_final_mapped.sam bincov=bincov.txt covbinsize=200" % (self.path,self.remap_min_identity ,sample, sample, sample,sample,sample,sample,sample)
         command = command.split(" ")
         logger.info("     Running secondary mapping")
         process = Popen(command, stdout=PIPE, stderr=PIPE)
@@ -137,7 +137,7 @@ class BBduk:
 
         """
 
-        Module for very fast preliminary classification. It needs specially prepared by programme
+        Module for very fast preliminary classification. It needs specially prepared by kcompress
         from bbtools package
 
          """
@@ -154,7 +154,6 @@ def log_writing(list,sample_id):
 
     with open(sample_id+"_log.txt","w") as f:
         for rec in list:
-            print rec
             f.write(rec+"\n")
 
 
@@ -208,5 +207,35 @@ class BBpipe_with_bbduk_preliminary:
             bblog.append(bbmap.primary_mapping(sra_id))
             Coverage('bincov.txt',sra_id+"_chloroplasts.hitstats",self.settings).ref_for_remapping()
             bblog.append(bbmap.secondary_mapping(sra_id))
+            log_writing(bblog,sra_id)
+#            Coverage("bincov_2.txt",sra_id+"_final_chloroplasts.hitstats",self.settings).report_cov()
+            os.chdir(starting_dir)
+
+
+class Single_mapping:
+
+    def __init__(self, list_sra, station_name,settings):
+
+        self.list_sra = list_sra
+        self.station_name = station_name
+        self.settings = settings
+
+    def process(self):
+
+        sra_ids = self.list_sra
+        list_sra_ids = sra_ids.split(",")
+        starting_dir = os.getcwd()
+        bbduk = BBduk(self.settings)
+        bbmap = BBmap(self.settings)
+
+        for sra_id in list_sra_ids:
+
+            bblog = []
+            logger.info("Procesing "+sra_id)
+            dir = "%s/%s/" % (self.station_name,sra_id)
+            os.chdir(dir)
+            bblog.append(bbduk.filtering(sra_id))
+            bblog.append(bbmap.filtering_conserved_regions(sra_id))
+            bblog.append(bbmap.primary_mapping(sra_id))
             log_writing(bblog,sra_id)
             os.chdir(starting_dir)

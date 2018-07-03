@@ -94,6 +94,12 @@ class Run:
         logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
         Taxonomic_assignment_Runner(self.list_sra, self.station_name,self.settings).process()
 
+    def classification_single_mapping(self):
+        Settings_loader_yaml(self.settings).yaml_check_settings_file()
+        Single_mapping(self.list_sra,self.station_name,self.settings).process()
+        Taxonomic_assignment_Runner(self.list_sra, self.station_name,self.settings).process()
+
+
 
 
 
@@ -105,6 +111,7 @@ if __name__ == "__main__":
     import argparse
     from src.bbmap_wrapper import BBpipe
     from src.bbmap_wrapper import BBpipe_with_bbduk_preliminary
+    from src.bbmap_wrapper import Single_mapping
     from src.krakenize import Pipeline_kraken
     from src.taxonomic_assignment import Taxonomic_assignment_Runner
     from src.get_data import Pipeline_fetch
@@ -185,6 +192,7 @@ This sofware was written by %s.
     parser.add_argument('-full_wf','--full',action='store_true')
     parser.add_argument('-classification_wf','--classify',action='store_true')
     parser.add_argument('-recalculation_wf','--recalculate',action='store_true')
+    parser.add_argument('-single_mapping','--single',action='store_true')
     parser.add_argument('-download_data','--fetch',action='store_true')
     parser.add_argument('-process_with_kmer_classif','--kmer_classif',action='store_true')
     parser.add_argument('sra_ids', metavar='sra_ids', type=str)
@@ -223,9 +231,12 @@ This sofware was written by %s.
 
         process.fetch_wf()
 
-    elif arg.kmer_classif:
+    elif args.kmer_classif:
 
         process.classification_with_kmer_method()
+
+    elif args.single:
+        process.classification_single_mapping()
 
     else:
 

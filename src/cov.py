@@ -40,6 +40,16 @@ import logging
 logger = logging.getLogger("src.cov")
 logging.basicConfig(level=logging.INFO)
 
+#TODO
+#Sprawdzic dobrze parametry
+#Cos sie mi nie podoba
+
+#%COV |nonzero bins|/|bins|*100
+# This is based on percentile, maybe peaking finding performs better?
+
+
+
+
 class Coverage:
 
     def __init__(self,filename, histstats,settings):
@@ -47,7 +57,7 @@ class Coverage:
 
         """ Params
 
-        param loaded: coverage data
+        param loaded: coverage data - produced by pileup
 
         param filename: keeps bincov.txt, draft coverage file, produced during mapping
 
@@ -82,10 +92,6 @@ class Coverage:
                     if splited[0][0] != "#":
                         organisms[splited[0]].append(float(splited[1]))
         return organisms
-
-#%COV |nonzero bins|/|bins|*100
-# This is based on percentile, maybe peaking finding performs better?
-
 
     def getpercentage_cov(self):
         #percentile

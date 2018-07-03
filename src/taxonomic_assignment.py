@@ -316,12 +316,19 @@ class Taxonomic_assignment(object):
             try:
                 try:
 
-                    if len(r1) != 0:
+                    if len(r1) != 0 and len(r2) != 0:
+
                         name_r1 = str(self.name2taxid(r1[0].reference_name))
+                        name_r2 = str(self.name2taxid(r2[0].reference_name))
         #                print name2taxid(name_r1,_seqid)
                         yield "%s\t%s\n" % (record+".1", ";".join(self.get_lineage(self.lca_assign[name_r1])))
+                        yield "%s\t%s\n" % (record+".2", ";".join(self.get_lineage(self.lca_assign[name_r2])))
 
-                    elif len(r2) != 0:
+                    elif len(r1) != 0 and len(r2) == 0:
+                        name_r1 = str(self.name2taxid(r1[0].reference_name))
+                        yield "%s\t%s\n" % (record+".1", ";".join(self.get_lineage(self.lca_assign[name_r1])))
+
+                    elif len(r1) == 0 and len(r2) != 0:
                         name_r2 = str(self.name2taxid(r2[0].reference_name))
                         yield "%s\t%s\n" % (record+".2", ";".join(self.get_lineage(self.lca_assign[name_r2])))
 
@@ -348,11 +355,17 @@ class Taxonomic_assignment(object):
 
             try:
                 try:
-                    if len(r1) != 0:
+                    if len(r1) != 0 and len(r2) != 0 :
+                        name_r1 = self.name2taxid(r1[0].reference_name)
+                        name_r2 = self.name2taxid(r2[0].reference_name)
+                        the_cdr_data_structure[self.lca_assign[name_r1]][name_r1] += 1
+                        the_cdr_data_structure[self.lca_assign[name_r2]][name_r1] += 1
+
+                    elif len(r1) != 0 and len(r2) == 0:
                         name_r1 = self.name2taxid(r1[0].reference_name)
                         the_cdr_data_structure[self.lca_assign[name_r1]][name_r1] += 1
 
-                    elif len(r2) != 0:
+                    elif len(r1) == 0 and len(r2) != 0:
                         name_r2 = self.name2taxid(r2[0].reference_name)
                         the_cdr_data_structure[self.lca_assign[name_r2]][name_r2] += 1
 
@@ -547,7 +560,9 @@ class Taxonomic_assignment_Runner:
             logger.info("Procesing "+i)
             dir = "%s/%s/" % (self.station_name,i)
             os.chdir(dir)
-            Coverage('bincov.txt',i+"_chloroplasts.hitstats",self.settings).report_cov()
+            c = Coverage('bincov.txt',i+"_chloroplasts.hitstats",self.settings)
+            c.getpercentage_cov()
+            c.report_cov()
 
             lca_postprocess =  Taxonomic_assignment(i,self.lca_treshold,self.seqidmap)
 #            lca_postprocess.process_taxonomic_assignment_to_file_easy()
