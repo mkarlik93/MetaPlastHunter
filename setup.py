@@ -9,9 +9,10 @@ if __name__ == '__main__':
         include_package_data=True,
         url='https://github.com/mkarlik93/MetaPlastHunter',
         license='LICENSE.txt',
-        description='Efficent pipeline for fast searching of chloroplast reads in huge metagenomic datasets',
+        description='Efficent pipeline for fast searching of chloroplast reads in metagenomic datasets',
         long_description=open('README.md').read(),
-#        entry_points={'console_scripts': ['HiCEnterprise=HiCEnterprise.__main__:main']},
+        entry_points={'console_scripts': ['MetaPlastHunter=metaplasthunter.MetaPlastHunter:main']},
+        scripts=['metaplasthunter/MetaPlastHunter.py'],
         keywords=['bioinformatics', 'metagenomics', 'chloroplast', 'classification'],
         classifiers=[
             'Development Status :: 2 - Pre-Alpha'

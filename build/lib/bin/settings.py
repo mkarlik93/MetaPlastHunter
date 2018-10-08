@@ -86,6 +86,28 @@ class Settings_loader_yaml:
                 logger.error("Check path of %s" % key )
                 sys.exit()
 
+    def check_reads(self,reads):
+        for key in reads:
+
+            if os.path.isfile(reads[key]) or os.path.isdir(reads[key]):
+                logger.info("%s read file has been added correctly" % key)
+
+            else:
+
+                logger.error("Check path of %s" % key )
+                sys.exit()
+
+    def check_contig(self,contig):
+        for key in contig:
+
+            if os.path.isfile(contig[key]) or os.path.isdir(contig[key]):
+                logger.info("%s contig file has been added correctly" % key)
+
+            else:
+
+                logger.error("Check path of %s" % key )
+                sys.exit()
+
     def check_params(self,params):
 
         for key in params:
@@ -100,7 +122,9 @@ class Settings_loader_yaml:
             try:
                 settings = yaml.load(stream)
             except yaml.YAMLError as exc:
-                print(exc)
+
+                print exc
+                sys.exit()
         return settings
 
 
@@ -110,3 +134,5 @@ class Settings_loader_yaml:
         self.check_software(settings_to_check["Software dependencies"])
         self.check_db(settings_to_check["Databases and mapping files"])
         self.check_params(settings_to_check["Params"])
+#        self.check_reads(settings_to_check["Input reads"])
+#        self.check_contig(settings_to_check["Input contigs"])

@@ -1,24 +1,19 @@
-# MetaPlastHunter
+#MetaPlastHunter
+
+A pipeline for fast and accurate searching chloroplasts reads in huge metagenomic datasets.
 
 
 
-
-An integrated framework for searching plastid DNA (cpDNA) fragments in metagenomic datasets.
-
-Currently MPH is under testing if you want to use it please contact me first! 
+#Installation
 
 
+via Github
 
+1) clone github repository ("git clone https://github.com/mkarlik93/MetaPlastHunter.git") 
+2) Move to package location (cd "package directory") 
+3) Install ("python setup.py install")
 
-
-
-
-
-
-
-
-
-
+All of paths to external dependencies can be added in settings files - input file or you can keep in $PATH
 
 
 
@@ -35,3 +30,19 @@ Currently MPH is under testing if you want to use it please contact me first!
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Michal Karlicki, 2018

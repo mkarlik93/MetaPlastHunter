@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!//anaconda/bin/python
 ###############################################################################
 #                                                                             #
 #    Entry point for MetaPlastHunter                                          #
@@ -27,6 +27,20 @@ __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
 import logging
+import argparse
+from time import gmtime, strftime
+import os
+from bin.bbmap_wrapper import BBpipe
+from bin.bbmap_wrapper import BBpipe_with_bbduk_preliminary
+from bin.bbmap_wrapper_v_1 import Mapping_runner
+from bin.krakenize import Pipeline_kraken
+from bin.taxonomic_assignment_v_1 import Taxonomic_assignment_Runner
+from bin.get_data import Pipeline_fetch
+from bin.settings import Settings_loader_yaml
+from bin.genome_reconstruction import Genome_reconstruction_pipe
+import sys
+import multiprocessing as mp
+
 
 logger = logging.getLogger("MetaPlastHunter")
 logging.basicConfig(level=logging.INFO)
@@ -39,12 +53,18 @@ class Run:
 
     """
 
-    def __init__(self,list_sra, station_name,settings,threads):
+    def __init__(self,settings,threads):
 
-        self.list_sra = list_sra
-        self.station_name = station_name
+        self.list_sra = ""
+        self.station_name = ""
         self.settings = settings
         self.threads = threads
+
+    def genomic_reconstruction(self):
+        logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        Settings_loader_yaml(self.settings).yaml_check_settings_file()
+        logger.info( "     [%s] Starting genomic reconstruction " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        Genome_reconstruction_pipe(self.settings).process()
 
     def full_wf(self):
         logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
@@ -58,8 +78,9 @@ class Run:
         logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Taxonomic_assignment_Runner(self.list_sra, self.station_name,self.settings).process()
 
+    #Osobny skrypt
     def fetch_wf(self):
-
+        #Ta funkcja jest okej
         logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Settings_loader_yaml(self.settings).yaml_check_settings_file()
         logger.info( "     [%s] Downloading data from SRArchive" % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
@@ -77,7 +98,7 @@ class Run:
         Taxonomic_assignment_Runner(self.list_sra, self.station_name,self.settings).process()
 
     def recalculation_wf(self):
-
+        #Do wywalenia
         logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Settings_loader_yaml(self.settings).yaml_check_settings_file()
         logger.info("     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
@@ -86,7 +107,9 @@ class Run:
         Taxonomic_assignment_Runner(self.list_sra, self.station_name,self.settings).process()
 
 
-    def classification_with_kmer_method(self):
+    #Some tests are still needed
+    def accelerated_taxonomic_assignment(self):
+        #Do przerobienia
         logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Settings_loader_yaml(self.settings).yaml_check_settings_file()
         logger.info("     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
@@ -94,82 +117,55 @@ class Run:
         logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
         Taxonomic_assignment_Runner(self.list_sra, self.station_name,self.settings).process()
 
-    def classification_single_mapping(self):
-        Settings_loader_yaml(self.settings).yaml_check_settings_file()
-        Single_mapping(self.list_sra,self.station_name,self.settings).process()
-        Taxonomic_assignment_Runner(self.list_sra, self.station_name,self.settings).process()
+    def taxonomic_assigment(self):
+        #Ta tez
+        logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        Settings_loader_yaml(self.settings).yaml_check_settings_file_classification()
+        logger.info("     [%s] Mapping and generating SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
+        Mapping_runner(self.settings).process()
+        logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
+        Taxonomic_assignment_Runner(self.settings).process()
 
 
 
-
-
-if __name__ == "__main__":
-
-    from time import gmtime, strftime
-    import sys
-    import os
-    import argparse
-    from src.bbmap_wrapper import BBpipe
-    from src.bbmap_wrapper import BBpipe_with_bbduk_preliminary
-    from src.bbmap_wrapper import Single_mapping
-    from src.krakenize import Pipeline_kraken
-    from src.taxonomic_assignment import Taxonomic_assignment_Runner
-    from src.get_data import Pipeline_fetch
-    from src.settings import Settings_loader_yaml
-    import multiprocessing as mp
-
-
+def main():
 
     description = """
 
 Version %s
 
 
-MetaPlastHunter - The efficient and accurate plastid reads classification pipeline.
+MetaPlastHunter -
 
+
+ The efficient and accurate plastid reads classification pipeline.
 
 Quantitative aproach for eukaryotic metagenomics.
 
-
 Available workflows:
 
-[-full_wf/--full] From downloading data to classification and visualization
+[-reconstruction/--R] Reconstruction of large plastid parts
 
 [-download_data/--fetch] Downloading data and directories preparation
 
-[-classification_wf/--classify] Classification and visualization
+[--taxonomic_classification/--C] Classification and visualization
 
-[-recalculation_wf/--recalculate] Use it for recalculate taxonomic assignemnt based on LCA algorithm
-
-[-process_with_kmer_classif, --kmer_classif] Use it to lunch pipeline with in house kmer based preliminary classification istead kraken step
-
+[--rapid_classification, --Acc] Use it to lunch pipeline with in house kmer based preliminary classification
 
 Obligatory arguments:
 
-sra_ids
-
-station_name
-
-settings [Includes the rest of pipeline parameters]
-
+Settings - inpute file
 
 Facultative arguments:
 
 threads
 
-
-
-
 If you have any questions, please do not hesitate to contact me
 email address: michal.karlicki@gmail.com
 
-
-Usig it please cite:
-
-Wood DE, Salzberg SL: Kraken: ultrafast metagenomic sequence classification using exact alignments. Genome Biology 2014, 15:R46.
+Please cite:
 
 https://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/bbmap-guide/
-
 
 
 This sofware was written by %s.
@@ -179,8 +175,9 @@ This sofware was written by %s.
 
 
 
-
 """
+
+
 
 
     parser = argparse.ArgumentParser(
@@ -188,22 +185,12 @@ This sofware was written by %s.
                     formatter_class=argparse.RawDescriptionHelpFormatter,
                     epilog=epilog)
 
-
-    parser.add_argument('-full_wf','--full',action='store_true')
-    parser.add_argument('-classification_wf','--classify',action='store_true')
-    parser.add_argument('-recalculation_wf','--recalculate',action='store_true')
-    parser.add_argument('-single_mapping','--single',action='store_true')
-    parser.add_argument('-download_data','--fetch',action='store_true')
-    parser.add_argument('-process_with_kmer_classif','--kmer_classif',action='store_true')
-    parser.add_argument('sra_ids', metavar='sra_ids', type=str)
-    parser.add_argument('station_name', metavar='station_name', type=str)
-    parser.add_argument('settings', metavar='settings', type=str)
-    parser.add_argument('threads',nargs='?', type=int,default=mp.cpu_count())
-
-#   parser.add_argument('number', nargs='?', type=int,default=None)
-#   parser.add_argument('format', nargs='?', type=str,default="fasta")
-
-
+    parser.add_argument('--reconstruction','-R',action='store_true')
+    parser.add_argument('--taxonomic_classification','-C',action='store_true')
+    parser.add_argument('--download_data','-F',action='store_true')
+    parser.add_argument('--rapid_classification', '-Acc',action='store_true')
+    parser.add_argument('--settings','-S', metavar='settings', type=str)
+    parser.add_argument('--threads',"-T",nargs='?', type=int,default=mp.cpu_count())
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -211,33 +198,28 @@ This sofware was written by %s.
 
     args = parser.parse_args()
 
+
     start = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
 
-    process = Run(args.sra_ids, args.station_name,args.settings,args.threads)
+    process = Run(args.settings,args.threads)
 
-    if args.full:
+    if args.taxonomic_classification:
 
-        process.full_wf()
+        process.taxonomic_assigment()
 
-    elif args.classify:
+    elif args.reconstruction:
 
-        process.classification_wf()
+        process.genomic_reconstruction()
 
-    elif args.recalculate:
 
-        process.recalculation_wf()
-
-    elif args.fetch:
+    elif args.download_data:
 
         process.fetch_wf()
 
-    elif args.kmer_classif:
+    elif args.rapid_classification:
 
-        process.classification_with_kmer_method()
-
-    elif args.single:
-        process.classification_single_mapping()
-
+        process.accelerated_taxonomic_assignment()
+        
     else:
 
         logger.error("      Please specify pipeline")
@@ -246,3 +228,8 @@ This sofware was written by %s.
     end = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
     logger.info("Starting time: "+start)
     logger.info("Ending time: "+end)
+
+
+
+if __name__ == "__main__":
+    main()

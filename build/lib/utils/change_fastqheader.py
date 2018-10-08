@@ -27,37 +27,68 @@ __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
 
-import subprocess
-import logging
+def change_header(read,number_of_pair):
+    header_changed_read = []
+    for seq_record in SeqIO.parse(read,"fastq"):
+        old_header = seq_record.id
+        new_header = old_header[:-2]+"/"+str(number_of_pair)
+        seq_record.id = new_header
+        seq_record.description = ""
+        header_changed_read.append(seq_record)
+    SeqIO.write(header_changed_read, str(read).rstrip(".fastq")+"_changed.fastq","fastq")
+    print "Headers have been changed"
 
-""" This is wrapper for RepeatMasker - ??????? """
+def paired_header(read_1, read_2):
+    change_header(read_1,1)
+    change_header(read_2,2)
 
-
-class RMasker(BaseException):
-    pass
-
-
-def __init__(self,settings):
-    self.settings = settings
-
-    if settings == None:
-        self.checkForRMasker()
-        self.path = ""
-    else:
-
-        self.path = Settings_loader(mode="RepeatMasker",path=self.settings).read_path()["RepeatMasker"]
-
-def run_masking(self,fastafile):
-    path = self.path
-    command = "%sRepeatMasker %s -small" % (path, fastafile)
-    os.system(command)
+if __name__ == "__main__":
 
 
-def check_for_rmasker(self):
-    """Check to see if RepeatMasker is on the system before we try to run it."""
+    from Bio import SeqIO
+    import os
+    from time import gmtime, strftime
+    import sys
+    import argparse
 
-    try:
-        subprocess.call(['RepeatMasker', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
-    except:
-        print "  [Error] Make sure RepeatMasker is on your system path or set usage to path in settings.txt"
-        sys.exit()
+    description = """
+
+Version 1.0
+
+Script changes fastq headers.
+
+If you have any questions, please do not hesitate to contact me
+email address: michal.karlicki@gmail.com
+
+
+
+"""
+
+    epilog = """
+
+"""
+
+
+    parser = argparse.ArgumentParser(
+                    description=description,
+                    formatter_class=argparse.RawDescriptionHelpFormatter,
+                    epilog=epilog)
+
+
+
+
+    parser.add_argument('read_1', metavar='-read1', type=str)
+    parser.add_argument('read_2', metavar='-read2', type=str)
+
+
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(1)
+
+    args = parser.parse_args()
+
+    start = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
+    paired_header(args.read_1,args.read_2)
+    end = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
+    print "Starting time: "+start
+    print "Ending time: "+end

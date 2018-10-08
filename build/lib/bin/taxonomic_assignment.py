@@ -426,7 +426,6 @@ class Taxonomic_assignment(object):
 
         G = nx.DiGraph()
 
-
         dict_ltu = self.dict_translator_taxid_name(self.processing_cdr_data_stucture())
 
         taxa_count_dict, longest =  self.open_lca_file()

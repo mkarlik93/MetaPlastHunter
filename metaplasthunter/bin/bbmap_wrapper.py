@@ -43,6 +43,12 @@ logging.basicConfig(level=logging.INFO)
 #Typu: -1 -2 -o jak w spades
 
 
+
+
+
+
+
+
 class BBmap:
 
     """ This class is bbmap wrapper for mapping, filtering of metagenomic reads.
@@ -52,7 +58,13 @@ class BBmap:
      """
 
     def __init__(self,settings):
-        " Below initial parameters taken from settings file "
+
+        """ Below initial parameters taken from settings file
+
+        Params are loaded from settings file
+
+        """
+
         self.settings = settings
         self.path = Settings_loader_yaml(path=self.settings).yaml_handler()["Software dependencies"]["bbmap.sh"]
         self.db = Settings_loader_yaml(path=self.settings).yaml_handler()["Databases and mapping files"]["bbmap_base"]
@@ -63,6 +75,7 @@ class BBmap:
         self.remap_min_identity = Settings_loader_yaml(path=self.settings).yaml_handler()["Params"]["min_identity"]
 
     def filtering_conserved_regions(self,sample):
+
         " Filters out 16S rDNA and 18S rDNA "
 
         command="%sbbmap.sh fast=t reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq nodisk ref=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best outm1=%s_filtered_mapped_conserved_1.fq outm2=%s_filtered_mapped_conserved_2.fq  scafstats=filter_ribosomal.stats" % (self.path, sample, sample, self.db_silva, sample, sample, sample,sample)
@@ -73,9 +86,10 @@ class BBmap:
 
 
     def primary_mapping(self,sample):
+
         " Maps filtered reads to the reference chloroplast database "
 
-        command="%sbbmap.sh fast=t nodisk reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s scafstats=%s_chloroplasts.hitstats out=%s_final_mapped.sam bincov=bincov.txt minidentity=0.70 covbinsize=101" % (self.path, sample, sample, self.db,sample,sample)
+        command="%sbbmap.sh minidentity=%s nodisk reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s scafstats=%s_chloroplasts.hitstats out=%s_final_mapped.sam bincov=bincov.txt outm1=%s_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq covbinsize=101" % (self.path,self.remap_min_identity ,sample, sample, self.db,sample,sample,sample,sample)
         command = command.split(" ")
         logger.info("     Running primary mapping")
         process = Popen(command, stdout=PIPE, stderr=PIPE)
@@ -83,6 +97,7 @@ class BBmap:
         return stderr
 
     def secondary_mapping(self,sample):
+
         " Maps reads again to the smaller database "
 
         command="%sbbmap.sh nodisk minidentity=%s idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outm1=%s_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq ambiguous=all scafstats=%s_final_chloroplasts.hitstats statsfile=%s_final_mapping_stats.txt out=%s_final_mapped.sam bincov=bincov.txt covbinsize=200" % (self.path,self.remap_min_identity ,sample, sample, sample,sample,sample,sample,sample)
@@ -96,12 +111,14 @@ class BBmap:
 
 #This comes first -> kraken_out
 class BBduk:
+
     """
     This class is a wrapper of bbduk programme from bbtools package.
     It contains:
         a) Function for filtering out low complex metagenomic reads
         b) Module for in-house made preliminary classification
     """
+
     def __init__(self,settings):
 
         self.settings = settings
