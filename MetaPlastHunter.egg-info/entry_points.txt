@@ -1,3 +1,0 @@
-[console_scripts]
-MetaPlastHunter = metaplasthunter.MetaPlastHunter:main
-
