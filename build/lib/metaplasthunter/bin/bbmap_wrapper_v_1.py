@@ -32,8 +32,22 @@ import sys
 from subprocess import Popen, PIPE
 import logging
 
+#TODO
+
 logger = logging.getLogger('src.bbmap_wrapper')
 logging.basicConfig(level=logging.INFO)
+#TODO
+
+#Tworzenie log-a bbmapowego
+#Moze lepiej przerobic na nazwe pliku
+#Typu: -1 -2 -o jak w spades
+
+
+
+
+
+
+
 
 class BBmap:
 
@@ -45,37 +59,9 @@ class BBmap:
 
     def __init__(self,settings):
 
-        """
-        Input Parameters
-        ----------
+        """ Below initial parameters taken from settings file
 
-        settings : str
-            The path to general settings file which keeps hyperparameters
-
-        Calculated gobal variables
-        ----------
-        _seqid: dictionary
-
-        path: str
-            Sample name
-
-        db: dictionary
-
-        db_silva: dictionary
-
-        minkmerhits: dictionary
-
-        kmer_len: graph data structure
-            Orginal data structure (weighted digraph) which keeps NCBI tree with proposed taxonomic positions (LTU and TTU)
-
-        remap_min_identity: graph data stucture
-            Prunned _lca_graph that keeps only taxonomic positions that have been above the treshold (min support value)
-
-        reads_1:
-
-        reads_2:
-
-        project_name:
+        Params are loaded from settings file
 
         """
 

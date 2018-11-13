@@ -13,7 +13,7 @@ if __name__ == '__main__':
         long_description=open('README.md').read(),
         entry_points={'console_scripts': ['MetaPlastHunter=metaplasthunter.MetaPlastHunter:main']},
         scripts=['metaplasthunter/MetaPlastHunter.py'],
-        keywords=['bioinformatics', 'metagenomics', 'chloroplast', 'classification'],
+        keywords=['bioinformatics', 'metagenomics', 'organelle', 'classification'],
         classifiers=[
             'Development Status :: 2 - Pre-Alpha'
             'Environment :: Console',

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!//anaconda/bin/python
 ###############################################################################
 #                                                                             #
 #    Entry point for MetaPlastHunter                                          #

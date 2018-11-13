@@ -40,7 +40,7 @@ import logging
 import pandas as pd
 from settings import *
 from cov import Coverage
-from subprocess import Popen, PIPE
+
 
 
 logger = logging.getLogger("src.taxonomic_assignment")
@@ -74,9 +74,6 @@ def sam_get_min_identity_of_covered_genome(target_genome):
 
     return numpy.mean(choosed_reads)
 
-def calculate_average_nucleotide_identity(list_of_genomes):
-    pass
-
 def merge_two_dicts(x, y):
     z = x.copy()   # start with x's keys and values
     z.update(y)    # modifies z with y's keys and values & returns None
@@ -93,7 +90,6 @@ def sam_splitter(list_of_genomes):
 
     for target_genome in list_of_genomes:
 
-        print target_genome
         good_reads = []
         for read in samfile.fetch():
             try:
@@ -123,40 +119,16 @@ class Taxonomic_assignment(object):
 
     def __init__ (self,sample,treshold,seqidmap):
 
-        """
-        Input Parameters
-        ----------
-        sample : str
-            bincov.txt, draft coverage file, produced during mapping
+        """Params
 
-        treshold : int
-            XXX
+        param treshold: To set min number of reads are needed for support given taxa
+        during graph prunning.
 
-        seqidmap : file
-            General settings file which keeps hyperparameters
+        param _lca_graph:  Lca graph instance, takes file produced by Sam_analyzer class and run lca_graph function
 
-        Calculated gobal variables
-        ----------
-        _seqid: dictionary
-
-        _sample_name: str
-            Sample name
-
-        _seqid_inverted: dictionary
-
-        _dict_of_reads: dictionary
-
-        lca_assign: dictionary
-
-        _lca_graph: graph data structure
-            Orginal data structure (weighted digraph) which keeps NCBI tree with proposed taxonomic positions (LTU and TTU)
-
-        analyzed_graf: graph data stucture
-            Prunned _lca_graph that keeps only taxonomic positions that have been above the treshold (min support value)
-
+        param _graph: Transformed graph instance
 
         """
-
         self._seqid = self.seqid2taxid(seqidmap)
         self._sample_name = sample
         self._seqid_inverted = self._seqid_inverted(self._seqid)
@@ -640,6 +612,7 @@ class Taxonomic_assignment(object):
         df = pd.DataFrame(_species_level.items(),columns=['Taxon', 'Counts'])
         df.to_csv(self._sample_name+"_species_level_table.csv")
 
+    #TU na razie nic nie ma.
     def krona_file_preparing(self,project_name):
 
         catched_taxa = self.ltu_catch()
@@ -649,13 +622,9 @@ class Taxonomic_assignment(object):
                 tax_path = " ".join(taxa[0][2:])
                 f.write(tax_path+"\t"+str(taxa[1])+"\n")
 
-        cmd = "ktImportText -o %s %s" % (project_name+"_krona.txt",project_name+"_krona.html")
-        subprocess.check_call(cmd,shell=True)
-
-    def sigle_bam_output(self):
+    def pg_output(self):
 
         "Splits SAM file into smaller which containes only well-covered genomes - tutaj trzeba uzyc nazwy -> nie taxidu!!!!"
-
         covered_genomes  = self.almost_full
         sam_splitter(covered_genomes)
 
@@ -700,5 +669,5 @@ class Taxonomic_assignment_Runner:
 #            lca_postprocess.process_taxonomic_assignment_to_file_easy()
         lca_postprocess.pandas_data_frame_species_level()
         lca_postprocess.krona_file_preparing(self.project_name)
-        lca_postprocess.sigle_bam_output()
+        lca_postprocess.pg_output()
         os.chdir(starting_dir)

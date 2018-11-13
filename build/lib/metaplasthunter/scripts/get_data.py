@@ -137,13 +137,12 @@ class Pipeline_fetch:
 
 if __name__ == "__main__":
 
-
-
     description = """
 
 Version 1.00
 
-Script was designed for getting data from SRA repository and evaluation.
+
+This scripts fetches raw data from SRA.
 
 If you have any questions, please do not hesitate to contact me
 email address: michal.karlicki@gmail.com
