@@ -119,9 +119,13 @@ def sam_splitter(list_of_genomes):
 
 class Taxonomic_assignment(object):
 
+
+    "Tu musze zmienic "
+
+
     ncbi = NCBITaxa()
 
-    def __init__ (self,sample,treshold,seqidmap):
+    def __init__ (self,sample,treshold,seqidmap,sam_type,input):
 
         """
         Input Parameters
@@ -156,7 +160,8 @@ class Taxonomic_assignment(object):
 
 
         """
-
+        self.sam_type = sam_type
+        self.input = input
         self._seqid = self.seqid2taxid(seqidmap)
         self._sample_name = sample
         self._seqid_inverted = self._seqid_inverted(self._seqid)
@@ -296,7 +301,6 @@ class Taxonomic_assignment(object):
                     dict_of_assigned[self.get_lineage_without_tree(i[0],ncbi)[-1]] = lca.taxid
         return dict_of_assigned,almost_full
 
-
     def lca_assignment_just_taxids(self):
 
         cov,almost_full =  self.coverage_file("cov_list.txt")
@@ -340,7 +344,7 @@ class Taxonomic_assignment(object):
 
         return unique,almost_full
 
-    #Ta funkcja do wymianki !!! - BUG!!!!!!!!!! - TODAY!!
+    #Ta funkcja do wymianki !!! - BUG!!
     def transform_read_name(self,readname):
 
         if len(readname.split(" ")) > 1:
@@ -360,8 +364,13 @@ class Taxonomic_assignment(object):
             return readname
 
     def sam_parse(self):
-        _samfile = glob.glob("*_final_mapped.sam")[0]
-        samfile = pysam.AlignmentFile(_samfile)
+
+        if self.sam_type  == True:
+
+            samfile =  pysam.AlignmentFile(self.input)
+        else:
+            _samfile = glob.glob("*_final_mapped.sam")[0]
+            samfile = pysam.AlignmentFile(_samfile)
         dict_reads = {}
 
         for read in samfile.fetch():
@@ -649,7 +658,7 @@ class Taxonomic_assignment(object):
                 tax_path = " ".join(taxa[0][2:])
                 f.write(tax_path+"\t"+str(taxa[1])+"\n")
 
-        cmd = "ktImportText -o %s %s" % (project_name+"_krona.txt",project_name+"_krona.html")
+        cmd = "ktImportText %s -o %s" % (project_name+"_krona.txt",project_name+"_krona.html")
         subprocess.check_call(cmd,shell=True)
 
     def sigle_bam_output(self):
@@ -659,18 +668,29 @@ class Taxonomic_assignment(object):
         covered_genomes  = self.almost_full
         sam_splitter(covered_genomes)
 
-
-
 class Taxonomic_assignment_Runner:
 
-    def __init__ (self,settings):
+    def __init__ (self,input,output,settings):
 
+
+        self.input = input
+        self.output = output
         self.settings = settings
+        self.sam_type = True
 
+
+        if (self.input).split(".")[1] == "sam":
+
+            self.sam_type = True
+
+        else:
+
+            self.sam_type = False
         try:
+
             self.seqidmap = Settings_loader_yaml(self.settings).yaml_handler()["Databases and mapping files"]["seqid2taxid.map"]
             self.lca_treshold = Settings_loader_yaml(self.settings).yaml_handler()["Params"]["lca_treshold"]
-            self.project_name = Settings_loader_yaml(path=self.settings).yaml_handler()["Project name"]["name"]
+            self.project_name = output
 
         except KeyError:
 
@@ -686,17 +706,18 @@ class Taxonomic_assignment_Runner:
         logger.info("Procesing "+project_name)
 
         dir = "%s/" % (project_name)
+
         if os.path.isdir(dir):
             os.chdir(dir)
+
         else:
             os.mkdir(dir)
             os.chdir(dir)
 
         c = Coverage('bincov.txt',project_name+"_chloroplasts.hitstats",self.settings)
-
         c.getpercentage_cov()
         c.report_cov()
-        lca_postprocess =  Taxonomic_assignment(project_name,self.lca_treshold,self.seqidmap)
+        lca_postprocess =  Taxonomic_assignment(self.project_name,self.lca_treshold,self.seqidmap,self.sam_type,self.input)
 #            lca_postprocess.process_taxonomic_assignment_to_file_easy()
         lca_postprocess.pandas_data_frame_species_level()
         lca_postprocess.krona_file_preparing(self.project_name)

@@ -15,7 +15,6 @@
 #    along with this program. If not, see <http://www.gnu.org/licenses/>.     #
 #                                                                             #
 ###############################################################################
-
 __author__ = 'Michal Karlicki'
 __copyright__ = 'Copyright 2018'
 __credits__ = ['Michal Karlicki']
@@ -43,7 +42,7 @@ class BBmap:
 
      """
 
-    def __init__(self,settings):
+    def __init__(self,input, input2, output, settings):
 
         """
         Input Parameters
@@ -57,6 +56,7 @@ class BBmap:
         _seqid: dictionary
 
         path: str
+
             Sample name
 
         db: dictionary
@@ -86,10 +86,13 @@ class BBmap:
         self.db_kmers = Settings_loader_yaml(path=self.settings).yaml_handler()["Databases and mapping files"]["kmers"]
         self.minkmerhits = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["minkmerhits"]
         self.kmer_len = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["kmer_len"]
+        self.bincov_len = Settings_loader_yaml(path=self.settings).yaml_handler()["Params"]["bincov_len"]
         self.remap_min_identity = Settings_loader_yaml(path=self.settings).yaml_handler()["Params"]["min_identity"]
-        self.reads_1 =  Settings_loader_yaml(path=self.settings).yaml_handler()["Input reads4classification"]["read_1"]
-        self.reads_2 =  Settings_loader_yaml(path=self.settings).yaml_handler()["Input reads4classification"]["read_2"]
-        self.project_name = Settings_loader_yaml(path=self.settings).yaml_handler()["Project name"]["name"]
+
+        self.project_name = output
+
+        self.reads_1 =  "../"+input
+        self.reads_2 =  "../"+input2
 
 
     def filtering_conserved_regions(self):
@@ -107,27 +110,13 @@ class BBmap:
 
         " Maps filtered reads to the reference chloroplast database "
 
-        command="%sbbmap.sh minidentity=%s nodisk reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s scafstats=%s_chloroplasts.hitstats out=%s_final_mapped.sam bincov=bincov.txt outm1=%s_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq covbinsize=101" % (self.path,self.remap_min_identity ,self.project_name, self.project_name, self.db,self.project_name,self.project_name,self.project_name,self.project_name)
+        command="%sbbmap.sh minidentity=%s nodisk reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s scafstats=%s_chloroplasts.hitstats out=%s_final_mapped.sam bincov=bincov.txt outm1=%s_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq covbinsize=%s" % (self.path,self.remap_min_identity ,self.project_name, self.project_name, self.db,self.project_name,self.project_name,self.project_name,self.project_name, self.bincov_len)
         command = command.split(" ")
         logger.info("     Running primary mapping")
         process = Popen(command, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
         return stderr
 
-#    def secondary_mapping(self,sample):
-#
-#        " Maps reads again to the smaller database "
-#
-#        command="%sbbmap.sh nodisk minidentity=%s idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=tmp_ref_base.fasta outm1=%s_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq ambiguous=all scafstats=%s_final_chloroplasts.hitstats statsfile=%s_final_mapping_stats.txt out=%s_final_mapped.sam bincov=bincov.txt covbinsize=200" % (self.path,self.remap_min_identity ,sample, sample, sample,sample,sample,sample,sample)
-#        command = command.split(" ")
-#        logger.info("     Running secondary mapping")
-#        process = Popen(command, stdout=PIPE, stderr=PIPE)
-#        stdout, stderr = process.communicate()
-#        return stderr
-
-
-
-#This comes first -> kraken_out
 class BBduk:
 
     """
@@ -136,13 +125,19 @@ class BBduk:
         a) Function for filtering out low complex metagenomic reads
     """
 
-    def __init__(self,settings):
+    def __init__(self,input,input2,output,settings):
 
         self.settings = settings
         self.path = Settings_loader_yaml(path=self.settings).yaml_handler()["Software dependencies"]["bbduk.sh"]
-        self.reads_1 =  Settings_loader_yaml(path=self.settings).yaml_handler()["Input reads4classification"]["read_1"]
-        self.reads_2 =  Settings_loader_yaml(path=self.settings).yaml_handler()["Input reads4classification"]["read_2"]
-        self.project_name = Settings_loader_yaml(path=self.settings).yaml_handler()["Project name"]["name"]
+
+        self.project_name = output
+
+        self.reads_1 =  "../"+input
+        self.reads_2 =  "../"+input2
+
+        self.db_kmers = Settings_loader_yaml(path=self.settings).yaml_handler()["Databases and mapping files"]["kmers"]
+        self.minkmerhits = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["minkmerhits"]
+        self.kmer_len = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["kmer_len"]
 
         if self.path == "":
             self.checkForBBduk()
@@ -155,7 +150,7 @@ class BBduk:
         try:
             subprocess.call(['bbduk.sh', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
         except:
-            logger.error("Make sure BBduk is on your system path or set proper path in settings.txt")
+            logger.warning("Make sure BBduk is on your system path or set proper path in settings.txt")
             sys.exit()
 
     def filtering_without_pre_classif(self):
@@ -171,33 +166,38 @@ class BBduk:
         return "DECOMPLEXATION"+"\n"+stderr
 
     def filtering_with_pre_classif(self):
-        #Narazie tego nie robie
+
+        #Teraz robie
         """ Filters out low complexity reads """
 
         path = self.path
         logger.info("     Running  filtering" )
-        command="%sbbduk.sh in1=%s_classif_R1.fastq in2=%s_classif_R2.fastq out1=%s_de_complex_R1.fastq out2=%s_de_complex_R2.fastq  outm=%s_repeat_regions_R1.fq outm2=%s_repeat_regions_R2.fq entropy=0.8 overwrite=true" % (path, sample, sample, sample, sample, sample, sample)
+        command="%sbbduk.sh in1=%s_classif_R1.fastq in2=%s_classif_R2.fastq out1=%s_de_complex_R1.fastq out2=%s_de_complex_R2.fastq  outm=%s_repeat_regions_R1.fq outm2=%s_repeat_regions_R2.fq entropy=0.8 overwrite=true" % (path, self.project_name, self.project_name, self.project_name, self.project_name, self.project_name, self.project_name)
         command = command.split(" ")
         process = Popen(command, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
         return "DECOMPLEXATION"+"\n"+stderr
 
-    def bbduk_pre_classification(self,sample):
+    def bbduk_pre_classification(self):
 
         """
 
-        Module for very fast preliminary classification. It needs specially prepared by kcompress
+        Module for very fast preliminary classification. It needs file specially prepared by kcompress
         from bbtools package
 
          """
+        path = self.path
+        logger.info("     Running  pre classification" )
+        command="%sbbduk.sh  in1=%s in2=%s outm1=%s_classif_R1.fastq  outm2=%s_classif_R2.fastq minkmerhits=%s k=%s ref=%s" % (self.path,self.reads_1, self.reads_2,self.project_name,self.project_name,self.minkmerhits,self.kmer_len,self.db_kmers)
 
-        command="%sbbduk.sh  in1=%s_1.fastq in2=%s_2.fastq outm1=%s_classif_R1.fastq  outm2=%s_classif_R2.fastq minkmerhits=%s k=%s ref=%s" % (self.path,sample, sample,sample,sample,self.db_kmers)
-        command = command.split(" ")
-        process = Popen(command, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = process.communicate()
-        logger.info("     Running  preliminary classification")
-        return stderr
+#        command = command.split(" ")
 
+#        process = Popen(command, stdout=PIPE, stderr=PIPE)
+
+#        stdout, stderr = process.communicate()
+        os.system(command)
+
+#        return "Pre classification"+"\n"+stderr
 
 def log_writing(list,sample_id):
 
@@ -205,78 +205,59 @@ def log_writing(list,sample_id):
         for rec in list:
             f.write(rec+"\n")
 
+class Pileup:
 
-#class BBpipe:
-#
-#    def __init__(self, list_sra, station_name,settings):
-#
-#        self.list_sra = list_sra
-#        self.station_name = station_name
-#        self.settings = settings
-#
-#    def process(self):
-#
-#        sra_ids = self.list_sra
-#        list_sra_ids = sra_ids.split(",")
-#        starting_dir = os.getcwd()
-#        bbduk = BBduk(self.settings)
-#        bbmap = BBmap(self.settings)
-#
-#        for sra_id in list_sra_ids:
-#
-#            bblog = []
-#            logger.info("Procesing "+sra_id)
-#            dir = "%s/%s/" % (self.station_name,sra_id)
-#            os.chdir(dir)
-#            bblog.append(bbduk.filtering(sra_id))
-#            bblog.append(bbmap.filtering_conserved_regions(sra_id))
-#            bblog.append(bbmap.primary_mapping(sra_id))
-#            Coverage('bincov.txt',sra_id+"_chloroplasts.hitstats",self.settings).ref_for_remapping()
-#            bblog.append(bbmap.secondary_mapping(sra_id))
-#            log_writing(bblog,sra_id)
-#            os.chdir(starting_dir)
+    """
+    This class is a wrapper of pileu programme from bbtools package.
+    It contains:
+        a) Function for generating bincov.txt from SAM file which is nessecary in taxonomic classification
 
-#class BBpipe_with_bbduk_preliminary:
-#
-#    def __init__(self, list_sra, station_name,settings):
-#
-#        self.list_sra = list_sra
-#        self.station_name = station_name
-#        self.settings = settings
-#
-#        for sra_id in list_sra_ids:
-#
-#            bblog = []
-#            logger.info("Procesing "+sra_id)
-#            dir = "%s/%s/" % (self.station_name,sra_id)
-#            os.chdir(dir)
-#            bblog.append(bbduk.bbduk_pre_classification(sra_id))
-#            bblog.append(bbduk.filtering(sra_id))
-#            bblog.append(bbmap.filtering_conserved_regions(sra_id))
-#            bblog.append(bbmap.primary_mapping(sra_id))
-#            Coverage('bincov.txt',sra_id+"_chloroplasts.hitstats",self.settings).ref_for_remapping()
-#            bblog.append(bbmap.secondary_mapping(sra_id))
-#            log_writing(bblog,sra_id)
-#            Coverage("bincov_2.txt",sra_id+"_final_chloroplasts.hitstats",self.settings).report_cov()
-#            os.chdir(starting_dir)
+    """
 
+    def __init__(self,settings):
+
+        self.settings = settings
+        self.path = Settings_loader_yaml(path=self.settings).yaml_handler()["Software dependencies"]["pileup.sh"]
+
+        if self.path == "":
+
+            self.checkForPileup()
+
+    def checkForPileup(self):
+
+        """Checks to see if BBduk is on the system's path before we try to run it."""
+
+        try:
+            subprocess.call(['pileup.sh', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
+        except:
+            logger.waring("Make sure pileup is on your system path or set proper path in settings.txt")
+            sys.exit()
+
+    def prepare_cov_file(self):
+
+        command="%pileup.sh in=%s bincov=bincov.txt binsize=%s" % (self.path, sample,self.bincov_len)
+        command = command.split(" ")
+        process = Popen(command, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+        return stderr
 
 class Mapping_runner:
 
-
-
-    def __init__(self, settings):
+    def __init__(self,input,input2,output, settings):
 
         self.settings = settings
+        self.input  =  input
+        self.input2 = input2
+        self.output = output
 
     def process(self):
 
         starting_dir = os.getcwd()
 
-        bbduk = BBduk(self.settings)
-        bbmap = BBmap(self.settings)
+        bbduk = BBduk(self.input,self.input2,self.output,self.settings)
+        bbmap = BBmap(self.input,self.input2,self.output,self.settings)
 
-        project_name = bbmap.project_name
+        project_name = self.output
 
         grlog = []
 
@@ -284,7 +265,10 @@ class Mapping_runner:
         dir = "%s/" % (project_name)
 
         if os.path.isdir(dir):
-            os.chdir(dir)
+
+            logger.warning("This directory exists! Please change the output name!")
+            sys.exit()
+
         else:
             os.mkdir(dir)
             os.chdir(dir)
@@ -294,5 +278,87 @@ class Mapping_runner:
         bblog.append(bbduk.filtering_without_pre_classif())
         bblog.append(bbmap.filtering_conserved_regions())
         bblog.append(bbmap.primary_mapping())
+        log_writing(bblog,project_name)
+        os.chdir(starting_dir)
+
+
+class RapidRunner:
+
+
+    def __init__(self,input,input2,output,settings):
+
+        self.settings = settings
+        self.path = Settings_loader_yaml(path=self.settings).yaml_handler()["Software dependencies"]["bbduk.sh"]
+        self.settings = settings
+        self.input  =  input
+        self.input2 = input2
+        self.output = output
+
+    def process(self):
+
+        starting_dir = os.getcwd()
+
+        bbduk = BBduk(self.input,self.input2,self.output,self.settings)
+        bbmap = BBmap(self.input,self.input2,self.output,self.settings)
+
+        project_name = self.output
+
+        grlog = []
+
+        logger.info("Procesing "+project_name)
+        dir = "%s/" % (project_name)
+
+        if os.path.isdir(dir):
+
+            logger.warning("This directory name exists! Please change the output name!")
+            sys.exit()
+
+        else:
+            os.mkdir(dir)
+            os.chdir(dir)
+
+        bblog = []
+        logger.info("Procesing "+project_name)
+        bbduk.bbduk_pre_classification()
+
+        bblog.append(bbduk.filtering_with_pre_classif())
+        bblog.append(bbmap.filtering_conserved_regions())
+
+        bblog.append(bbmap.primary_mapping())
+        log_writing(bblog,project_name)
+        os.chdir(starting_dir)
+
+class SAM2coverage:
+
+    def __init__(self,input,input2,output, settings):
+
+        self.settings = settings
+        self.input  = input
+        self.input2 = input2
+        self.output = output
+
+    def process(self):
+
+        starting_dir = os.getcwd()
+
+        pileup = Pileup(self.input, self.input2, self.output,self.settings)
+
+        project_name = self.output
+        grlog = []
+        logger.info("Procesing "+project_name)
+        dir = "%s/" % (project_name)
+
+        if os.path.isdir(dir):
+
+            logger.warning("This directory name exists! Please change the output name!")
+            sys.exit()
+
+        else:
+            os.mkdir(dir)
+            os.chdir(dir)
+
+        bblog = []
+        logger.info("Procesing "+project_name)
+        bblog.append(pileup.prepare_cov_file())
         log_writing(bblog,project_name)
         os.chdir(starting_dir)

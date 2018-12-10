@@ -47,8 +47,21 @@ logging.basicConfig(level=logging.INFO)
 
 
 class Settings_loader_yaml:
+
     def __init__(self,path):
         self.path = path
+
+
+
+    """
+    Parameters
+    ----------
+    name : path
+
+        keeps path to the settings file in YAML
+
+    """
+
 
     def check_software(self,software):
         """Check to see if software is on the system before we try to run it."""

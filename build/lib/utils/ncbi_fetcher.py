@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
 Version 1.00
 
-Script designed for downloading sequences using NC ids
+Scripts enables downloading fasta files (genome's) from NCBI usign NC numbers.
 
 If you have any questions, please do not hesitate to contact me
 email address: michal.karlicki@gmail.com

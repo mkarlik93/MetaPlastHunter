@@ -65,7 +65,7 @@ class Coverage:
 
         Calculated gobal variables
         ----------
-        min_bin_coverage: in
+        min_bin_coverage: int
             Loaded from settings file
         percentile_treshold: int
 

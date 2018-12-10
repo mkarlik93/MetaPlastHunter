@@ -28,7 +28,6 @@ __status__ = 'Development'
 
 
 #TODO
-#Description of remapping
 
 from settings import  Settings_loader_yaml
 from Bio import SeqIO
@@ -54,16 +53,30 @@ class Coverage:
 
     def __init__(self,filename, histstats,settings):
 
+        """
+        Parameters
+        ----------
+        name : filename
+            bincov.txt, draft coverage file, produced during mapping
+        sound : histstats
+            XXX
+        num_legs : settings
+            General settings file which keeps hyperparameters
 
-        """ Params
+        Calculated gobal variables
+        ----------
+        min_bin_coverage: int
+            Loaded from settings file
+        percentile_treshold: int
 
-        param loaded: coverage data - produced by pileup
+        bin_cov_for_report: int
 
-        param filename: keeps bincov.txt, draft coverage file, produced during mapping
-
-        param histstats: keeps data from histstats file
+        static_treshold: int
 
         """
+
+
+
         self.loaded_bin_cov = self.load_bincov(filename,histstats)
         self.database = Settings_loader_yaml(settings).yaml_handler()["Databases and mapping files"]["bbmap_base"]
         self.min_bin_coverage = Settings_loader_yaml(settings).yaml_handler()["Params"]["min_bin_coverage"]
@@ -72,6 +85,8 @@ class Coverage:
         self.static_treshold = Settings_loader_yaml(settings).yaml_handler()["Params"]["static_coverage_treshold[%]"]
 
     def load_genomes_len(self):
+
+        """ """
         genomes_dict = {}
         with open(filename,"r") as f:
             for i in f:
@@ -81,7 +96,7 @@ class Coverage:
         return genomes_dict
 
     def load_bincov(self,filename,hist):
-
+        """ """
         with open(filename,"r") as f:
             organisms = {}
             for i in f:
@@ -94,6 +109,7 @@ class Coverage:
         return organisms
 
     def getpercentage_cov(self):
+        """ """
         #percentile
 #       thresh = self.min_bin_coverage
         percentile_tresh = self.percentile_treshold
@@ -135,7 +151,7 @@ class Coverage:
 
     def ref_for_remapping(self):
 
-        " Creates fasta file for further remapping "
+        """ Creates fasta file for further remapping """
 
         list_of_genomes = self.getpercentage_cov()
         chloroplasts_ref = SeqIO.parse(self.database,"fasta")
@@ -146,7 +162,7 @@ class Coverage:
 
     def report_cov(self):
 
-        " Reports fully/partially covered chloroplast genomes "
+        """ Reports fully/partially covered chloroplast genomes """
 
 #        threshold = self.bin_cov_for_report
         dict_of_genomes = {}
