@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # MetaPlastHunter rc
 ## MetaPlastHunter for read classificaton
 
@@ -34,12 +35,6 @@ A manual is available in the form of the wiki here on GitHub.
 ### License
 
 MetaPlastHunter is licensed under the GNU GPL v3+. See LICENSE.txt for further details. MPH makes use of 18S rRNA sequences sourced from the SILVA database, which employs a dual licensing model. See SILVA.LICENCE.txt for further details.
-
-
-
-
-
-
 
 
 
