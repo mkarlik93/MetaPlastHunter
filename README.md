@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # MetaPlastHunter rc
 ## MetaPlastHunter for read classificaton
 
