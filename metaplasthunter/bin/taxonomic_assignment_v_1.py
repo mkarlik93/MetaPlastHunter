@@ -82,7 +82,6 @@ def merge_two_dicts(x, y):
     z.update(y)    # modifies z with y's keys and values & returns None
     return z
 
-#havent tested yet!!
 def sam_splitter(input,is_sam,list_of_genomes):
 
     if is_sam  == True:
@@ -133,8 +132,11 @@ class Taxonomic_assignment(object):
         """
         Input Parameters
         ----------
-        sample : str
+        sam_type : boolean
             bincov.txt, draft coverage file, produced during mapping
+
+        input: str
+            absolute path of input file
 
         treshold : int
             XXX
@@ -147,7 +149,7 @@ class Taxonomic_assignment(object):
         _seqid: dictionary
 
         _sample_name: str
-            Sample name
+            project folder name (output)
 
         _seqid_inverted: dictionary
 
@@ -187,7 +189,6 @@ class Taxonomic_assignment(object):
     def taxid_name_translator(self,taxid):
         return  str(Taxonomic_assignment.ncbi.get_taxid_translator([taxid])[taxid])
 
-    #WORKS
     def species_list(self):
 
         " Returns list of species proper for NCBI taxonomy for species "
