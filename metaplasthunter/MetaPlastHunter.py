@@ -77,9 +77,11 @@ class Run:
     def assign_taxonomy(self):
 
         logger.info( " [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
-        Settings_loader_yaml(self.settings).yaml_check_settings_file()
+#        Settings_loader_yaml(self.settings).yaml_check_settings_file()
         logger.info( " [%s] Starting assign taxa to SAM file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
-
+        SAM2coverage(self.input, self.output, self.settings).process()
+        logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
+        Taxonomic_assignment_Runner(self.input, self.output,self.settings).process()
     #Tests are still needed
 
     def rapid_taxonomic_assignment(self):
@@ -172,7 +174,8 @@ This sofware was written by %s.
 
     start = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
 
-    process = Run(args.in_1, args.in_2, args.output, args.settings,args.threads)
+
+    process = Run(os.path.abspath(args.in_1),os.path.abspath(args.in_2), args.output, args.settings,args.threads)
 
     if args.taxonomic_classification:
 

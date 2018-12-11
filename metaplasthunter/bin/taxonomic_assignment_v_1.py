@@ -83,11 +83,14 @@ def merge_two_dicts(x, y):
     return z
 
 #havent tested yet!!
-def sam_splitter(list_of_genomes):
+def sam_splitter(input,is_sam,list_of_genomes):
 
-    samfile = glob.glob("*_final_mapped.sam")[0]
+    if is_sam  == True:
 
-    samfile = pysam.AlignmentFile(samfile)
+        samfile =  pysam.AlignmentFile(input)
+    else:
+        _samfile = glob.glob("*_final_mapped.sam")[0]
+        samfile = pysam.AlignmentFile(_samfile)
 
     sam_header = samfile.header
 
@@ -282,7 +285,6 @@ class Taxonomic_assignment(object):
                     if coverage > 90.0 :
                         almost_full.append(species_name)
         return covered_,almost_full
-
 
     def lca_assignment(self):
 
@@ -584,7 +586,7 @@ class Taxonomic_assignment(object):
         count = self._lca_graph.nodes['root']['count']
         species_treshold = int(count*self.treshold)
         #here can appear a logger info message
-        print "Species treshold is "+str(species_treshold)
+        print "Species treshold was set on "+str(species_treshold)
         #node pruning
         to_del = []
         #Tu moze jest zla konstrukcja
@@ -655,8 +657,8 @@ class Taxonomic_assignment(object):
 
         with open(project_name+"_krona.txt","w") as f:
             for taxa in catched_taxa:
-                tax_path = " ".join(taxa[0][2:])
-                f.write(tax_path+"\t"+str(taxa[1])+"\n")
+                tax_path = "\t".join(taxa[0][2:])
+                f.write(str(taxa[1])+"\t"+tax_path+"\n")
 
         cmd = "ktImportText %s -o %s" % (project_name+"_krona.txt",project_name+"_krona.html")
         subprocess.check_call(cmd,shell=True)
@@ -666,7 +668,8 @@ class Taxonomic_assignment(object):
         "Splits SAM file into smaller which containes only well-covered genomes - tutaj trzeba uzyc nazwy -> nie taxidu!!!!"
 
         covered_genomes  = self.almost_full
-        sam_splitter(covered_genomes)
+        sam_splitter(self.input, self.sam_type, covered_genomes)
+
 
 class Taxonomic_assignment_Runner:
 

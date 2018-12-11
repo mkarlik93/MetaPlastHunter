@@ -91,8 +91,8 @@ class BBmap:
 
         self.project_name = output
 
-        self.reads_1 =  "../"+input
-        self.reads_2 =  "../"+input2
+        self.reads_1 =  input
+        self.reads_2 =  input2
 
 
     def filtering_conserved_regions(self):
@@ -132,8 +132,8 @@ class BBduk:
 
         self.project_name = output
 
-        self.reads_1 =  "../"+input
-        self.reads_2 =  "../"+input2
+        self.reads_1 =  input
+        self.reads_2 =  input2
 
         self.db_kmers = Settings_loader_yaml(path=self.settings).yaml_handler()["Databases and mapping files"]["kmers"]
         self.minkmerhits = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["minkmerhits"]
@@ -214,10 +214,13 @@ class Pileup:
 
     """
 
-    def __init__(self,settings):
+    def __init__(self,input,settings):
 
         self.settings = settings
         self.path = Settings_loader_yaml(path=self.settings).yaml_handler()["Software dependencies"]["pileup.sh"]
+        self.bincov_len = Settings_loader_yaml(path=self.settings).yaml_handler()["Params"]["bincov_len"]
+        self.input = input
+
 
         if self.path == "":
 
@@ -229,14 +232,17 @@ class Pileup:
 
         try:
             subprocess.call(['pileup.sh', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
+
         except:
             logger.waring("Make sure pileup is on your system path or set proper path in settings.txt")
             sys.exit()
 
     def prepare_cov_file(self):
 
-        command="%pileup.sh in=%s bincov=bincov.txt binsize=%s" % (self.path, sample,self.bincov_len)
+
+        command= "%spileup.sh in=%s bincov=bincov.txt binsize=%s" % (self.path, self.input, str(self.bincov_len))
         command = command.split(" ")
+
         process = Popen(command, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
         return stderr
@@ -330,18 +336,17 @@ class RapidRunner:
 
 class SAM2coverage:
 
-    def __init__(self,input,input2,output, settings):
+    def __init__(self,input,output, settings):
 
         self.settings = settings
         self.input  = input
-        self.input2 = input2
         self.output = output
 
     def process(self):
 
         starting_dir = os.getcwd()
 
-        pileup = Pileup(self.input, self.input2, self.output,self.settings)
+        pileup = Pileup(self.input,self.settings)
 
         project_name = self.output
         grlog = []
