@@ -22,10 +22,9 @@ MetaPlastHunter provides:
 
 However, to use all features of MetaPlastHunter extra binary applications are required:
 
-bbmap
-bbduke
-pileup
-Krona tools
+(bbtools)[https://jgi.doe.gov/data-and-tools/bbtools/]
+
+(Krona tools)[https://github.com/marbl/Krona/wiki]
 
 ### Manual
 
