@@ -28,7 +28,7 @@ However, to use all features of MetaPlastHunter extra binary applications are re
 
 ### Manual
 
-A manual is available in the form of the wiki here on GitHub.
+A manual is available in the form of the [wiki](https://github.com/mkarlik93/MetaPlastHunter/wiki) here on GitHub.
 
 ### License
 
