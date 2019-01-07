@@ -82,12 +82,14 @@ def merge_two_dicts(x, y):
     z.update(y)    # modifies z with y's keys and values & returns None
     return z
 
-#havent tested yet!!
-def sam_splitter(list_of_genomes):
+def sam_splitter(input,is_sam,list_of_genomes):
 
-    samfile = glob.glob("*_final_mapped.sam")[0]
+    if is_sam  == True:
 
-    samfile = pysam.AlignmentFile(samfile)
+        samfile =  pysam.AlignmentFile(input)
+    else:
+        _samfile = glob.glob("*_final_mapped.sam")[0]
+        samfile = pysam.AlignmentFile(_samfile)
 
     sam_header = samfile.header
 
@@ -130,8 +132,11 @@ class Taxonomic_assignment(object):
         """
         Input Parameters
         ----------
-        sample : str
+        sam_type : boolean
             bincov.txt, draft coverage file, produced during mapping
+
+        input: str
+            absolute path of input file
 
         treshold : int
             XXX
@@ -144,7 +149,7 @@ class Taxonomic_assignment(object):
         _seqid: dictionary
 
         _sample_name: str
-            Sample name
+            project folder name (output)
 
         _seqid_inverted: dictionary
 
@@ -160,7 +165,8 @@ class Taxonomic_assignment(object):
 
 
         """
-
+        self.sam_type = sam_type
+        self.input = input
         self._seqid = self.seqid2taxid(seqidmap)
         self._sample_name = sample
         self._seqid_inverted = self._seqid_inverted(self._seqid)
@@ -170,8 +176,6 @@ class Taxonomic_assignment(object):
         self.run = self.process_taxonomic_assignment_to_file_easy()
         self._lca_graph = self.lca_graph()
         self.analyzed_graf = self.lca_graph_analysis()
-        self.sam_type = sam_type
-        self.input = input
 
     def merge_two_dicts(x, y):
         z = x.copy()   # start with x's keys and values
@@ -185,7 +189,6 @@ class Taxonomic_assignment(object):
     def taxid_name_translator(self,taxid):
         return  str(Taxonomic_assignment.ncbi.get_taxid_translator([taxid])[taxid])
 
-    #WORKS
     def species_list(self):
 
         " Returns list of species proper for NCBI taxonomy for species "
@@ -283,7 +286,6 @@ class Taxonomic_assignment(object):
                     if coverage > 90.0 :
                         almost_full.append(species_name)
         return covered_,almost_full
-
 
     def lca_assignment(self):
 
@@ -585,7 +587,7 @@ class Taxonomic_assignment(object):
         count = self._lca_graph.nodes['root']['count']
         species_treshold = int(count*self.treshold)
         #here can appear a logger info message
-        print "Species treshold is "+str(species_treshold)
+        print "Species treshold was set on "+str(species_treshold)
         #node pruning
         to_del = []
         #Tu moze jest zla konstrukcja
@@ -656,10 +658,10 @@ class Taxonomic_assignment(object):
 
         with open(project_name+"_krona.txt","w") as f:
             for taxa in catched_taxa:
-                tax_path = " ".join(taxa[0][2:])
-                f.write(tax_path+"\t"+str(taxa[1])+"\n")
+                tax_path = "\t".join(taxa[0][2:])
+                f.write(str(taxa[1])+"\t"+tax_path+"\n")
 
-        cmd = "ktImportText -o %s %s" % (project_name+"_krona.txt",project_name+"_krona.html")
+        cmd = "ktImportText %s -o %s" % (project_name+"_krona.txt",project_name+"_krona.html")
         subprocess.check_call(cmd,shell=True)
 
     def sigle_bam_output(self):
@@ -667,24 +669,29 @@ class Taxonomic_assignment(object):
         "Splits SAM file into smaller which containes only well-covered genomes - tutaj trzeba uzyc nazwy -> nie taxidu!!!!"
 
         covered_genomes  = self.almost_full
-        sam_splitter(covered_genomes)
+        sam_splitter(self.input, self.sam_type, covered_genomes)
+
 
 class Taxonomic_assignment_Runner:
 
     def __init__ (self,input,output,settings):
 
-        self.settings = settings
-        self.output = output
 
-        if input.split(".")[1] == "sam":
+        self.input = input
+        self.output = output
+        self.settings = settings
+        self.sam_type = True
+
+
+        if (self.input).split(".")[1] == "sam":
 
             self.sam_type = True
 
         else:
 
             self.sam_type = False
-
         try:
+
             self.seqidmap = Settings_loader_yaml(self.settings).yaml_handler()["Databases and mapping files"]["seqid2taxid.map"]
             self.lca_treshold = Settings_loader_yaml(self.settings).yaml_handler()["Params"]["lca_treshold"]
             self.project_name = output
@@ -703,8 +710,10 @@ class Taxonomic_assignment_Runner:
         logger.info("Procesing "+project_name)
 
         dir = "%s/" % (project_name)
+
         if os.path.isdir(dir):
             os.chdir(dir)
+
         else:
             os.mkdir(dir)
             os.chdir(dir)

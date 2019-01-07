@@ -34,7 +34,6 @@ import os
 from bin.bbmap_wrapper_v_1 import Mapping_runner, SAM2coverage, RapidRunner
 from bin.taxonomic_assignment_v_1 import Taxonomic_assignment_Runner
 from bin.settings import Settings_loader_yaml
-#from bin.genome_reconstruction import Genome_reconstruction_pipe
 import sys
 import multiprocessing as mp
 
@@ -65,12 +64,6 @@ class Run:
         self.input = input
         self.input2 = input2
         self.output = output
-
-#    def genomic_reconstruction(self):
-#        logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
-#        Settings_loader_yaml(self.settings).yaml_check_settings_file()
-#        logger.info( "     [%s] Starting genomic reconstruction " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
-#        Genome_reconstruction_pipe(self.settings).process()
 
     def assign_taxonomy(self):
 

@@ -56,6 +56,7 @@ class BBmap:
         _seqid: dictionary
 
         path: str
+
             Sample name
 
         db: dictionary
@@ -85,11 +86,13 @@ class BBmap:
         self.db_kmers = Settings_loader_yaml(path=self.settings).yaml_handler()["Databases and mapping files"]["kmers"]
         self.minkmerhits = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["minkmerhits"]
         self.kmer_len = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["kmer_len"]
-        self.bincov_len = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["bincov_len"]
+        self.bincov_len = Settings_loader_yaml(path=self.settings).yaml_handler()["Params"]["bincov_len"]
         self.remap_min_identity = Settings_loader_yaml(path=self.settings).yaml_handler()["Params"]["min_identity"]
+
+        self.project_name = output
+
         self.reads_1 =  input
         self.reads_2 =  input2
-        self.project_name = output
 
 
     def filtering_conserved_regions(self):
@@ -126,9 +129,15 @@ class BBduk:
 
         self.settings = settings
         self.path = Settings_loader_yaml(path=self.settings).yaml_handler()["Software dependencies"]["bbduk.sh"]
-        self.reads_1 = input
-        self.reads_2 =  input2
+
         self.project_name = output
+
+        self.reads_1 =  input
+        self.reads_2 =  input2
+
+        self.db_kmers = Settings_loader_yaml(path=self.settings).yaml_handler()["Databases and mapping files"]["kmers"]
+        self.minkmerhits = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["minkmerhits"]
+        self.kmer_len = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["kmer_len"]
 
         if self.path == "":
             self.checkForBBduk()
@@ -141,7 +150,7 @@ class BBduk:
         try:
             subprocess.call(['bbduk.sh', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
         except:
-            logger.error("Make sure BBduk is on your system path or set proper path in settings.txt")
+            logger.warning("Make sure BBduk is on your system path or set proper path in settings.txt")
             sys.exit()
 
     def filtering_without_pre_classif(self):
@@ -157,32 +166,38 @@ class BBduk:
         return "DECOMPLEXATION"+"\n"+stderr
 
     def filtering_with_pre_classif(self):
-        #Narazie tego nie robie
+
+        #Teraz robie
         """ Filters out low complexity reads """
 
         path = self.path
         logger.info("     Running  filtering" )
-        command="%sbbduk.sh in1=%s_classif_R1.fastq in2=%s_classif_R2.fastq out1=%s_de_complex_R1.fastq out2=%s_de_complex_R2.fastq  outm=%s_repeat_regions_R1.fq outm2=%s_repeat_regions_R2.fq entropy=0.8 overwrite=true" % (path, sample, sample, sample, sample, sample, sample)
+        command="%sbbduk.sh in1=%s_classif_R1.fastq in2=%s_classif_R2.fastq out1=%s_de_complex_R1.fastq out2=%s_de_complex_R2.fastq  outm=%s_repeat_regions_R1.fq outm2=%s_repeat_regions_R2.fq entropy=0.8 overwrite=true" % (path, self.project_name, self.project_name, self.project_name, self.project_name, self.project_name, self.project_name)
         command = command.split(" ")
         process = Popen(command, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
         return "DECOMPLEXATION"+"\n"+stderr
 
-    def bbduk_pre_classification(self,sample):
+    def bbduk_pre_classification(self):
 
         """
 
-        Module for very fast preliminary classification. It needs specially prepared by kcompress
+        Module for very fast preliminary classification. It needs file specially prepared by kcompress
         from bbtools package
 
          """
+        path = self.path
+        logger.info("     Running  pre classification" )
+        command="%sbbduk.sh  in1=%s in2=%s outm1=%s_classif_R1.fastq  outm2=%s_classif_R2.fastq minkmerhits=%s k=%s ref=%s" % (self.path,self.reads_1, self.reads_2,self.project_name,self.project_name,self.minkmerhits,self.kmer_len,self.db_kmers)
 
-        command="%sbbduk.sh  in1=%s_1.fastq in2=%s_2.fastq outm1=%s_classif_R1.fastq  outm2=%s_classif_R2.fastq minkmerhits=%s k=%s ref=%s" % (self.path,sample, sample,sample,sample,self.db_kmers)
-        command = command.split(" ")
-        process = Popen(command, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = process.communicate()
-        logger.info("     Running  preliminary classification")
-        return stderr
+#        command = command.split(" ")
+
+#        process = Popen(command, stdout=PIPE, stderr=PIPE)
+
+#        stdout, stderr = process.communicate()
+        os.system(command)
+
+#        return "Pre classification"+"\n"+stderr
 
 def log_writing(list,sample_id):
 
@@ -199,10 +214,13 @@ class Pileup:
 
     """
 
-    def __init__(self,settings):
+    def __init__(self,input,settings):
 
         self.settings = settings
         self.path = Settings_loader_yaml(path=self.settings).yaml_handler()["Software dependencies"]["pileup.sh"]
+        self.bincov_len = Settings_loader_yaml(path=self.settings).yaml_handler()["Params"]["bincov_len"]
+        self.input = input
+
 
         if self.path == "":
 
@@ -214,14 +232,17 @@ class Pileup:
 
         try:
             subprocess.call(['pileup.sh', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
+
         except:
-            logger.error("Make sure pileup is on your system path or set proper path in settings.txt")
+            logger.waring("Make sure pileup is on your system path or set proper path in settings.txt")
             sys.exit()
 
     def prepare_cov_file(self):
 
-        command="%pileup.sh in=%s bincov=bincov.txt binsize=%s" % (self.path, sample,self.bincov_len)
+
+        command= "%spileup.sh in=%s bincov=bincov.txt binsize=%s" % (self.path, self.input, str(self.bincov_len))
         command = command.split(" ")
+
         process = Popen(command, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
         return stderr
@@ -251,7 +272,7 @@ class Mapping_runner:
 
         if os.path.isdir(dir):
 
-            logger.Error("This directory name exists! Please change the output name!")
+            logger.warning("This directory exists! Please change the output name!")
             sys.exit()
 
         else:
@@ -274,10 +295,10 @@ class RapidRunner:
 
         self.settings = settings
         self.path = Settings_loader_yaml(path=self.settings).yaml_handler()["Software dependencies"]["bbduk.sh"]
-        self.project_name = output
         self.settings = settings
         self.input  =  input
         self.input2 = input2
+        self.output = output
 
     def process(self):
 
@@ -295,7 +316,7 @@ class RapidRunner:
 
         if os.path.isdir(dir):
 
-            logger.Error("This directory name exists! Please change the output name!")
+            logger.warning("This directory name exists! Please change the output name!")
             sys.exit()
 
         else:
@@ -304,26 +325,28 @@ class RapidRunner:
 
         bblog = []
         logger.info("Procesing "+project_name)
-        bblog.append(bbduk.filtering_without_pre_classif())
+        bbduk.bbduk_pre_classification()
+
+        bblog.append(bbduk.filtering_with_pre_classif())
         bblog.append(bbmap.filtering_conserved_regions())
+
         bblog.append(bbmap.primary_mapping())
         log_writing(bblog,project_name)
         os.chdir(starting_dir)
 
 class SAM2coverage:
 
-    def __init__(self,input,input2,output, settings):
+    def __init__(self,input,output, settings):
 
         self.settings = settings
         self.input  = input
-        self.input2 = input2
         self.output = output
 
     def process(self):
 
         starting_dir = os.getcwd()
 
-        pileup = Pileup(self.input, self.input2, self.output,self.settings)
+        pileup = Pileup(self.input,self.settings)
 
         project_name = self.output
         grlog = []
@@ -332,7 +355,7 @@ class SAM2coverage:
 
         if os.path.isdir(dir):
 
-            logger.Error("This directory name exists! Please change the output name!")
+            logger.warning("This directory name exists! Please change the output name!")
             sys.exit()
 
         else:

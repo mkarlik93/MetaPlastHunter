@@ -3,3 +3,4 @@ scipy
 ete3
 pandas
 matplotlib
+pysam

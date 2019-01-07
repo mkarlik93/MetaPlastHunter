@@ -48,6 +48,7 @@ def fastq_dump_sra_file(station_name,list_sra,path):
         os.system(command)
 
     else:
+
         command_create_dir = "mkdir %s/%s" % (station_name,list_sra)
         os.system(command_create_dir)
         command = "%sfastq-dump %s --skip-technical -I --split-3" % (path,list_sra)
@@ -68,8 +69,8 @@ class Pipeline_fetch:
     def create_station_dir(self):
 
         if os.path.exists(self.station_name):
-
             logger.info("It's seems folder named already exists %s, ommiting this step." % self.station_name)
+
         else:
             command  = "mkdir %s" % (self.station_name)
             os.system(command)

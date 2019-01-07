@@ -1,4 +1,4 @@
-#!//anaconda/bin/python
+#!python
 
 ###############################################################################
 #                                                                             #
@@ -34,7 +34,7 @@ import os
 from bin.bbmap_wrapper_v_1 import Mapping_runner, SAM2coverage, RapidRunner
 from bin.taxonomic_assignment_v_1 import Taxonomic_assignment_Runner
 from bin.settings import Settings_loader_yaml
-from bin.genome_reconstruction import Genome_reconstruction_pipe
+#from bin.genome_reconstruction import Genome_reconstruction_pipe
 import sys
 import multiprocessing as mp
 
@@ -60,36 +60,35 @@ class Run:
 
         self.list_sra = ""
         self.station_name = ""
-
         self.settings = settings
         self.threads = threads
-
         self.input = input
         self.input2 = input2
         self.output = output
 
-
-
-    def genomic_reconstruction(self):
-        logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
-        Settings_loader_yaml(self.settings).yaml_check_settings_file()
-        logger.info( "     [%s] Starting genomic reconstruction " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
-        Genome_reconstruction_pipe(self.settings).process()
+#    def genomic_reconstruction(self):
+#        logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+#        Settings_loader_yaml(self.settings).yaml_check_settings_file()
+#        logger.info( "     [%s] Starting genomic reconstruction " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+#        Genome_reconstruction_pipe(self.settings).process()
 
     def assign_taxonomy(self):
 
         logger.info( " [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
-        Settings_loader_yaml(self.settings).yaml_check_settings_file()
+#        Settings_loader_yaml(self.settings).yaml_check_settings_file()
         logger.info( " [%s] Starting assign taxa to SAM file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
-
+        SAM2coverage(self.input, self.output, self.settings).process()
+        logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
+        Taxonomic_assignment_Runner(self.input, self.output,self.settings).process()
     #Tests are still needed
 
     def rapid_taxonomic_assignment(self):
         #Do przerobienia (?)
+
         logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
-        Settings_loader_yaml(self.settings).yaml_check_settings_file()
+#        Settings_loader_yaml(self.settings).yaml_check_settings_file()
         logger.info("     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
-        RapidRunner(self.list_sra,self.station_name,self.settings).process()
+        RapidRunner(self.input,self.input2,self.output,self.settings).process()
         logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
         Taxonomic_assignment_Runner(self.input, self.output,self.settings).process()
 
@@ -120,11 +119,11 @@ Quantitative aproach for eukaryotic metagenomics.
 
 Available workflows:
 
-[-reconstruction/--R] Reconstruction of large plastid parts
+[--taxonomic_classification/-C] Searching, Classification, Visualization
 
-[--taxonomic_classification/--C] Classification and visualization
+[--rapid_classification, -Acc] Use it to lunch pipeline with in exact k-mer matching preliminary classification
 
-[--rapid_classification, --Acc] Use it to lunch pipeline with in house kmer based preliminary classification
+[--sam_assign, -A]   Sequence alignment file (SAM) classification
 
 Obligatory arguments:
 
@@ -155,19 +154,13 @@ This sofware was written by %s.
                     formatter_class=argparse.RawDescriptionHelpFormatter,
                     epilog=epilog)
 
-    parser.add_argument('--reconstruction','-R',action='store_true')
     parser.add_argument('--taxonomic_classification','-C',action='store_true')
-#    parser.add_argument('--download_data','-F',action='store_true')
     parser.add_argument('--rapid_classification', '-Acc',action='store_true')
     parser.add_argument('--settings','-S', metavar='settings', type=str)
     parser.add_argument('--sam_assign','-A',action='store_true')
-
     parser.add_argument('--in_1', metavar='input',type=str)
-
     parser.add_argument('--in_2',nargs='?',type=str, default="")
-
     parser.add_argument('--output','-O',type=str)
-
     parser.add_argument('--threads','-T',nargs='?', type=int,default=mp.cpu_count())
 
     if len(sys.argv) == 1:
@@ -178,15 +171,12 @@ This sofware was written by %s.
 
     start = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
 
-    process = Run(args.in_1, args.in_2, arg.output, args.settings,args.threads)
+
+    process = Run(os.path.abspath(args.in_1),os.path.abspath(args.in_2), args.output, args.settings,args.threads)
 
     if args.taxonomic_classification:
 
         process.taxonomic_assigment()
-
-    elif args.reconstruction:
-
-        process.genomic_reconstruction()
 
     elif args.rapid_classification:
 

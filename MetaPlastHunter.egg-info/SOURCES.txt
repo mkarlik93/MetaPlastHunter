@@ -1,3 +1,4 @@
+README.md
 setup.py
 MetaPlastHunter.egg-info/PKG-INFO
 MetaPlastHunter.egg-info/SOURCES.txt
@@ -10,7 +11,6 @@ metaplasthunter/__init__.py
 metaplasthunter/bin/__init__.py
 metaplasthunter/bin/bbmap_wrapper_v_1.py
 metaplasthunter/bin/cov.py
-metaplasthunter/bin/genome_reconstruction.py
 metaplasthunter/bin/settings.py
 metaplasthunter/bin/taxonomic_assignment_v_1.py
 metaplasthunter/scripts/__init__.py
