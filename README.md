@@ -4,7 +4,7 @@
 
 The tool for accurate classifing and quantifing reads of plastid origin from metagenomes.
 
-MetaPlstHunter will search the provided sequences (Fastq) or sequence alignment file (SAM) and acurate classify them using MetaPlastHunter algorithm :
+MetaPlastHunter will search the provided sequences (Fastq) or sequence alignment file (SAM) and acurate classify them using MetaPlastHunter algorithm :
 
 MetaPlastHunter provides:
 
