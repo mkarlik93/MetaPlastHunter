@@ -66,6 +66,7 @@ class BBmap:
         minkmerhits: dictionary
 
         kmer_len: graph data structure
+
             Orginal data structure (weighted digraph) which keeps NCBI tree with proposed taxonomic positions (LTU and TTU)
 
         remap_min_identity: graph data stucture
@@ -88,18 +89,16 @@ class BBmap:
         self.kmer_len = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["kmer_len"]
         self.bincov_len = Settings_loader_yaml(path=self.settings).yaml_handler()["Params"]["bincov_len"]
         self.remap_min_identity = Settings_loader_yaml(path=self.settings).yaml_handler()["Params"]["min_identity"]
-
         self.project_name = output
-
         self.reads_1 =  input
         self.reads_2 =  input2
 
 
     def filtering_conserved_regions(self):
 
-        " Filters out 16S rDNA and 18S rDNA "
-
-        command="%sbbmap.sh fast=t reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq nodisk ref=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best outm1=%s_filtered_mapped_conserved_1.fq outm2=%s_filtered_mapped_conserved_2.fq  scafstats=filter_ribosomal.stats" % (self.path, self.project_name, self.project_name, self.db_silva, self.project_name, self.project_name, self.project_name,self.project_name)
+        """ Filters out parts of ribosomal operons """
+        #brakuje odniesienia do liczby rdzeni
+        command="%sbbmap.sh fast=t reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq ref=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best outm1=%s_filtered_mapped_conserved_1.fq outm2=%s_filtered_mapped_conserved_2.fq  scafstats=filter_ribosomal.stats" % (self.path, self.project_name, self.project_name, self.db_silva, self.project_name, self.project_name, self.project_name,self.project_name)
         command = command.split(" ")
         process = Popen(command, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
@@ -108,8 +107,8 @@ class BBmap:
 
     def primary_mapping(self):
 
-        " Maps filtered reads to the reference chloroplast database "
-
+        """ Maps filtered reads to the reference chloroplast database """
+        #brakuje odniesienia do rdzeni
         command="%sbbmap.sh minidentity=%s nodisk reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s scafstats=%s_chloroplasts.hitstats out=%s_final_mapped.sam bincov=bincov.txt outm1=%s_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq covbinsize=%s" % (self.path,self.remap_min_identity ,self.project_name, self.project_name, self.db,self.project_name,self.project_name,self.project_name,self.project_name, self.bincov_len)
         command = command.split(" ")
         logger.info("     Running primary mapping")
@@ -129,12 +128,9 @@ class BBduk:
 
         self.settings = settings
         self.path = Settings_loader_yaml(path=self.settings).yaml_handler()["Software dependencies"]["bbduk.sh"]
-
         self.project_name = output
-
         self.reads_1 =  input
         self.reads_2 =  input2
-
         self.db_kmers = Settings_loader_yaml(path=self.settings).yaml_handler()["Databases and mapping files"]["kmers"]
         self.minkmerhits = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["minkmerhits"]
         self.kmer_len = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["kmer_len"]
@@ -149,6 +145,7 @@ class BBduk:
 
         try:
             subprocess.call(['bbduk.sh', '-h'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT)
+
         except:
             logger.warning("Make sure BBduk is on your system path or set proper path in settings.txt")
             sys.exit()
@@ -167,7 +164,6 @@ class BBduk:
 
     def filtering_with_pre_classif(self):
 
-        #Teraz robie
         """ Filters out low complexity reads """
 
         path = self.path
@@ -182,7 +178,7 @@ class BBduk:
 
         """
 
-        Module for very fast preliminary classification. It needs file specially prepared by kcompress
+        Module for speeding up preliminary classification. It needs file specially prepared by kcompress
         from bbtools package
 
          """
@@ -278,7 +274,6 @@ class Mapping_runner:
         else:
             os.mkdir(dir)
             os.chdir(dir)
-
         bblog = []
         logger.info("Procesing "+project_name)
         bblog.append(bbduk.filtering_without_pre_classif())

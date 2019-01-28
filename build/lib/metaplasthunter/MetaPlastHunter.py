@@ -29,19 +29,16 @@ __status__ = 'Development'
 
 import logging
 import argparse
+logger = logging.getLogger("MetaPlastHunter")
+logging.basicConfig(level=logging.INFO)
+import argparse
 from time import gmtime, strftime
-import os
 from bin.bbmap_wrapper_v_1 import Mapping_runner, SAM2coverage, RapidRunner
 from bin.taxonomic_assignment_v_1 import Taxonomic_assignment_Runner
 from bin.settings import Settings_loader_yaml
-#from bin.genome_reconstruction import Genome_reconstruction_pipe
-import sys
 import multiprocessing as mp
-
-
-logger = logging.getLogger("MetaPlastHunter")
-logging.basicConfig(level=logging.INFO)
-
+import os
+import sys
 
 class Run:
 
@@ -50,7 +47,7 @@ class Run:
 
     Main class for running MetaPlastHunter RC
 
-    for read classification
+    MPH for read classification
 
 
 
@@ -66,13 +63,7 @@ class Run:
         self.input2 = input2
         self.output = output
 
-#    def genomic_reconstruction(self):
-#        logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
-#        Settings_loader_yaml(self.settings).yaml_check_settings_file()
-#        logger.info( "     [%s] Starting genomic reconstruction " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
-#        Genome_reconstruction_pipe(self.settings).process()
-
-    def assign_taxonomy(self):
+    def assign_taxnomomy_to_SAM(self):
 
         logger.info( " [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
 #        Settings_loader_yaml(self.settings).yaml_check_settings_file()
@@ -96,6 +87,9 @@ class Run:
         #Ta tez
         logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Settings_loader_yaml(self.settings).yaml_check_settings_file_classification()
+
+        Coverage_utillities(self.settings).add_empirical_treshold()
+
         logger.info("     [%s] Mapping and generating SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
         Mapping_runner(self.input,self.input2,self.output, self.settings).process()
         logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
@@ -184,7 +178,7 @@ This sofware was written by %s.
 
     elif args.sam_assign:
 
-        process.assign_taxonomy()
+        process.assign_taxnomomy_to_SAM()
 
     else:
 

@@ -31,13 +31,19 @@ __status__ = 'Development'
 
 from settings import  Settings_loader_yaml
 from Bio import SeqIO
-import glob
+from subprocess import Popen, PIPE
 import numpy as np
 import sys
 import logging
+import os
 
 logger = logging.getLogger("src.cov")
 logging.basicConfig(level=logging.INFO)
+
+
+#Tutaj dopisujemy tworzenie pliku zawierajacego tworzemy sredniego pokrycia calego genomu (normalne)
+
+
 
 class Coverage:
 
@@ -65,25 +71,12 @@ class Coverage:
 
         """
 
-
-
         self.loaded_bin_cov = self.load_bincov(filename,histstats)
         self.database = Settings_loader_yaml(settings).yaml_handler()["Databases and mapping files"]["bbmap_base"]
         self.min_bin_coverage = Settings_loader_yaml(settings).yaml_handler()["Params"]["min_bin_coverage"]
         self.percentile_treshold = Settings_loader_yaml(settings).yaml_handler()["Params"]["percentile_treshold"]
         self.bin_cov_for_report =  Settings_loader_yaml(settings).yaml_handler()["Params"]["bincov4_report"]
         self.static_treshold = Settings_loader_yaml(settings).yaml_handler()["Params"]["static_coverage_treshold[%]"]
-
-    def load_genomes_len(self):
-
-        """ Loads reference genome lengths """
-        genomes_dict = {}
-        with open(filename,"r") as f:
-            for i in f:
-                splited = i.split("\t")
-                genomes_dict[splited[0]] = splited[1].strip("\n")
-                unique_names.add(splited[0])
-        return genomes_dict
 
     def load_bincov(self,filename,hist):
 
@@ -99,6 +92,16 @@ class Coverage:
                     if splited[0][0] != "#":
                         organisms[splited[0]].append(float(splited[1]))
         return organisms
+
+    def average_coverage(self):
+
+        """ Calculates average depth of coverage """
+        bin_cov_dict = self.loaded_bin_cov
+        dict_of_genomes = {}
+        for reference_genome in  bin_cov_dict:
+            dict_of_genomes[reference_genome] = np.mean(bin_cov_dict[reference_genome])
+        return dict_of_genomes
+
 
     def getpercentage_cov(self):
 
@@ -118,10 +121,8 @@ class Coverage:
                 covered_part = len(list_tmp)/float(all_seq) * 100
                 dict_gen_con[covered_part] = name
 
-
         percentages = sorted(dict_gen_con.keys())
         sum_percentages = sum(percentages)
-
         percentile_value =  np.percentile(percentages,percentile_tresh)
         percentages_ok = [i for i in percentages if i > percentile_value]
 
@@ -136,22 +137,10 @@ class Coverage:
             for key in percentages_ready:
 
                 list_for_recalculation.append(dict_gen_con[key])
+
                 f.write("%s,%s\n" % (dict_gen_con[key],key))
 
         return list_for_recalculation
-
-#Remapping
-
-    def ref_for_remapping(self):
-
-        " Creates fasta file for further remapping "
-
-        list_of_genomes = self.getpercentage_cov()
-        chloroplasts_ref = SeqIO.parse(self.database,"fasta")
-        chloroplast_ref_dict = {}
-        for record in chloroplasts_ref:
-            chloroplast_ref_dict[record.description] = record
-        SeqIO.write(list(map(lambda name: chloroplast_ref_dict[name],list_of_genomes)), "tmp_ref_base.fasta", "fasta")
 
     def report_cov(self):
 
@@ -185,3 +174,149 @@ class Coverage:
                 for key in dict_of_genomes:
                     f.write("%s\t%s\n" % (key, dict_of_genomes[key]))
                     logger.info("Genome of %s is almost fully covered" % key)
+
+
+
+class Coverage_utillities:
+
+    """
+
+    This class generates empirical trehshold for every genome in the reference database
+
+            Parameters
+            ----------
+            name : str
+                bincov.txt, draft coverage file, produced during mapping
+            sound : histstats
+                XXX
+
+            num_legs : settings
+                General settings file which keeps hyperparameters
+
+            Calculated gobal variables
+            ----------
+            min_bin_coverage: int
+                Loaded from settings file
+
+            bin_cov_for_report: int
+
+            static_treshold: int
+
+    """
+
+    def __init__ (self, settings):
+
+        self.settings = settings
+        self.database = Settings_loader_yaml(settings).yaml_handler()["Databases and mapping files"]["bbmap_base"]
+        self.path = Settings_loader_yaml(path=self.settings).yaml_handler()["Software dependencies"]["randomreads.sh"]
+        self.e_coverage_treshold = Settings_loader_yaml(settings).yaml_handler()["Databases and mapping files"]["empirical_treshold"]
+        if self.e_coverage_treshold is not None:
+            self.e_coverage_treshold_ditionary = self.load_emprirical_coverage()
+
+    def load_emprirical_coverage(self):
+
+        """ Load reference genome empricial tresholds """
+
+        with open(self.e_coverage_treshold,"r") as f:
+            return dict([genome.split("\t") for genome in f])
+
+    def analyze_emp_genome_list(self):
+
+        """ Checking genomes without annotation """
+
+        genome_list = [seq for seq in (SeqIO.parse(self.database,"fasta"))]
+        empirical_keys = self.e_coverage_treshold_ditionary.keys()
+        return  list(filter(lambda x: x.id not in empirical_keys, genome_list))
+
+    def create_reads(self,genome_to_analyze):
+
+        """ Random reads generator of length 100
+
+        and isert size between 100 - 300 """
+
+        logger.info("     Read creating " )
+        command="%srandomreads.sh ref=%s.fa coverage=2 paired=t out1=%s_1.fq out2=%s_2.fq"  % (self.path, genome_to_analyze,genome_to_analyze,genome_to_analyze)
+        command = command.split(" ")
+        process = Popen(command, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+        return "DECOMPLEXATION"+"\n"+stderr
+
+    def cleaning(self,project_name):
+
+        """ Removing temporary data """
+
+        command = "rm -r %s" % (project_name)
+        command_2 = "rm %s_1.fq %s_2.fq"  % (project_name, project_name)
+        command_3 = "rm %s.fa" % (project_name)
+        os.system(command)
+        os.system(command_2)
+        os.system(command_3)
+
+    def run_MetaPlastHunter(self,genome_to_analyze):
+        logger.info("   Creating artificial reads" )
+        self.create_reads(genome_to_analyze)
+        logger.info("   Estimating coverage treshold" )
+        command="MetaPlastHunter --in_1 %s_1.fq --in_2 %s_2.fq -C --output %s --settings %s"  % (genome_to_analyze,genome_to_analyze,genome_to_analyze,self.settings)
+        command = command.split(" ")
+        process = Popen(command, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+
+        old_dir = os.getcwd()
+        os.chdir(old_dir+"/"+genome_to_analyze+"/")
+
+        with open("covered_genomes.csv","r") as f:
+            treshold = float([genome.split("\t") for genome in f][1][1])
+
+        os.chdir(old_dir)
+        self.cleaning(genome_to_analyze)
+        return treshold
+
+    def add_empirical_treshold(self):
+
+        """ In this fuction run_MetaPlastHunter is called for every genome that
+
+         hasn't had already calculated empirical treshold  """
+
+        if self.e_coverage_treshold is None:
+
+            logger.info("It seems you haven't added empirical coverage info - new file is generating")
+            genome_records = [seq for seq in (SeqIO.parse(self.database,"fasta"))]
+
+            record_indx = 1
+            number_of_sequences = len(genome_records)
+
+            with open("metaplasthunter_empirical_tresholds.txt","w") as f:
+                while len(genome_records) > 0:
+                    logger.info("Doing job: %s/%s" % (str(record_indx),str(number_of_sequences)))
+                    record_indx = record_indx + 1
+                    record = genome_records.pop(0)
+                    old_rec = record.id
+                    if "|" in record.id:
+                        record.id = (record.id).replace("|","_")
+                    SeqIO.write(record,record.id+".fa","fasta")
+                    treshold = self.run_MetaPlastHunter(record.id)
+                    f.write("%s\t%s\n" % (old_rec, treshold))
+
+            logger.info("Now you can add file called metaplasthunter_empirical_tresholds.txt to the settings")
+
+        elif len(self.analyze_emp_genome_list()) > 1:
+
+            genome_records = self.analyze_emp_genome_list()
+
+            record_indx = 1
+            number_of_sequences = len(genome_records)
+            logger.info("It seems that reference database has been updated - new empirical tresholds are generating")
+            while len(genome_records) > 0:
+                with open(self.e_coverage_treshold,"a") as f:
+                    logger.info("Doing job: %s/%s" % (str(record_indx),str(number_of_sequences)))
+                    record_indx = record_indx + 1
+                    record = genome_records.pop(0)
+                    old_rec = record.id
+                    if "|" in record.id:
+                        record.id = (record.id).replace("|","_")
+                    SeqIO.write(record,record.id+".fa","fasta")
+                    treshold = self.run_MetaPlastHunter(record.id)
+                    f.write("%s\t%s\n" % (old_rec, treshold))
+
+        else:
+            logger.info("Empiricial treshold file has been added correctly")

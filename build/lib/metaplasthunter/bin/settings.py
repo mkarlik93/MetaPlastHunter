@@ -58,7 +58,7 @@ class Settings_loader_yaml:
     ----------
     name : path
 
-        keeps path to the settings file in YAML
+        keeps path to the settings file in YAML format
 
     """
 

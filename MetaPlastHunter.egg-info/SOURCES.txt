@@ -13,6 +13,8 @@ metaplasthunter/bin/bbmap_wrapper_v_1.py
 metaplasthunter/bin/cov.py
 metaplasthunter/bin/settings.py
 metaplasthunter/bin/taxonomic_assignment_v_1.py
+metaplasthunter/bin/tests/__init__.py
+metaplasthunter/bin/tests/tests.py
 metaplasthunter/scripts/__init__.py
 metaplasthunter/scripts/get_data.py
 utils/__init__.py

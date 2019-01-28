@@ -17,6 +17,10 @@
 #                                                                             #
 ###############################################################################
 
+#TODO
+#relative aboudance
+
+
 __author__ = 'Michal Karlicki'
 __copyright__ = 'Copyright 2018'
 __credits__ = ['Michal Karlicki']
@@ -25,8 +29,6 @@ __version__ = '1.0.0'
 __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
-
-
 
 from ete3 import Tree
 from ete3 import  NCBITaxa
@@ -39,12 +41,14 @@ import sys
 import logging
 import pandas as pd
 from settings import *
-from cov import Coverage
+from cov import Coverage, Coverage_utillities
 from subprocess import Popen, PIPE
-
 
 logger = logging.getLogger("src.taxonomic_assignment")
 logging.basicConfig(level=logging.INFO)
+
+
+# Nastepenie relative abundance to bedzie pokrycie calkowite * pokrycie srednie -> oczywiscie sumujace sie do danego taksonu
 
 def sam_get_min_identity_of_covered_genome(target_genome):
 
@@ -61,7 +65,6 @@ def sam_get_min_identity_of_covered_genome(target_genome):
                 pass
 
             else:
-
                 if read.is_secondary:
                     pass
 
@@ -77,12 +80,12 @@ def sam_get_min_identity_of_covered_genome(target_genome):
 def calculate_average_nucleotide_identity(list_of_genomes):
     pass
 
-
+#This function is not valid !!!
 def sam_splitter(input,is_sam,list_of_genomes):
 
     if is_sam  == True:
-
         samfile =  pysam.AlignmentFile(input)
+
     else:
         _samfile = glob.glob("*_final_mapped.sam")[0]
         samfile = pysam.AlignmentFile(_samfile)
@@ -91,24 +94,19 @@ def sam_splitter(input,is_sam,list_of_genomes):
 
     for target_genome in list_of_genomes:
 
-        print target_genome
         good_reads = []
         for read in samfile.fetch():
             try:
-
                 if read.is_unmapped:
                     pass
                 else:
-
                     if read.is_secondary:
                         pass
-
                     else:
                         if read.reference_name == target_genome:
 
                             choosed_reads.append(read)
             except:
-
                 pass
 
         with pysam.AlignmentFile(target_genome+"_single.bam", "wb", header=sam_header) as outf:
@@ -120,7 +118,7 @@ class Taxonomic_assignment(object):
 
     ncbi = NCBITaxa()
 
-    def __init__ (self,sample,treshold,seqidmap,sam_type,input):
+    def __init__ (self,sample,treshold,seqidmap,sam_type,input,settings,avg_coverage_dict):
 
         """
         Input Parameters
@@ -158,6 +156,7 @@ class Taxonomic_assignment(object):
 
 
         """
+        self.settings = settings
         self.sam_type = sam_type
         self.input = input
         self._seqid = self.seqid2taxid(seqidmap)
@@ -169,6 +168,9 @@ class Taxonomic_assignment(object):
         self.run = self.process_taxonomic_assignment_to_file_easy()
         self._lca_graph = self.lca_graph()
         self.analyzed_graf = self.lca_graph_analysis()
+        self.absolute_coverage_loaded = self.absolute_coverage_loading_to_NCBI()
+        self.empirical_coverage_ncbi = self.empirical_coverage_to_NCBI()
+        self.avg_coverage_dict = avg_coverage_dict
 
     def merge_two_dicts(self, x, y):
         z = x.copy()   # start with x's keys and values
@@ -184,7 +186,7 @@ class Taxonomic_assignment(object):
 
     def species_list(self):
 
-        " Returns list of species proper for NCBI taxonomy for species "
+        """ Returns list of species proper for NCBI taxonomy for species """
 
         species_taxid_dict = self._seqid
         species_list = []
@@ -198,7 +200,7 @@ class Taxonomic_assignment(object):
 
     #NEW - Haven't tested yet
     def species_identifier(self,input_name):
-        " Returns true if given name is in list of species "
+        """ Returns true if given name is in list of species """
         species_name_list = self.species_list()
         if input_name in species_name_list:
 
@@ -206,10 +208,13 @@ class Taxonomic_assignment(object):
         else:
             return False
 
-
     def dict_init(self,dictionary):
 
-        "Creates data structure like this in LTU: {1261581: {'2006943': 0, '1261582': 0, '2006970': 0, '2006944': 0}, developed for The closest db rel"
+        """Creates data structure like this in
+
+        LTU: {1261581: {'2006943': 0, '1261582': 0, '2006970': 0, '2006944': 0}
+
+         developed for The closest db relative"""
 
         new_dict = {}
 
@@ -232,7 +237,7 @@ class Taxonomic_assignment(object):
 
     def get_NCBI_tree(self,covered_):
 
-        "Initialization of NCBI tree"
+        """Initialization of NCBI tree - from ete3 packagess"""
 
         ncbi = self.ncbi
         tree = ncbi.get_topology(covered_,intermediate_nodes=True)
@@ -240,7 +245,7 @@ class Taxonomic_assignment(object):
 
     def seqid2taxid(self,seqidmap):
 
-        "Creates dictionary instance with seqid - taxid structure"
+        """Creates dictionary instance with seqid - taxid structure"""
 
         seqid2taxid = {}
         with open(seqidmap,"r") as f:
@@ -256,7 +261,7 @@ class Taxonomic_assignment(object):
 
     def get_lineage(self,taxid):
 
-        "Generates taxonomical lineage based on taxid"
+        """Generates taxonomical lineage based on taxid"""
 
         ncbi = self.ncbi
         lineage =  ncbi.get_lineage(taxid)
@@ -272,22 +277,52 @@ class Taxonomic_assignment(object):
         lin = [names[taxid] for taxid in lineage]
         return lin
 
+    def absolute_coverage_loading_to_NCBI(self):
+
+        """Loads absolute coverage to dict of NCBI taxa names """
+
+        with open("cov_list.txt","r") as f:
+            return dict([(self.taxid_name_translator(int(self._seqid[line.split(",")[0]])),line.split(",")[1].strip("\n")) for line in f])
+
+    def empirical_coverage_to_NCBI(self):
+
+        """Loads empirical coverage to dict of NCBI taxa names """
+
+        empirical_treshold = Coverage_utillities(self.settings).load_emprirical_coverage()
+        return dict([(self.taxid_name_translator(int(self._seqid[key])),float(empirical_treshold[key].strip("\n"))) for key in empirical_treshold])
+
+    def mean_coverage_to_NCBI(self):
+
+        """Loads mean coverage to dict with NCBI taxa names """
+        return dict([(self.taxid_name_translator(int(self._seqid[key])),float(self.avg_coverage_dict[key])) for key in self.avg_coverage_dict])
+
     def coverage_file(self,coverage_file):
 
-        "Handles coverage file and seperates genomes into two classes almost and fully covered"
+        """ Handles coverage file and seperates
+        genomes into two classes LTU and TTU """
 
+        #For every genome MPH uses pre-calculated empirical treshold
+        empirical_treshold = Coverage_utillities(self.settings).load_emprirical_coverage()
         covered_ = []
         almost_full = []
-        with open(coverage_file,"r") as f:
-            for i in f:
-                if i.split(" ")[0] != "Genome":
-                    coverage =  float((i.split(" ")[-1]).split(",")[1])
-                    species_name = self._seqid[i.split(" ")[0]]
 
-                    if coverage <= 90.0:
-                        covered_.append(species_name)
-                    if coverage > 90.0 :
-                        almost_full.append(species_name)
+        with open(coverage_file,"r") as file:
+
+            for coverage_record in file:
+
+                """ Split coverage file which looks like this: record,coverage  """
+                splited_list = coverage_record.split(",")
+                coverage =  float(splited_list[1])
+                species_name = self._seqid[splited_list[0]]
+
+                if coverage <= float(empirical_treshold[splited_list[0]]):
+                    #covered_.append(splited_list[0])
+                    covered_.append(species_name)
+
+                if coverage > float(empirical_treshold[splited_list[0]]):
+                    #almost_full.append(splited_list[0])
+                    almost_full.append(species_name)
+
         return covered_,almost_full
 
     def lca_assignment(self):
@@ -297,7 +332,7 @@ class Taxonomic_assignment(object):
         dict_of_assigned =  {}
         ncbi = Taxonomic_assignment.ncbi
         for i in itertools.permutations(cov,2):
-
+            #MPH conducts LCA assignmnet of reads usig built-in function from ete3
             lca = tree.get_common_ancestor(i[0],i[1])
 
             if self.get_lineage_without_tree(i[0],ncbi)[-1] not in dict_of_assigned:
@@ -305,11 +340,12 @@ class Taxonomic_assignment(object):
             else:
                 if len(self.get_lineage_without_tree(dict_of_assigned[self.get_lineage_without_tree(i[0],ncbi)[-1]],ncbi))<  len(self.get_lineage_without_tree(lca.taxid,ncbi)):
                     dict_of_assigned[self.get_lineage_without_tree(i[0],ncbi)[-1]] = lca.taxid
+
         return dict_of_assigned,almost_full
 
     def lca_assignment_just_taxids(self):
 
-        "LCA assignmnet workflow"
+        """LCA assignmnet workflow"""
 
         cov,almost_full =  self.coverage_file("cov_list.txt")
 
@@ -320,7 +356,7 @@ class Taxonomic_assignment(object):
 
             if len(cov) == 1:
 
-                print "It seems that only one cpGenome were detected but with low coverage. Those reads were assigned as Eukaryote"
+                logger.info("It seems that only one cpGenome were detected but with low coverage. Those reads were assigned as Eukaryote")
                 dict_of_assigned[cov[0]] = 2759
                 return dict_of_assigned,almost_full
 
@@ -344,7 +380,9 @@ class Taxonomic_assignment(object):
 
         unique = {}
         lca_assign,almost_full = lca_assignment(self._seqid)
+
         for key in lca_assign:
+
             if lca_assign[key] not in unique:
                 unique[lca_assign[key]] = [key]
             else:
@@ -355,7 +393,7 @@ class Taxonomic_assignment(object):
     def transform_read_name(self,readname):
 
         if len(readname.split(" ")) > 1:
-            #SRA Reads
+
             readname = readname.replace(" ","_")
             return readname
         else:
@@ -378,7 +416,6 @@ class Taxonomic_assignment(object):
                 else:
 
                     new_read_name =  self.transform_read_name(read.qname)
-
 
                     if new_read_name[:-2] == ".1":
                         record = new_read_name[:-2]
@@ -419,7 +456,7 @@ class Taxonomic_assignment(object):
         return dict_reads
 
     def reads_processing_easy(self):
-
+        #Teraz tu jest cos nie tak
         ncbi = self.ncbi
         for record in self.almost_full:
 
@@ -429,12 +466,9 @@ class Taxonomic_assignment(object):
         for record in self._dict_of_reads:
 
             r1 = self._dict_of_reads[record][0]
-
             r2 = self._dict_of_reads[record][1]
 
             try:
-
-
                 try:
                     if len(r1) != 0 and len(r2) != 0:
                         name_r1 = str(self.name2taxid(r1[0].reference_name))
@@ -452,15 +486,14 @@ class Taxonomic_assignment(object):
                         yield "%s\t%s\n" % (record+".2", ";".join(self.get_lineage(self.lca_assign[name_r2])))
 
                 except ValueError:
-                    print "Value error "+ name_r1
+                    pass
             except KeyError:
-                print "Key error "+ name_r1
+                pass
 
     def processing_cdr_data_stucture(self):
 
 
         for record in self.almost_full:
-
             self.lca_assign[str(record)] = int(record)
 
         the_cdr_data_structure =  self.dict_init(self.lca_assign)
@@ -488,34 +521,37 @@ class Taxonomic_assignment(object):
 
                 except ValueError:
                     pass
-                    #print "Val err "+ r1
+
             except KeyError:
                 pass
+
         return the_cdr_data_structure
 
     def process_taxonomic_assignment_to_file_easy(self):
+
+        """ Writing taxonomic assignmnet file """
         to_write = list(self.reads_processing_easy())
-        #It's better to call function 'write' once than many sam_analyzer times
+        #It's more efficient to call function 'write' once than many sam_analyzer times
         open(self._sample_name+"_assignment.txt", "wb").write(''.join(to_write))
 
 
     def get_count(self):
 
-        "Takes taxonomic assignment file as an input"
+        """Takes taxonomic assignment file as an input"""
 
         assignment_file = glob.glob("*_assignment.txt")
         if len(assignment_file) == 0:
-            logger.error("There is no taxonomic assignment file, but should be here!")
+            logger.error("There is no taxonomic assignment file, but should be in this directory")
             sys.exit()
         num_lines = sum(1 for line in open(assignment_file[0]))
         if num_lines == 0:
-            logger.warn("There was no classified chloroplast reads, re-run with diffrent settings")
+            logger.warn("There was no classified chloroplast reads, please re-run with diffrent settings")
             sys.exit()
         return num_lines
 
     def open_lca_file(self):
 
-        "Prepares file for lca graph"
+        """Prepares file for lca graph"""
 
         count = self.get_count()
         assignment_file = glob.glob("*_assignment.txt")
@@ -524,8 +560,7 @@ class Taxonomic_assignment(object):
             longest = 0
             for line in f:
                 count = count + 1
-                # first Read name, second lineage
-
+                # First comes read name and lineage
                 splited = line.split("\t")
 
                 if len(splited[1].split("/")) > longest:
@@ -544,18 +579,14 @@ class Taxonomic_assignment(object):
         "Creates graph representation of taxonomical assigned reads"
 
         G = nx.DiGraph()
-
         dict_ltu = self.dict_translator_taxid_name(self.processing_cdr_data_stucture())
-
         taxa_count_dict, longest =  self.open_lca_file()
-
         good_taxa = {}
         bad_taxa = {}
-
         G.add_node('root',count = self.get_count())
 
-        for key in taxa_count_dict:
 
+        for key in taxa_count_dict:
 
             lineage = key.split(";")
             #edges and nodes
@@ -575,16 +606,17 @@ class Taxonomic_assignment(object):
 
         return G
 
-    "Relative min_supporting - threshold * SUM"
-
     def lca_graph_analysis(self):
 
+        """ Prunnes graph branches until branch is greater than treshold  """
+
         dict_ltu = self.dict_translator_taxid_name(self.processing_cdr_data_stucture())
-        count = self._lca_graph.nodes['root']['count']
-        species_treshold = int(count*self.treshold)
-        #here can appear a logger info message
-        print "Species treshold was set on "+str(species_treshold)
-        #node pruning
+        sum = self._lca_graph.nodes['root']['count']
+        #Relative min_supporting - threshold * SUM
+        species_treshold = int(sum*self.treshold)
+
+        logger.info("Species treshold was set on "+str(species_treshold))
+
         to_del = []
 
         for node in self._lca_graph.nodes():
@@ -607,7 +639,6 @@ class Taxonomic_assignment(object):
                          G.nodes[pre]["ltu_genomes"] = merged
                     else:
                         G.nodes[pre]["ltu_genomes"] =  G_tmp.nodes[node[0]]["ltu_genomes"]
-
         G.remove_nodes_from(to_del)
 
         return G
@@ -634,12 +665,94 @@ class Taxonomic_assignment(object):
                 species[node] = (self.analyzed_graf.nodes[node]['count'],self.analyzed_graf.nodes[node]['ltu_genomes'])
         return species
 
+
+    def ltu_empirical_treshold_comparsion(self):
+
+        taxonomic_assignment_graph = self.analyzed_graf
+        good_taxa  = {}
+        empirical_treshold = self.empirical_coverage_to_NCBI()
+        avg_coverage = self.mean_coverage_to_NCBI()
+        for node in taxonomic_assignment_graph.nodes():
+
+            if taxonomic_assignment_graph.degree[node] == 1 and node != "root":
+
+                try:
+                    ltu_sum = sum([float(self.absolute_coverage_loaded[x]) for x in taxonomic_assignment_graph.nodes[node]['ltu_genomes'].keys()])
+                    avg_empirical_treshold = numpy.mean([float(empirical_treshold[x]) for x in taxonomic_assignment_graph.nodes[node]['ltu_genomes'].keys()])
+                    if ltu_sum > avg_empirical_treshold:
+                        good_taxa[node] = ltu_sum
+                except:
+                    pass
+
+        return good_taxa
+
+
+#    def ltu_every_level_experimental(self):
+#
+#        " Returns dictionary with ltu and genomes related with - The closest db relative "
+#        #Coverage prunning - coverage propagation
+#        #Najpierw dodajemy do slownika, pozniej mozna jakies data structure
+#        summed_coverage_taxa = {}
+#
+#        for node in self.analyzed_graf.nodes():
+#
+#            if self.analyzed_graf.degree[node] == 1 and node != "root":
+#
+#                shortest_path = list(reversed(nx.shortest_path(self.analyzed_graf, "root", target=node)))
+#                ltu_node = shortest_path[0]
+#                try:
+#
+#                    ltu_sum = summed = sum([float(self.absolute_coverage_loaded[x]) for x in self.analyzed_graf.nodes[ltu_node]['ltu_genomes'].keys()])
+#                except:
+#
+#                    pass
+#
+#                summed_coverage_taxa[ltu_node] = ltu_sum
+#
+#                for j in shortest_path[1:]:
+#
+#                    try:
+#                        if self.analyzed_graf.nodes[j]['ltu_genomes'] is not '' and j is not "root":
+#
+#                            summed = sum([float(self.absolute_coverage_loaded[x]) for x in self.analyzed_graf.nodes[j]['ltu_genomes'].keys()])
+#
+#                            if j not in summed_coverage_taxa:
+#                                summed_coverage_taxa[j] = summed
+#
+#                            else:
+#                                summed_coverage_taxa[j] = summed_coverage_taxa[j] + summed
+#
+#                            self.analyzed_graf.nodes[j]['ltu_genomes'] = ''
+#
+#                        else:
+#                            if j not in summed_coverage_taxa:
+#                                summed_coverage_taxa[j] = ltu_sum
+#                            else:
+#                                summed_coverage_taxa[j] = summed_coverage_taxa[j] + ltu_sum
+#                    except:
+#                        pass
+#
+#        return summed_coverage_taxa
+
     def ltu_catch(self):
 
         ltu_after_min_support = []
         for node in self.analyzed_graf.nodes():
             if self.analyzed_graf.degree[node] == 1 and node != "root":
+
                 ltu_after_min_support.append((nx.shortest_path(self.analyzed_graf, "root", target=node),self.analyzed_graf.nodes[node]['count']))
+
+        return ltu_after_min_support
+
+    def ltu_catch_prunned(self):
+
+        probable_taxa = self.ltu_empirical_treshold_comparsion().keys()
+        average_coverage = self.mean_coverage_to_NCBI()
+        ltu_after_min_support = []
+        for node in self.analyzed_graf.nodes():
+
+            if self.analyzed_graf.degree[node] == 1 and node != "root" and node in probable_taxa:
+                ltu_after_min_support.append((nx.shortest_path(self.analyzed_graf, "root", target=node),self.analyzed_graf.nodes[node]['count'],average_coverage[node]))
         return ltu_after_min_support
 
     def pandas_data_frame_species_level(self):
@@ -649,23 +762,18 @@ class Taxonomic_assignment(object):
 
     def krona_file_preparing(self,project_name):
 
+        """ Prepares file formatted for Krona tools """
+
         catched_taxa = self.ltu_catch()
 
         with open(project_name+"_krona.txt","w") as f:
             for taxa in catched_taxa:
                 tax_path = "\t".join(taxa[0][2:])
                 f.write(str(taxa[1])+"\t"+tax_path+"\n")
+        #Tu cos by sie przydalo - settings
+        cmd = "%sktImportText %s -o %s" % (self.settings,project_name+"_krona.txt",project_name+"_krona.html")
 
-        cmd = "ktImportText %s -o %s" % (project_name+"_krona.txt",project_name+"_krona.html")
         subprocess.check_call(cmd,shell=True)
-
-    def sigle_bam_output(self):
-
-        "Splits SAM file into smaller which containes only well-covered genomes - tutaj trzeba uzyc nazwy -> nie taxidu!!!!"
-
-        covered_genomes  = self.almost_full
-        sam_splitter(self.input, self.sam_type, covered_genomes)
-
 
 class Taxonomic_assignment_Runner:
 
@@ -683,8 +791,8 @@ class Taxonomic_assignment_Runner:
             self.sam_type = True
 
         else:
-
             self.sam_type = False
+
         try:
 
             self.seqidmap = Settings_loader_yaml(self.settings).yaml_handler()["Databases and mapping files"]["seqid2taxid.map"]
@@ -703,7 +811,6 @@ class Taxonomic_assignment_Runner:
         grlog = []
 
         logger.info("Procesing "+project_name)
-
         dir = "%s/" % (project_name)
 
         if os.path.isdir(dir):
@@ -716,9 +823,10 @@ class Taxonomic_assignment_Runner:
         c = Coverage('bincov.txt',project_name+"_chloroplasts.hitstats",self.settings)
         c.getpercentage_cov()
         c.report_cov()
-        lca_postprocess =  Taxonomic_assignment(self.project_name,self.lca_treshold,self.seqidmap,self.sam_type,self.input)
-#            lca_postprocess.process_taxonomic_assignment_to_file_easy()
+        avg_coverage = c.average_coverage()
+        lca_postprocess = Taxonomic_assignment(self.project_name,self.lca_treshold,self.seqidmap,self.sam_type,self.input,self.settings,avg_coverage)
         lca_postprocess.pandas_data_frame_species_level()
         lca_postprocess.krona_file_preparing(self.project_name)
-        lca_postprocess.sigle_bam_output()
+        print lca_postprocess.ltu_every_level()
+        print lca_postprocess.ltu_catch_prunned()
         os.chdir(starting_dir)

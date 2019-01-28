@@ -29,18 +29,19 @@ __status__ = 'Development'
 
 import logging
 import argparse
-from time import gmtime, strftime
-import os
-from bin.bbmap_wrapper_v_1 import Mapping_runner, SAM2coverage, RapidRunner
-from bin.taxonomic_assignment_v_1 import Taxonomic_assignment_Runner
-from bin.settings import Settings_loader_yaml
-import sys
-import multiprocessing as mp
-
-
 logger = logging.getLogger("MetaPlastHunter")
 logging.basicConfig(level=logging.INFO)
+import argparse
+from time import gmtime, strftime
+from bin.external import Mapping_runner, SAM2coverage, RapidRunner
+from bin.taxonomic_assignment_v_1 import Taxonomic_assignment_Runner
+from bin.settings import Settings_loader_yaml
+from bin.cov import Coverage_utillities
+import multiprocessing as mp
+import os
+import sys
 
+#TODO - sprawdzanie poprawnosci plikow i kompletnosci
 
 class Run:
 
@@ -49,7 +50,7 @@ class Run:
 
     Main class for running MetaPlastHunter RC
 
-    for read classification
+    MPH for read classification
 
 
 
@@ -65,7 +66,7 @@ class Run:
         self.input2 = input2
         self.output = output
 
-    def assign_taxonomy(self):
+    def assign_taxnomomy_to_SAM(self):
 
         logger.info( " [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
 #        Settings_loader_yaml(self.settings).yaml_check_settings_file()
@@ -94,7 +95,12 @@ class Run:
         logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
         Taxonomic_assignment_Runner(self.input,self.output, self.settings).process()
 
+    def check(self):
 
+        logger.info("     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        Settings_loader_yaml(self.settings).yaml_check_settings_file_classification()
+        logger.info("      [%s] Checking empirical treshold file and update if nessecary" %  (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        Coverage_utillities(self.settings).add_empirical_treshold()
 
 def main():
 
@@ -118,6 +124,9 @@ Available workflows:
 
 [--sam_assign, -A]   Sequence alignment file (SAM) classification
 
+[--check]   Check settings and calculate empirical treshold if nessecary
+
+
 Obligatory arguments:
 
 Settings - inpute file
@@ -131,7 +140,11 @@ email address: michal.karlicki@gmail.com
 
 Please cite:
 
+Karlicki & Karnkowska, 2019
+
 https://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/bbmap-guide/
+
+SILVA
 
 
 This sofware was written by %s.
@@ -155,6 +168,8 @@ This sofware was written by %s.
     parser.add_argument('--in_2',nargs='?',type=str, default="")
     parser.add_argument('--output','-O',type=str)
     parser.add_argument('--threads','-T',nargs='?', type=int,default=mp.cpu_count())
+    parser.add_argument('--check',action='store_true')
+
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -167,6 +182,10 @@ This sofware was written by %s.
 
     process = Run(os.path.abspath(args.in_1),os.path.abspath(args.in_2), args.output, args.settings,args.threads)
 
+    if args.check:
+
+        process.check()
+
     if args.taxonomic_classification:
 
         process.taxonomic_assigment()
@@ -177,7 +196,7 @@ This sofware was written by %s.
 
     elif args.sam_assign:
 
-        process.assign_taxonomy()
+        process.assign_taxnomomy_to_SAM()
 
     else:
 

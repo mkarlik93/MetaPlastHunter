@@ -77,10 +77,6 @@ def sam_get_min_identity_of_covered_genome(target_genome):
 def calculate_average_nucleotide_identity(list_of_genomes):
     pass
 
-def merge_two_dicts(x, y):
-    z = x.copy()   # start with x's keys and values
-    z.update(y)    # modifies z with y's keys and values & returns None
-    return z
 
 def sam_splitter(input,is_sam,list_of_genomes):
 
@@ -120,9 +116,6 @@ def sam_splitter(input,is_sam,list_of_genomes):
                 outf.write(read)
 
 class Taxonomic_assignment(object):
-
-
-    "Tu musze zmienic "
 
 
     ncbi = NCBITaxa()
@@ -177,7 +170,7 @@ class Taxonomic_assignment(object):
         self._lca_graph = self.lca_graph()
         self.analyzed_graf = self.lca_graph_analysis()
 
-    def merge_two_dicts(x, y):
+    def merge_two_dicts(self, x, y):
         z = x.copy()   # start with x's keys and values
         z.update(y)    # modifies z with y's keys and values & returns None
         return z
@@ -213,7 +206,6 @@ class Taxonomic_assignment(object):
         else:
             return False
 
-
     def dict_init(self,dictionary):
 
         "Creates data structure like this in LTU: {1261581: {'2006943': 0, '1261582': 0, '2006970': 0, '2006944': 0}, developed for The closest db rel"
@@ -238,11 +230,16 @@ class Taxonomic_assignment(object):
         return new_dict
 
     def get_NCBI_tree(self,covered_):
+
+        "Initialization of NCBI tree"
+
         ncbi = self.ncbi
         tree = ncbi.get_topology(covered_,intermediate_nodes=True)
         return tree
 
     def seqid2taxid(self,seqidmap):
+
+        "Creates dictionary instance with seqid - taxid structure"
 
         seqid2taxid = {}
         with open(seqidmap,"r") as f:
@@ -257,12 +254,14 @@ class Taxonomic_assignment(object):
         return inv_map
 
     def get_lineage(self,taxid):
+
+        "Generates taxonomical lineage based on taxid"
+
         ncbi = self.ncbi
-
         lineage =  ncbi.get_lineage(taxid)
-
         names = ncbi.get_taxid_translator(lineage)
         lin = [names[taxid] for taxid in lineage]
+
         return lin
 
     def get_lineage_without_tree(self,taxid,ncbi_tree):
@@ -273,6 +272,9 @@ class Taxonomic_assignment(object):
         return lin
 
     def coverage_file(self,coverage_file):
+
+        "Handles coverage file and seperates genomes into two classes almost and fully covered"
+
         covered_ = []
         almost_full = []
         with open(coverage_file,"r") as f:
@@ -305,6 +307,8 @@ class Taxonomic_assignment(object):
         return dict_of_assigned,almost_full
 
     def lca_assignment_just_taxids(self):
+
+        "LCA assignmnet workflow"
 
         cov,almost_full =  self.coverage_file("cov_list.txt")
 
@@ -347,22 +351,12 @@ class Taxonomic_assignment(object):
 
         return unique,almost_full
 
-    #Ta funkcja do wymianki !!! - BUG!!
     def transform_read_name(self,readname):
 
         if len(readname.split(" ")) > 1:
             #SRA Reads
             readname = readname.replace(" ","_")
             return readname
-#            split_1 = readname.split(".")
-#
-#            if len(split_1) > 1:
-#
-#                split_2 = split_1[2].split(" ")
-#                return  "%s.%s.%s" % (split_1[0],split_1[1],split_2[0])
-#            else:
-#                split_2 = readname.split(" ")
-#                return  "%s.%s" % (split_2[0],split_2[1])
         else:
             return readname
 
@@ -381,9 +375,6 @@ class Taxonomic_assignment(object):
                 if read.is_unmapped:
                     pass
                 else:
-
-                    #here we have to check -- !
-                    #if read.qname == "ERR538178.142953062.1 H3:C2FGHACXX:1:2310:4346:40753":
 
                     new_read_name =  self.transform_read_name(read.qname)
 
@@ -522,7 +513,9 @@ class Taxonomic_assignment(object):
         return num_lines
 
     def open_lca_file(self):
+
         "Prepares file for lca graph"
+
         count = self.get_count()
         assignment_file = glob.glob("*_assignment.txt")
         taxa_count_dict = {}
@@ -546,6 +539,8 @@ class Taxonomic_assignment(object):
             return taxa_count_dict,longest
 
     def lca_graph(self):
+
+        "Creates graph representation of taxonomical assigned reads"
 
         G = nx.DiGraph()
 
@@ -590,8 +585,7 @@ class Taxonomic_assignment(object):
         print "Species treshold was set on "+str(species_treshold)
         #node pruning
         to_del = []
-        #Tu moze jest zla konstrukcja
-        #Moze byc - rozpocznij od ostatniego
+
         for node in self._lca_graph.nodes():
             if self._lca_graph.nodes[str(node)]['count'] < species_treshold:
                 to_del.append(node)
@@ -608,7 +602,7 @@ class Taxonomic_assignment(object):
                     pre = list(G_tmp.predecessors(node[0]))[0]
                     if pre in dict_ltu:
                          old = G.nodes[pre]['ltu_genomes']
-                         merged = merge_two_dicts(old, G.nodes[node[0]]["ltu_genomes"])
+                         merged = self.merge_two_dicts(old, G.nodes[node[0]]["ltu_genomes"])
                          G.nodes[pre]["ltu_genomes"] = merged
                     else:
                         G.nodes[pre]["ltu_genomes"] =  G_tmp.nodes[node[0]]["ltu_genomes"]
