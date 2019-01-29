@@ -633,12 +633,19 @@ class Taxonomic_assignment(object):
                 if node[0] in to_del:
 
                     pre = list(G_tmp.predecessors(node[0]))[0]
+
                     if pre in dict_ltu:
+
                          old = G.nodes[pre]['ltu_genomes']
+
                          merged = self.merge_two_dicts(old, G.nodes[node[0]]["ltu_genomes"])
+
                          G.nodes[pre]["ltu_genomes"] = merged
+
                     else:
+
                         G.nodes[pre]["ltu_genomes"] =  G_tmp.nodes[node[0]]["ltu_genomes"]
+
         G.remove_nodes_from(to_del)
 
         return G
@@ -672,13 +679,14 @@ class Taxonomic_assignment(object):
         good_taxa  = {}
         empirical_treshold = self.empirical_coverage_to_NCBI()
         avg_coverage = self.mean_coverage_to_NCBI()
+        relaxation_parameter = 1.0
         for node in taxonomic_assignment_graph.nodes():
 
             if taxonomic_assignment_graph.degree[node] == 1 and node != "root":
 
                 try:
                     ltu_sum = sum([float(self.absolute_coverage_loaded[x]) for x in taxonomic_assignment_graph.nodes[node]['ltu_genomes'].keys()])
-                    avg_empirical_treshold = numpy.mean([float(empirical_treshold[x]) for x in taxonomic_assignment_graph.nodes[node]['ltu_genomes'].keys()])
+                    avg_empirical_treshold = relaxation_parameter *  numpy.mean([float(empirical_treshold[x]) for x in taxonomic_assignment_graph.nodes[node]['ltu_genomes'].keys()])
                     if ltu_sum > avg_empirical_treshold:
                         good_taxa[node] = ltu_sum
                 except:
@@ -749,16 +757,48 @@ class Taxonomic_assignment(object):
         probable_taxa = self.ltu_empirical_treshold_comparsion().keys()
         average_coverage = self.mean_coverage_to_NCBI()
         ltu_after_min_support = []
+
         for node in self.analyzed_graf.nodes():
 
             if self.analyzed_graf.degree[node] == 1 and node != "root" and node in probable_taxa:
-                ltu_after_min_support.append((nx.shortest_path(self.analyzed_graf, "root", target=node),self.analyzed_graf.nodes[node]['count'],average_coverage[node]))
+                try:
+                    keys_for_average = self.analyzed_graf.nodes[node]['ltu_genomes'].keys()
+                    avg_sum = sum(list([average_coverage[key] for key in keys_for_average]))
+                    ltu_after_min_support.append((nx.shortest_path(self.analyzed_graf, "root", target=node),self.analyzed_graf.nodes[node]['count'],avg_sum))
+                except TypeError:
+                    print "To ten error "+ node
+
         return ltu_after_min_support
 
     def pandas_data_frame_species_level(self):
         _species_level = self.species_level()
         df = pd.DataFrame(_species_level.items(),columns=['Taxon', 'Counts'])
         df.to_csv(self._sample_name+"_species_level_table.csv")
+
+    def krona_prunned_count_preparing(self,project_name):
+
+        catched_taxa = self.ltu_catch_prunned()
+
+        with open(project_name+"_average_coverage_krona.txt","w") as f:
+            for taxa in catched_taxa:
+                tax_path = "\t".join(taxa[0][2:])
+                f.write(str(taxa[1])+"\t"+tax_path+"\n")
+
+        cmd = "ktImportText %s -o %s" % (project_name+"_prunned_count_krona.txt",project_name+"_krona.html")
+        subprocess.check_call(cmd,shell=True)
+
+
+    def krona_prunned_avg_coverage(self, project_name):
+
+        catched_taxa = self.ltu_catch_prunned()
+        with open(project_name+"_average_coverage_krona.txt","w") as f:
+            for taxa in catched_taxa:
+                tax_path = "\t".join(taxa[0][2:])
+                f.write(str(taxa[2])+"\t"+tax_path+"\n")
+
+        cmd = "ktImportText %s -o %s" % (project_name+"_average_coverage_krona.txt",project_name+"_krona.html")
+        subprocess.check_call(cmd,shell=True)
+
 
     def krona_file_preparing(self,project_name):
 
@@ -771,8 +811,7 @@ class Taxonomic_assignment(object):
                 tax_path = "\t".join(taxa[0][2:])
                 f.write(str(taxa[1])+"\t"+tax_path+"\n")
         #Tu cos by sie przydalo - settings
-        cmd = "%sktImportText %s -o %s" % (self.settings,project_name+"_krona.txt",project_name+"_krona.html")
-
+        cmd = "ktImportText %s -o %s" % (project_name+"_krona.txt",project_name+"_krona.html")
         subprocess.check_call(cmd,shell=True)
 
 class Taxonomic_assignment_Runner:
@@ -827,6 +866,8 @@ class Taxonomic_assignment_Runner:
         lca_postprocess = Taxonomic_assignment(self.project_name,self.lca_treshold,self.seqidmap,self.sam_type,self.input,self.settings,avg_coverage)
         lca_postprocess.pandas_data_frame_species_level()
         lca_postprocess.krona_file_preparing(self.project_name)
+        lca_postprocess.krona_prunned_count_preparing(self.project_name)
+        lca_postprocess.krona_prunned_avg_coverage(self.project_name)
         print lca_postprocess.ltu_every_level()
         print lca_postprocess.ltu_catch_prunned()
         os.chdir(starting_dir)

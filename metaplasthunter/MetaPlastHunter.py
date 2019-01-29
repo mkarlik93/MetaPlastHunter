@@ -151,8 +151,6 @@ This sofware was written by %s.
 """ % (__version__,__author__)
 
     epilog = """
-
-
 """
 
     parser = argparse.ArgumentParser(
