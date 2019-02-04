@@ -1,7 +1,0 @@
-numpy
-scipy
-networkx
-ete3
-pandas
-matplotlib
-pysam

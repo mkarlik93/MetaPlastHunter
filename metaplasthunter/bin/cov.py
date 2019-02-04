@@ -317,6 +317,5 @@ class Coverage_utillities:
                     SeqIO.write(record,record.id+".fa","fasta")
                     treshold = self.run_MetaPlastHunter(record.id)
                     f.write("%s\t%s\n" % (old_rec, treshold))
-
         else:
             logger.info("Empiricial treshold file has been added correctly")

@@ -29,17 +29,24 @@ __status__ = 'Development'
 
 import logging
 import argparse
-logger = logging.getLogger("MetaPlastHunter")
-logging.basicConfig(level=logging.INFO)
-import argparse
+import os
+import sys
 from time import gmtime, strftime
+import multiprocessing as mp
+
+
+
 from bin.external import Mapping_runner, SAM2coverage, RapidRunner
 from bin.taxonomic_assignment_v_1 import Taxonomic_assignment_Runner
 from bin.settings import Settings_loader_yaml
 from bin.cov import Coverage_utillities
-import multiprocessing as mp
-import os
-import sys
+
+
+
+
+#logging.basicConfig(level=debug[args.verbosity], format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+logger = logging.getLogger("MetaPlastHunter")
+
 
 #TODO - sprawdzanie poprawnosci plikow i kompletnosci
 
@@ -53,7 +60,6 @@ class Run:
     MPH for read classification
 
 
-
     """
 
     def __init__(self,input,input2,output,settings,threads):
@@ -65,6 +71,7 @@ class Run:
         self.input = input
         self.input2 = input2
         self.output = output
+
 
     def assign_taxnomomy_to_SAM(self):
 
@@ -177,6 +184,17 @@ This sofware was written by %s.
 
     start = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
 
+    if os.path.exists(args.in_1) is True:
+        pass
+    else:
+        logger.error("There is no such a file under given path!")
+
+    if os.path.exists(args.in_2) is True and args.in_2 is not None:
+        pass
+
+    else:
+        logger.error("There is no such a file under given path!")
+
 
     process = Run(os.path.abspath(args.in_1),os.path.abspath(args.in_2), args.output, args.settings,args.threads)
 
@@ -202,6 +220,8 @@ This sofware was written by %s.
         sys.exit()
 
     end = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
+
+
     logger.info("Starting time: "+start)
     logger.info("Ending time: "+end)
 
