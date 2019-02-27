@@ -17,9 +17,6 @@
 #                                                                             #
 ###############################################################################
 
-#TODO
-#relative aboudance
-
 
 __author__ = 'Michal Karlicki'
 __copyright__ = 'Copyright 2018'
@@ -37,7 +34,7 @@ import pysam
 import numpy
 import glob
 import itertools
-import sys
+import sys, os
 import logging
 import pandas as pd
 from settings import *
@@ -171,11 +168,17 @@ class Taxonomic_assignment(object):
         self.avg_coverage_dict = avg_coverage_dict
 
     def merge_two_dicts(self, x, y):
+
+        """ Merges two dictionaries """
+
         z = x.copy()   # start with x's keys and values
         z.update(y)    # modifies z with y's keys and values & returns None
         return z
 
     def name2taxid(self,name):
+
+        """ Transforms query name to taxid """
+
         species_name = self._seqid[name.split(" ")[0]]
         return species_name
 
@@ -257,6 +260,9 @@ class Taxonomic_assignment(object):
         return seqid2taxid
 
     def _seqid_inverted(self,_seqid):
+
+        """ Returns inverted dictionary """
+
         inv_map = {v: k for k, v in _seqid.iteritems()}
         return inv_map
 
@@ -272,6 +278,9 @@ class Taxonomic_assignment(object):
         return lin
 
     def get_lineage_without_tree(self,taxid,ncbi_tree):
+
+        """ Returns lineage (based Tncbi) of given taxid """
+
         ncbi = ncbi_tree
         lineage =  ncbi.get_lineage(taxid)
         names = ncbi.get_taxid_translator(lineage)
@@ -644,6 +653,23 @@ class Taxonomic_assignment(object):
         cmd = "ktImportText %s -o %s" % (project_name+"_krona.txt",project_name+"_krona.html")
         subprocess.check_call(cmd,shell=True)
 
+
+class Cleaner:
+
+
+    def __init__ (self,output):
+
+        self.output = output
+
+
+    def clean(self):
+
+        os.remove(self.output+"_de_complex_R1.fastq")
+        os.remove(self.output+"_de_complex_R2.fastq")
+        os.remove(self.output+"_filtered_chloroplasts_reads_R1.fq")
+        os.remove(self.output+"_filtered_chloroplasts_reads_R2.fq")
+
+
 class Taxonomic_assignment_Runner:
 
     def __init__ (self,input,output,settings):
@@ -689,6 +715,10 @@ class Taxonomic_assignment_Runner:
             os.mkdir(dir)
             os.chdir(dir)
 
+        #cleaner instance
+        Cleaner(project_name).clean()
+
+        #coverage instance
         c = Coverage('bincov.txt',project_name+"_chloroplasts.hitstats",self.settings)
         c.getpercentage_cov()
         c.report_cov()
@@ -697,8 +727,8 @@ class Taxonomic_assignment_Runner:
         lca_postprocess.pandas_data_frame_species_level()
         lca_postprocess.krona_file_preparing(self.project_name)
         print lca_postprocess.sam_parse_experimental()
-        #lca_postprocess.krona_prunned_count_preparing(self.project_name)
-        #lca_postprocess.krona_prunned_avg_coverage(self.project_name)
+        lca_postprocess.krona_prunned_count_preparing(self.project_name)
+        lca_postprocess.krona_prunned_avg_coverage(self.project_name)
         print lca_postprocess.ltu_every_level()
         print lca_postprocess.ltu_catch_prunned()
         os.chdir(starting_dir)

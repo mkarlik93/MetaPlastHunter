@@ -34,10 +34,8 @@ import sys
 from time import gmtime, strftime
 import multiprocessing as mp
 
-
-
 from bin.external import Mapping_runner, SAM2coverage, RapidRunner
-from bin.taxonomic_assignment_v_1 import Taxonomic_assignment_Runner
+from bin.taxonomic_assignment import Taxonomic_assignment_Runner
 from bin.settings import Settings_loader_yaml
 from bin.cov import Coverage_utillities
 
@@ -62,7 +60,7 @@ class Run:
 
     """
 
-    def __init__(self,input,input2,output,settings,threads):
+    def __init__(self,input,input2,output,settings,threads,mapping):
 
         self.list_sra = ""
         self.station_name = ""
@@ -71,6 +69,7 @@ class Run:
         self.input = input
         self.input2 = input2
         self.output = output
+        self.mapping = mapping
 
 
     def assign_taxnomomy_to_SAM(self):
@@ -83,22 +82,22 @@ class Run:
         Taxonomic_assignment_Runner(self.input, self.output,self.settings).process()
     #Tests are still needed
 
-    def rapid_taxonomic_assignment(self):
+#    def rapid_taxonomic_assignment(self):
         #Do przerobienia (?)
 
-        logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+#        logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
 #        Settings_loader_yaml(self.settings).yaml_check_settings_file()
-        logger.info("     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
-        RapidRunner(self.input,self.input2,self.output,self.settings).process()
-        logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
-        Taxonomic_assignment_Runner(self.input, self.output,self.settings).process()
+#        logger.info("     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
+#        RapidRunner(self.input,self.input2,self.output,self.settings).process()
+#        logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
+#        Taxonomic_assignment_Runner(self.input, self.output,self.settings).process()
 
     def taxonomic_assigment(self):
         #Ta tez
         logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Settings_loader_yaml(self.settings).yaml_check_settings_file_classification()
         logger.info("     [%s] Mapping and generating SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
-        Mapping_runner(self.input,self.input2,self.output, self.settings).process()
+        Mapping_runner(self.input,self.input2,self.output, self.settings,self.threads,self.mapping).process()
         logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
         Taxonomic_assignment_Runner(self.input,self.output, self.settings).process()
 
@@ -127,8 +126,6 @@ Available workflows:
 
 [--taxonomic_classification/-C] Searching, Classification, Visualization
 
-[--rapid_classification, -Acc] Use it to lunch pipeline with in exact k-mer matching preliminary classification
-
 [--sam_assign, -A]   Sequence alignment file (SAM) classification
 
 [--check]   Check settings and calculate empirical treshold if nessecary
@@ -143,7 +140,7 @@ Facultative arguments:
 threads
 
 If you have any questions, please do not hesitate to contact me
-email address: michal.karlicki@gmail.com
+email address: %s
 
 Please cite:
 
@@ -154,8 +151,8 @@ https://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/bbmap-guide/
 SILVA
 
 
-This sofware was written by %s.
-""" % (__version__,__author__)
+This sofware has been written by %s.
+""" % (__version__,__email__,__author__)
 
     epilog = """
 """
@@ -173,8 +170,8 @@ This sofware was written by %s.
     parser.add_argument('--in_2',nargs='?',type=str, default="")
     parser.add_argument('--output','-O',type=str)
     parser.add_argument('--threads','-T',nargs='?', type=int,default=mp.cpu_count())
+    parser.add_argument('--mapping','-M',nargs='?',type=bool,default=False)
     parser.add_argument('--check',action='store_true')
-
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -196,7 +193,7 @@ This sofware was written by %s.
         logger.error("There is no such a file under given path!")
 
 
-    process = Run(os.path.abspath(args.in_1),os.path.abspath(args.in_2), args.output, args.settings,args.threads)
+    process = Run(os.path.abspath(args.in_1),os.path.abspath(args.in_2), args.output, args.settings,args.threads,args.mapping)
 
     if args.check:
 

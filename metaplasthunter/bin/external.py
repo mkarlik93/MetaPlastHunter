@@ -39,10 +39,9 @@ class BBmap:
     """ This class is bbmap wrapper for mapping, filtering of metagenomic reads.
         Log goes to seperate file called sample_id+log.txt
 
-
      """
 
-    def __init__(self,input, input2, output, settings):
+    def __init__(self,input, input2, output, settings,threads):
 
         """
         Input Parameters
@@ -56,7 +55,6 @@ class BBmap:
         _seqid: dictionary
 
         path: str
-
             Sample name
 
         db: dictionary
@@ -70,13 +68,14 @@ class BBmap:
             Orginal data structure (weighted digraph) which keeps NCBI tree with proposed taxonomic positions (LTU and TTU)
 
         remap_min_identity: graph data stucture
+
             Prunned _lca_graph that keeps only taxonomic positions that have been above the treshold (min support value)
 
-        reads_1:
+        reads_1: fastq file (or SAM file)
 
-        reads_2:
+        reads_2: fastq file
 
-        project_name:
+        project_name: name of the output
 
         """
 
@@ -92,13 +91,14 @@ class BBmap:
         self.project_name = output
         self.reads_1 =  input
         self.reads_2 =  input2
+        self.threads = str(threads)
 
 
     def filtering_conserved_regions(self):
 
-        """ Filters out parts of ribosomal operons """
-        #brakuje odniesienia do liczby rdzeni
-        command="%sbbmap.sh fast=t reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq ref=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best outm1=%s_filtered_mapped_conserved_1.fq outm2=%s_filtered_mapped_conserved_2.fq  scafstats=filter_ribosomal.stats" % (self.path, self.project_name, self.project_name, self.db_silva, self.project_name, self.project_name, self.project_name,self.project_name)
+        """ Filters out parts of ribosomal operons based on mapping strategy """
+
+        command="%sbbmap.sh fast=t reads=-1 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq ref=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq ambiguous=best outm1=%s_filtered_mapped_conserved_1.fq outm2=%s_filtered_mapped_conserved_2.fq  scafstats=filter_ribosomal.stats threads=%s" % (self.path, self.project_name, self.project_name, self.db_silva, self.project_name, self.project_name, self.project_name,self.project_name,self.threads)
         command = command.split(" ")
         process = Popen(command, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
@@ -108,8 +108,8 @@ class BBmap:
     def primary_mapping(self):
 
         """ Maps filtered reads to the reference chloroplast database """
-        #brakuje odniesienia do rdzeni
-        command="%sbbmap.sh minidentity=%s nodisk reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s scafstats=%s_chloroplasts.hitstats out=%s_final_mapped.sam bincov=bincov.txt outm1=%s_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq covbinsize=%s" % (self.path,self.remap_min_identity ,self.project_name, self.project_name, self.db,self.project_name,self.project_name,self.project_name,self.project_name, self.bincov_len)
+
+        command="%sbbmap.sh minidentity=%s nodisk reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s scafstats=%s_chloroplasts.hitstats out=%s_final_mapped.sam bincov=bincov.txt outm1=%s_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq covbinsize=%s threads=%s" % (self.path,self.remap_min_identity ,self.project_name, self.project_name, self.db,self.project_name,self.project_name,self.project_name,self.project_name, self.bincov_len,self.threads)
         command = command.split(" ")
         logger.info("     Running primary mapping")
         process = Popen(command, stdout=PIPE, stderr=PIPE)
@@ -124,7 +124,7 @@ class BBduk:
         a) Function for filtering out low complex metagenomic reads
     """
 
-    def __init__(self,input,input2,output,settings):
+    def __init__(self,input,input2,output,settings,threads):
 
         self.settings = settings
         self.path = Settings_loader_yaml(path=self.settings).yaml_handler()["Software dependencies"]["bbduk.sh"]
@@ -134,10 +134,11 @@ class BBduk:
         self.db_kmers = Settings_loader_yaml(path=self.settings).yaml_handler()["Databases and mapping files"]["kmers"]
         self.minkmerhits = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["minkmerhits"]
         self.kmer_len = Settings_loader_yaml(path=self.settings).yaml_handler()["Preliminary classification"]["kmer_len"]
+        self.silva_compressed = Settings_loader_yaml(path=self.settings).yaml_handler()["Databases and mapping files"]["compressed_Silva"]
+        self.threads = str(threads)
 
         if self.path == "":
             self.checkForBBduk()
-
 
     def checkForBBduk(self):
 
@@ -150,13 +151,25 @@ class BBduk:
             logger.warning("Make sure BBduk is on your system path or set proper path in settings.txt")
             sys.exit()
 
+    def filtering_conserved_regions_based_on_kmers(self):
+
+        """ Filters out parts of ribosomal operons based on exact kmer matching strategy """
+
+        command = "%sbbduk.sh minkmerhits=1 k=31 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq ref=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq  outm1=%s_filtered_mapped_conserved_1.fq outm2=%s_filtered_mapped_conserved_2.fq threads=%s" % (self.path, self.project_name, self.project_name, self.silva_compressed, self.project_name, self.project_name, self.project_name,self.project_name,self.threads)
+        splited_cmd = command.split(" ")
+
+        process = Popen(splited_cmd,stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+
+        return "Filtration conserved reads using kmer catching method"+"\n"+stderr
+
     def filtering_without_pre_classif(self):
 
         """ Filters out low complexity reads """
 
         path = self.path
         logger.info("     Running  filtering" )
-        command="%sbbduk.sh in1=%s in2=%s out1=%s_de_complex_R1.fastq out2=%s_de_complex_R2.fastq  outm=%s_repeat_regions_R1.fq outm2=%s_repeat_regions_R2.fq entropy=0.8 overwrite=true" % (path, self.reads_1, self.reads_2, self.project_name, self.project_name, self.project_name, self.project_name)
+        command="%sbbduk.sh in1=%s in2=%s out1=%s_de_complex_R1.fastq out2=%s_de_complex_R2.fastq  outm=%s_repeat_regions_R1.fq outm2=%s_repeat_regions_R2.fq entropy=0.8 overwrite=true threads=%s" % (path, self.reads_1, self.reads_2, self.project_name, self.project_name, self.project_name, self.project_name,str(self.threads))
         command = command.split(" ")
         process = Popen(command, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
@@ -168,7 +181,7 @@ class BBduk:
 
         path = self.path
         logger.info("     Running  filtering" )
-        command="%sbbduk.sh in1=%s_classif_R1.fastq in2=%s_classif_R2.fastq out1=%s_de_complex_R1.fastq out2=%s_de_complex_R2.fastq  outm=%s_repeat_regions_R1.fq outm2=%s_repeat_regions_R2.fq entropy=0.8 overwrite=true" % (path, self.project_name, self.project_name, self.project_name, self.project_name, self.project_name, self.project_name)
+        command="%sbbduk.sh in1=%s_classif_R1.fastq in2=%s_classif_R2.fastq out1=%s_de_complex_R1.fastq out2=%s_de_complex_R2.fastq  outm=%s_repeat_regions_R1.fq outm2=%s_repeat_regions_R2.fq entropy=0.8 overwrite=true threads=%s" % (path, self.project_name, self.project_name, self.project_name, self.project_name, self.project_name, self.project_name,str(self.threads))
         command = command.split(" ")
         process = Popen(command, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
@@ -181,19 +194,14 @@ class BBduk:
         Module for speeding up preliminary classification. It needs file specially prepared by kcompress
         from bbtools package
 
-         """
+        """
         path = self.path
         logger.info("     Running  pre classification" )
-        command="%sbbduk.sh  in1=%s in2=%s outm1=%s_classif_R1.fastq  outm2=%s_classif_R2.fastq minkmerhits=%s k=%s ref=%s" % (self.path,self.reads_1, self.reads_2,self.project_name,self.project_name,self.minkmerhits,self.kmer_len,self.db_kmers)
-
-#        command = command.split(" ")
-
-#        process = Popen(command, stdout=PIPE, stderr=PIPE)
-
-#        stdout, stderr = process.communicate()
-        os.system(command)
-
-#        return "Pre classification"+"\n"+stderr
+        command="%sbbduk.sh  in1=%s in2=%s outm1=%s_classif_R1.fastq  outm2=%s_classif_R2.fastq minkmerhits=%s k=%s ref=%s threads=%s" % (self.path,self.reads_1, self.reads_2,self.project_name,self.project_name,self.minkmerhits,self.kmer_len,self.db_kmers,self.threads)
+        command = command.split(" ")
+        process = Popen(command,shell=False,stdout=PIPE)
+        stdout, stderr = process.communicate()
+        return "Pre classification"+"\n"+stdout
 
 def log_writing(list,sample_id):
 
@@ -245,19 +253,21 @@ class Pileup:
 
 class Mapping_runner:
 
-    def __init__(self,input,input2,output, settings):
+    def __init__(self,input,input2,output, settings,threads,mapping):
 
         self.settings = settings
         self.input  =  input
         self.input2 = input2
         self.output = output
+        self.threads = threads
+        self.mapping = mapping
 
     def process(self):
 
         starting_dir = os.getcwd()
 
-        bbduk = BBduk(self.input,self.input2,self.output,self.settings)
-        bbmap = BBmap(self.input,self.input2,self.output,self.settings)
+        bbduk = BBduk(self.input,self.input2,self.output,self.settings,self.threads)
+        bbmap = BBmap(self.input,self.input2,self.output,self.settings,self.threads)
 
         project_name = self.output
 
@@ -276,11 +286,22 @@ class Mapping_runner:
             os.chdir(dir)
         bblog = []
         logger.info("Procesing "+project_name)
-        bblog.append(bbduk.filtering_without_pre_classif())
-        bblog.append(bbmap.filtering_conserved_regions())
-        bblog.append(bbmap.primary_mapping())
-        log_writing(bblog,project_name)
-        os.chdir(starting_dir)
+
+        if self.mapping is True:
+
+            bblog.append(bbduk.filtering_without_pre_classif())
+            bblog.append(bbmap.filtering_conserved_regions())
+            bblog.append(bbmap.primary_mapping())
+            log_writing(bblog,project_name)
+            os.chdir(starting_dir)
+
+        else:
+
+            bblog.append(bbduk.filtering_without_pre_classif())
+            bblog.append(bbduk.filtering_conserved_regions_based_on_kmers())
+            bblog.append(bbmap.primary_mapping())
+            log_writing(bblog,project_name)
+            os.chdir(starting_dir)
 
 
 class RapidRunner:
@@ -342,7 +363,6 @@ class SAM2coverage:
         starting_dir = os.getcwd()
 
         pileup = Pileup(self.input,self.settings)
-
         project_name = self.output
         grlog = []
         logger.info("Procesing "+project_name)
@@ -354,6 +374,7 @@ class SAM2coverage:
             sys.exit()
 
         else:
+
             os.mkdir(dir)
             os.chdir(dir)
 

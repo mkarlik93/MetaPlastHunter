@@ -1,0 +1,45 @@
+#################################
+##     MetaPlastHunter         ##
+##      settings file          ##
+## Please add full paths below ##
+#################################
+
+###### Software ######
+
+Software dependencies:
+
+  bbduk.sh: /opt/bbmap/
+  bbmap.sh: /opt/bbmap/
+  pileup.sh: /opt/bbmap/
+  randomreads.sh: /opt/bbmap/
+
+#### Databases and mapping files ######
+
+Databases and mapping files:
+
+  bbmap_base: /home/karlicki/reference_database_no_masked_1209_new.fasta
+  seqid2taxid.map: /home/karlicki/seqid2taxid.map
+  silva: /home/karlicki/ribosomal_db.fa
+  compressed_Silva: /home/karlicki/compressed_ribosomal_db.fa.gz
+  kmers: /home/karlicki/comp_19_3.fa
+  empirical_treshold: /home/karlicki/metaplasthunter_empirical_tresholds.txt
+
+#### Params ####
+
+Params:
+
+  min_number_of_reads: 50
+  percentile_treshold: 1
+  min_bin_coverage: 0
+  bincov4_report: 0
+  lca_treshold: 0.00001
+  static_coverage_treshold[%]: 1
+  min_identity: 0.7
+  bincov_len: 100
+
+### Kmer pre-classification ###
+
+Preliminary classification:
+
+  minkmerhits: 1
+  kmer_len: 31

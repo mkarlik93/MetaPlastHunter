@@ -96,6 +96,7 @@ class Coverage:
     def average_coverage(self):
 
         """ Calculates average depth of coverage """
+
         bin_cov_dict = self.loaded_bin_cov
         dict_of_genomes = {}
         for reference_genome in  bin_cov_dict:
@@ -253,6 +254,9 @@ class Coverage_utillities:
         os.system(command_3)
 
     def run_MetaPlastHunter(self,genome_to_analyze):
+
+        """ Wrapper of MetaPlastHunter """
+
         logger.info("   Creating artificial reads" )
         self.create_reads(genome_to_analyze)
         logger.info("   Estimating coverage treshold" )
