@@ -8,7 +8,7 @@ MetaPlastHunter will search the provided sequences (Fastq) or sequence alignment
 
 ### Manual
 
-A manual is available [here](https://github.com/mkarlik93/MetaPlastHunter/wiki) here on GitHub.
+A manual is available [here](https://github.com/mkarlik93/MetaPlastHunter/wiki) on GitHub Wiki.
 
 ### License
 
