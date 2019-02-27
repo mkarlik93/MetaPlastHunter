@@ -13,3 +13,6 @@ A manual is available [here] (https://github.com/mkarlik93/MetaPlastHunter/wiki)
 ### License
 
 MetaPlastHunter is licensed under the GNU GPL v3+. See LICENSE.txt for further details. MPH makes use of ribosomal operon sequences sourced from the SILVA database, which employs a dual licensing model. See SILVA.LICENCE.txt for further details.
+
+
+Michał Karlicki& Anna Karnkowska
