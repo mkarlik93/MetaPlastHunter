@@ -182,15 +182,19 @@ This sofware has been written by %s.
     start = strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
 
     if os.path.exists(args.in_1) is True:
+
         pass
+
     else:
+
         logger.error("There is no such a file under given path!")
+
 
     if os.path.exists(args.in_2) is True and args.in_2 is not None:
         pass
 
-    else:
-        logger.error("There is no such a file under given path!")
+#    else:
+#        logger.error("There is no such a file under given path!")
 
 
     process = Run(os.path.abspath(args.in_1),os.path.abspath(args.in_2), args.output, args.settings,args.threads,args.mapping)

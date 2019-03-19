@@ -155,7 +155,7 @@ class BBduk:
 
         """ Filters out parts of ribosomal operons based on exact kmer matching strategy """
 
-        command = "%sbbduk.sh minkmerhits=1 k=31 in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq ref=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq  outm1=%s_filtered_mapped_conserved_1.fq outm2=%s_filtered_mapped_conserved_2.fq threads=%s" % (self.path, self.project_name, self.project_name, self.silva_compressed, self.project_name, self.project_name, self.project_name,self.project_name,self.threads)
+        command = "%sbbduk.sh minkmerhits=%s k=%s in1=%s_de_complex_R1.fastq in2=%s_de_complex_R2.fastq ref=%s outu1=%s_filtered_chloroplasts_reads_R1.fq outu2=%s_filtered_chloroplasts_reads_R2.fq  outm1=%s_filtered_mapped_conserved_1.fq outm2=%s_filtered_mapped_conserved_2.fq threads=%s" % (self.path,self.minkmerhits,self.kmer_len,self.project_name, self.project_name, self.silva_compressed, self.project_name, self.project_name, self.project_name,self.project_name,self.threads)
         splited_cmd = command.split(" ")
 
         process = Popen(splited_cmd,stdout=PIPE, stderr=PIPE)

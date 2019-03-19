@@ -112,6 +112,8 @@ class Coverage:
         dict_of_genomes = {}
         dict_gen_con = {}
         dict = self.loaded_bin_cov
+
+
         for i in dict:
             name = i
             record = dict[i]
@@ -123,6 +125,11 @@ class Coverage:
                 dict_gen_con[covered_part] = name
 
         percentages = sorted(dict_gen_con.keys())
+
+        if len(percentages) == 0:
+            logger.error("There was no pre classified plastids")
+            sys.exit()
+
         sum_percentages = sum(percentages)
         percentile_value =  np.percentile(percentages,percentile_tresh)
         percentages_ok = [i for i in percentages if i > percentile_value]

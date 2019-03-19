@@ -44,10 +44,7 @@ from subprocess import Popen, PIPE
 logger = logging.getLogger("src.taxonomic_assignment")
 logging.basicConfig(level=logging.INFO)
 
-
-# Nastepenie relative abundance to bedzie pokrycie calkowite * pokrycie srednie -> oczywiscie sumujace sie do danego taksonu
-
-def sam_get_min_identity_of_covered_genome(target_genome):
+def sam_get_min_identity_of_covered_genome(target_species_genome):
 
     """ Returns identity level of reads of covered genomes at species level min (95% ?????) """
 
@@ -62,14 +59,17 @@ def sam_get_min_identity_of_covered_genome(target_genome):
                 pass
 
             else:
+
                 if read.is_secondary:
                     pass
 
                 else:
+
                     if read.reference_name == target_genome:
                         read_test = read
                         choosed_reads.append(float(read.tags[-1][1]))
         except:
+
             pass
 
     return numpy.mean(choosed_reads)
@@ -452,7 +452,7 @@ class Taxonomic_assignment(object):
         #dict with read counts
         assigned_reads = dict([(self._seqid[reference_genome],tmp_dict_of_reads[reference_genome]) for reference_genome in tmp_dict_of_reads])
         assigned_reads = dict((k, v) for k, v in assigned_reads.items() if v > 0)
-
+#
 
         for taxa in the_cdr_data_structure:
 
@@ -462,6 +462,11 @@ class Taxonomic_assignment(object):
         taxa_count_dict = dict((str(";".join(self.get_lineage(taxa))),sum(v.values())) for taxa, v in the_cdr_data_structure.items())
 
         dict_ltu = self.dict_translator_taxid_name(the_cdr_data_structure)
+
+        #Checking reads count
+
+        if count == 0:
+            sys.exit("There was no preclassified plastid reads!")
 
         return taxa_count_dict, dict_ltu, count
 
@@ -557,6 +562,9 @@ class Taxonomic_assignment(object):
                 species[node] = (self.analyzed_graf.nodes[node]['count'],self.analyzed_graf.nodes[node]['ltu_genomes'])
         return species
 
+    def is_LTU(node):
+
+        pass
 
     def ltu_empirical_treshold_comparsion(self):
 
@@ -564,19 +572,34 @@ class Taxonomic_assignment(object):
         good_taxa  = {}
         empirical_treshold = self.empirical_coverage_to_NCBI()
         avg_coverage = self.mean_coverage_to_NCBI()
-        relaxation_parameter = 1.0
+        relaxation_parameter = 0.9
+
         for node in taxonomic_assignment_graph.nodes():
 
-            if taxonomic_assignment_graph.degree[node] == 1 and node != "root":
+            if 'ltu_genomes' in taxonomic_assignment_graph.nodes[node]:
 
-                try:
-                    ltu_sum = sum([float(self.absolute_coverage_loaded[x]) for x in taxonomic_assignment_graph.nodes[node]['ltu_genomes'].keys()])
-                    avg_empirical_treshold = relaxation_parameter *  numpy.mean([float(empirical_treshold[x]) for x in taxonomic_assignment_graph.nodes[node]['ltu_genomes'].keys()])
-                    if ltu_sum > avg_empirical_treshold:
-                        good_taxa[node] = ltu_sum
-                except:
-                    pass
+                if type(taxonomic_assignment_graph.nodes[node]['ltu_genomes']) is dict:
 
+                    try:
+
+                        ltu_sum = sum([float(self.absolute_coverage_loaded[x]) for x in taxonomic_assignment_graph.nodes[node]['ltu_genomes'].keys()])
+
+
+                        avg_empirical_treshold = relaxation_parameter *  numpy.mean([float(empirical_treshold[x]) for x in taxonomic_assignment_graph.nodes[node]['ltu_genomes'].keys()])
+
+                        if ltu_sum >= avg_empirical_treshold:
+                            good_taxa[node] = ltu_sum
+
+                        else:
+                            pass
+                    except:
+
+                        print "Error  " + taxonomic_assignment_graph.degree[node]
+
+            else:
+                print taxonomic_assignment_graph.nodes[node]
+
+        print good_taxa
         return good_taxa
 
     def ltu_catch(self):
@@ -597,13 +620,16 @@ class Taxonomic_assignment(object):
 
         for node in self.analyzed_graf.nodes():
 
-            if self.analyzed_graf.degree[node] == 1 and node != "root" and node in probable_taxa:
-                try:
-                    keys_for_average = self.analyzed_graf.nodes[node]['ltu_genomes'].keys()
-                    avg_sum = sum(list([average_coverage[key] for key in keys_for_average]))
-                    ltu_after_min_support.append((nx.shortest_path(self.analyzed_graf, "root", target=node),self.analyzed_graf.nodes[node]['count'],avg_sum))
-                except TypeError:
-                    print "To ten error "+ node
+            if 'ltu_genomes' in self.analyzed_graf.nodes[node]:
+
+                if type(self.analyzed_graf.nodes[node]['ltu_genomes']) is dict and node in probable_taxa:
+
+                    try:
+                        keys_for_average = self.analyzed_graf.nodes[node]['ltu_genomes'].keys()
+                        avg_sum = sum(list([average_coverage[key] for key in keys_for_average]))
+                        ltu_after_min_support.append((nx.shortest_path(self.analyzed_graf, "root", target=node),self.analyzed_graf.nodes[node]['count'],avg_sum))
+                    except TypeError:
+                        print "To ten error "+ node
 
         return ltu_after_min_support
 
@@ -634,7 +660,7 @@ class Taxonomic_assignment(object):
                 tax_path = "\t".join(taxa[0][2:])
                 f.write(str(taxa[2])+"\t"+tax_path+"\n")
 
-        cmd = "ktImportText %s -o %s" % (project_name+"_average_coverage_krona.txt",project_name+"average_coverage_krona.html")
+        cmd = "ktImportText %s -o %s" % (project_name+"_average_coverage_krona.txt",project_name+"_average_coverage_krona.html")
 
         subprocess.check_call(cmd,shell=True)
 
@@ -668,7 +694,6 @@ class Cleaner:
         os.remove(self.output+"_de_complex_R2.fastq")
         os.remove(self.output+"_filtered_chloroplasts_reads_R1.fq")
         os.remove(self.output+"_filtered_chloroplasts_reads_R2.fq")
-
 
 class Taxonomic_assignment_Runner:
 
@@ -716,7 +741,6 @@ class Taxonomic_assignment_Runner:
             os.chdir(dir)
 
         #cleaner instance
-        Cleaner(project_name).clean()
 
         #coverage instance
         c = Coverage('bincov.txt',project_name+"_chloroplasts.hitstats",self.settings)
@@ -726,9 +750,14 @@ class Taxonomic_assignment_Runner:
         lca_postprocess = Taxonomic_assignment(self.project_name,self.lca_treshold,self.seqidmap,self.sam_type,self.input,self.settings,avg_coverage)
         lca_postprocess.pandas_data_frame_species_level()
         lca_postprocess.krona_file_preparing(self.project_name)
-        print lca_postprocess.sam_parse_experimental()
+#        print lca_postprocess.sam_parse_experimental()
         lca_postprocess.krona_prunned_count_preparing(self.project_name)
         lca_postprocess.krona_prunned_avg_coverage(self.project_name)
-        print lca_postprocess.ltu_every_level()
-        print lca_postprocess.ltu_catch_prunned()
+#        print lca_postprocess.ltu_every_level()
+#        print lca_postprocess.ltu_catch_prunned()
+
+        if self.sam_type == False:
+
+            Cleaner(project_name).clean()
+
         os.chdir(starting_dir)
