@@ -33,14 +33,10 @@ import os
 import sys
 from time import gmtime, strftime
 import multiprocessing as mp
-
-from bin.external import Mapping_runner, SAM2coverage, RapidRunner
+from bin.external import Mapping_runner, SAM2coverage
 from bin.taxonomic_assignment import Taxonomic_assignment_Runner
 from bin.settings import Settings_loader_yaml
-from bin.cov import Coverage_utillities
-
-
-
+from bin.cov import Coverage_utilities
 
 #logging.basicConfig(level=debug[args.verbosity], format='%(asctime)s %(levelname)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 logger = logging.getLogger("MetaPlastHunter")
@@ -80,17 +76,6 @@ class Run:
         SAM2coverage(self.input, self.output, self.settings).process()
         logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
         Taxonomic_assignment_Runner(self.input, self.output,self.settings).process()
-    #Tests are still needed
-
-#    def rapid_taxonomic_assignment(self):
-        #Do przerobienia (?)
-
-#        logger.info( "     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
-#        Settings_loader_yaml(self.settings).yaml_check_settings_file()
-#        logger.info("     [%s] BBtools postprocessing" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
-#        RapidRunner(self.input,self.input2,self.output,self.settings).process()
-#        logger.info("     [%s] Taxonomic assignment based on SAM file" % (strftime("%a, %d %b %Y %H:%M:%S +2", gmtime())))
-#        Taxonomic_assignment_Runner(self.input, self.output,self.settings).process()
 
     def taxonomic_assigment(self):
         #Ta tez
@@ -105,8 +90,8 @@ class Run:
 
         logger.info("     [%s] Testing settings file " % (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
         Settings_loader_yaml(self.settings).yaml_check_settings_file_classification()
-        logger.info("      [%s] Checking empirical treshold file and update if nessecary" %  (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
-        Coverage_utillities(self.settings).add_empirical_treshold()
+        logger.info("      [%s] Checking empirical threshold file and update if nessecary" %  (strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())))
+        Coverage_utilities(self.settings).add_empirical_threshold()
 
 def main():
 
@@ -128,7 +113,7 @@ Available workflows:
 
 [--sam_assign, -A]   Sequence alignment file (SAM) classification
 
-[--check]   Check settings and calculate empirical treshold if nessecary
+[--check]   Check settings and calculate empirical threshold if nessecary
 
 
 Obligatory arguments:
@@ -189,13 +174,15 @@ This sofware has been written by %s.
 
         logger.error("There is no such a file under given path!")
 
-
     if os.path.exists(args.in_2) is True and args.in_2 is not None:
         pass
 
+    if args.in_1 == args.in_2:
+        logger.error("input__1 and input__2 seems to be indentical")
+        sys.exit()
+
 #    else:
 #        logger.error("There is no such a file under given path!")
-
 
     process = Run(os.path.abspath(args.in_1),os.path.abspath(args.in_2), args.output, args.settings,args.threads,args.mapping)
 

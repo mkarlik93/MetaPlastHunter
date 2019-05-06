@@ -183,7 +183,7 @@ class Settings_loader_yaml:
 
     def check_params_classification(self,params):
 
-        classification_list = ["min_identity","static_coverage_treshold[%]","lca_treshold","min_bin_coverage","bincov4_report"]
+        classification_list = ["min_identity","static_coverage_threshold[%]","lca_threshold","min_bin_coverage","bincov4_report"]
         for key in params:
             if key in classification_list:
                 if params[key] == None:

@@ -69,7 +69,7 @@ class BBmap:
 
         remap_min_identity: graph data stucture
 
-            Prunned _lca_graph that keeps only taxonomic positions that have been above the treshold (min support value)
+            Prunned _lca_graph that keeps only taxonomic positions that have been above the threshold (min support value)
 
         reads_1: fastq file (or SAM file)
 
@@ -93,7 +93,6 @@ class BBmap:
         self.reads_2 =  input2
         self.threads = str(threads)
 
-
     def filtering_conserved_regions(self):
 
         """ Filters out parts of ribosomal operons based on mapping strategy """
@@ -104,12 +103,11 @@ class BBmap:
         stdout, stderr = process.communicate()
         return stderr
 
-
     def primary_mapping(self):
 
         """ Maps filtered reads to the reference chloroplast database """
 
-        command="%sbbmap.sh minidentity=%s nodisk reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s scafstats=%s_chloroplasts.hitstats out=%s_final_mapped.sam bincov=bincov.txt outm1=%s_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq covbinsize=%s threads=%s" % (self.path,self.remap_min_identity ,self.project_name, self.project_name, self.db,self.project_name,self.project_name,self.project_name,self.project_name, self.bincov_len,self.threads)
+        command="%sbbmap.sh ambiguous=best minidentity=%s nodisk reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s scafstats=%s_chloroplasts.hitstats out=%s_final_mapped.sam bincov=bincov.txt outm1=%s_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq covbinsize=%s threads=%s" % (self.path,self.remap_min_identity ,self.project_name, self.project_name, self.db,self.project_name,self.project_name,self.project_name,self.project_name, self.bincov_len,self.threads)
         command = command.split(" ")
         logger.info("     Running primary mapping")
         process = Popen(command, stdout=PIPE, stderr=PIPE)
@@ -243,10 +241,8 @@ class Pileup:
 
     def prepare_cov_file(self):
 
-
         command= "%spileup.sh in=%s bincov=bincov.txt binsize=%s" % (self.path, self.input, str(self.bincov_len))
         command = command.split(" ")
-
         process = Popen(command, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
         return stderr
