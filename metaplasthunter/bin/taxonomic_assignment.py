@@ -27,20 +27,17 @@ __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
-from ete3 import Tree
 from ete3 import  NCBITaxa
 import networkx as nx
 import pysam
 import numpy
 import glob
 import itertools
-import sys, os
-import logging
+
 import pandas as pd
 from settings import *
 from cov import Coverage
 from cov import Coverage_utilities
-from subprocess import Popen, PIPE
 
 logger = logging.getLogger("src.taxonomic_assignment")
 logging.basicConfig(level=logging.INFO)
@@ -367,10 +364,10 @@ class Taxonomic_assignment(object):
 
             return dict_of_assigned,almost_full
 
-    def _LTU_calc_with_taxa_name(self):
+    def _ltu_calc_with_taxa_name(self):
 
         unique = {}
-        lca_assign,almost_full = lca_assignment(self._seqid)
+        lca_assign, almost_full = lca_assignment(self._seqid)
 
         for key in lca_assign:
 
@@ -379,7 +376,7 @@ class Taxonomic_assignment(object):
             else:
                 unique[lca_assign[key]].append(key)
 
-        return unique,almost_full
+        return unique, almost_full
 
     def transform_read_name(self,readname):
 
@@ -423,6 +420,7 @@ class Taxonomic_assignment(object):
             except ValueError:
                 pass
         #dict with read counts
+
         assigned_reads = dict([(self._seqid[reference_genome],tmp_dict_of_reads[reference_genome]) for reference_genome in tmp_dict_of_reads])
         assigned_reads = dict((k, v) for k, v in assigned_reads.items() if v > 0)
 
@@ -572,7 +570,7 @@ class Taxonomic_assignment(object):
             else:
                 print taxonomic_assignment_graph.nodes[node]
 
-        print good_taxa
+
         return good_taxa
 
     def ltu_catch(self):
@@ -722,11 +720,12 @@ class Taxonomic_assignment_Runner:
         lca_postprocess = Taxonomic_assignment(self.project_name,self.lca_threshold,self.seqidmap,self.sam_type,self.input,self.settings,avg_coverage)
         lca_postprocess.pandas_data_frame_species_level()
         lca_postprocess.krona_file_preparing(self.project_name)
-#        print lca_postprocess.sam_parse_experimental()
+
+
         lca_postprocess.krona_prunned_count_preparing(self.project_name)
+
         lca_postprocess.krona_prunned_avg_coverage(self.project_name)
-#        print lca_postprocess.ltu_every_level()
-#        print lca_postprocess.ltu_catch_prunned()
+
 
         if self.sam_type == False:
 

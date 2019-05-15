@@ -25,6 +25,7 @@ if __name__ == '__main__':
             'Topic :: Scientific/Engineering :: Bio-Informatics'
         ],
         install_requires=[
+            "Bio",
             "numpy",
             "scipy",
 	        "networkx",
