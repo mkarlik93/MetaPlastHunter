@@ -26,7 +26,7 @@ __maintainer__ = 'Michal Karlicki'
 __email__ = 'michal.karlicki@gmail.com'
 __status__ = 'Development'
 
-from settings import  Settings_loader_yaml
+from settings import Settings_loader_yaml
 from Bio import SeqIO
 from subprocess import Popen, PIPE
 import numpy as np
@@ -39,16 +39,16 @@ logging.basicConfig(level=logging.INFO)
 
 class Coverage:
 
-    def __init__(self,filename, histstats,settings):
+    def __init__(self,filename, histstats, settings):
 
         """
         Parameters
         ----------
-        name : filename
+        filename : filename
             bincov.txt, draft coverage file, produced during mapping
-        sound : histstats
+        histstats : histstats
             XXX
-        num_legs : settings
+        settings : settings
             General settings file which keeps hyperparameters
 
         Calculated gobal variables
@@ -67,7 +67,7 @@ class Coverage:
         self.database = Settings_loader_yaml(settings).yaml_handler()["Databases and mapping files"]["bbmap_base"]
         self.min_bin_coverage = Settings_loader_yaml(settings).yaml_handler()["Params"]["min_bin_coverage"]
         self.percentile_threshold = Settings_loader_yaml(settings).yaml_handler()["Params"]["percentile_threshold"]
-        self.bin_cov_for_report =  Settings_loader_yaml(settings).yaml_handler()["Params"]["bincov4_report"]
+        self.bin_cov_for_report = Settings_loader_yaml(settings).yaml_handler()["Params"]["bincov4_report"]
         self.static_threshold = Settings_loader_yaml(settings).yaml_handler()["Params"]["static_coverage_threshold[%]"]
 
     def load_bincov(self, filename):
@@ -125,7 +125,7 @@ class Coverage:
             sys.exit()
 
         sum_percentages = sum(percentages)
-        percentile_value =  np.percentile(percentages,percentile_thresh)
+        percentile_value =  np.percentile(percentages, percentile_thresh)
         percentages_ok = [i for i in percentages if i > percentile_value]
 
         """ static filtration """
@@ -225,7 +225,7 @@ class Coverage_utilities:
 
         """ Checking genomes without annotation """
 
-        genome_list = [seq for seq in (SeqIO.parse(self.database,"fasta"))]
+        genome_list = [seq for seq in (SeqIO.parse(self.database, "fasta"))]
         empirical_keys = self.e_coverage_threshold_ditionary.keys()
         return  list(filter(lambda x: x.id not in empirical_keys, genome_list))
 
@@ -236,7 +236,7 @@ class Coverage_utilities:
         and insert size between 100 - 300 """
 
         logger.info("     Read creating ")
-        command="%srandomreads.sh ref=%s.fa coverage=2 paired=t out1=%s_1.fq out2=%s_2.fq" % (self.path, genome_to_analyze,genome_to_analyze,genome_to_analyze)
+        command="%srandomreads.sh ref=%s.fa coverage=2 paired=t out1=%s_1.fq out2=%s_2.fq" % (self.path, genome_to_analyze, genome_to_analyze, genome_to_analyze)
         command = command.split(" ")
         process = Popen(command, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
@@ -254,14 +254,14 @@ class Coverage_utilities:
         os.system(command_2)
         os.system(command_3)
 
-    def run_MetaPlastHunter(self, genome_to_analyze):
+    def run_metaplasthunter(self, genome_to_analyze):
 
         """ Wrapper of MetaPlastHunter """
 
         logger.info("   Creating artificial reads" )
         self.create_reads(genome_to_analyze)
         logger.info("   Estimating coverage threshold" )
-        command="MetaPlastHunter --in_1 %s_1.fq --in_2 %s_2.fq -C --output %s --settings %s"  % (genome_to_analyze,genome_to_analyze,genome_to_analyze,self.settings)
+        command="MetaPlastHunter --in_1 %s_1.fq --in_2 %s_2.fq -C --output %s --settings %s" % (genome_to_analyze, genome_to_analyze, genome_to_analyze, self.settings)
         command = command.split(" ")
         process = Popen(command, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
@@ -325,4 +325,4 @@ class Coverage_utilities:
                     threshold = self.run_MetaPlastHunter(record.id)
                     f.write("%s\t%s\n" % (old_rec, threshold))
         else:
-            logger.info("Empiricial threshold file has been added correctly")
+            logger.info("Empirical threshold file has been added correctly")

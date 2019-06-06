@@ -137,7 +137,7 @@ SILVA
 
 
 This sofware has been written by %s.
-""" % (__version__,__email__,__author__)
+""" % (__version__, __email__, __author__)
 
     epilog = """
 """

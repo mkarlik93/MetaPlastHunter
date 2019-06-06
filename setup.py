@@ -25,14 +25,15 @@ if __name__ == '__main__':
             'Topic :: Scientific/Engineering :: Bio-Informatics'
         ],
         install_requires=[
-            "Bio",
+            "biopython",
             "numpy",
             "scipy",
 	        "networkx",
             "ete3",
             'pandas',
             "matplotlib",
-            "pysam"
+            "pysam",
+            "pyyaml"
 
         ],
         setup_requires=['pytest-runner<=3.0.1'],

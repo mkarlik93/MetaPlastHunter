@@ -107,7 +107,7 @@ class BBmap:
 
         """ Maps filtered reads to the reference chloroplast database """
 
-        command="%sbbmap.sh ambiguous=best minidentity=%s nodisk reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s scafstats=%s_chloroplasts.hitstats out=%s_final_mapped.sam bincov=bincov.txt outm1=%s_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq covbinsize=%s threads=%s" % (self.path,self.remap_min_identity ,self.project_name, self.project_name, self.db,self.project_name,self.project_name,self.project_name,self.project_name, self.bincov_len,self.threads)
+        command="%sbbmap.sh ambiguous=best minidentity=%s nodisk reads=-1 idtag=t in1=%s_filtered_chloroplasts_reads_R1.fq in2=%s_filtered_chloroplasts_reads_R2.fq ref=%s scafstats=%s_chloroplasts.hitstats out=%s_final_mapped.sam bincov=bincov.txt outm1=%s_final_chloroplasts_reads_R1.fq outm2=%s_final_chloroplasts_reads_R2.fq covbinsize=%s threads=%s" % (self.path,self.remap_min_identity ,self.project_name, self.project_name, self.db,self.project_name,self.project_name,self.project_name,self.project_name, self.bincov_len,self.threads)
         command = command.split(" ")
         logger.info("     Running primary mapping")
         process = Popen(command, stdout=PIPE, stderr=PIPE)
